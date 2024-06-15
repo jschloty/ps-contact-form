@@ -10,21 +10,45 @@
 	"example": {},
 	"supports": {
 		"color": {
-			"background": false,
+			"background": true,
 			"text": true
 		},
 		"html": false,
 		"typography": {
-			"fontSize": true
+			"fontSize": true,
+			"lineHeight": true
 		}
 	},
 	"attributes": {
-		"showStartingYear": {
-			"type": "boolean"
-		},
-		"startingYear": {
-			"type": "string"
-		}
+		"inputs": { "type": "array",
+			"default": [
+				{ 
+				"name": "name",
+				"label": "Full name",
+				"id": "contact_name",
+				"type": "text",
+				"page": 1,
+				"required": true
+				},
+				{ 
+				"name": "email",
+				"label": "Email address",
+				"id": "contact_email",
+				"type": "email",
+				"page": 1,
+				"required": true
+				},
+				{ 
+				"name": "phone",
+				"label": "Phone number",
+				"id": "contact_phone",
+				"type": "tel",
+				"page": 1,
+				"required": true
+				}
+			]},
+		"message": { "type": "boolean", "default": true},
+		"pages": { "type": "integer", "default": 1 }
 	},
 	"textdomain": "ps-contact-form-block",
 	"editorScript": "file:./index.js",

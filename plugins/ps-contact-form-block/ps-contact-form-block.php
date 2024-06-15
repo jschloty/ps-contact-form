@@ -24,7 +24,147 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @see https://developer.wordpress.org/reference/functions/register_block_type/
  */
-function create_block_ps_contact_form_block_block_init() {
+ function create_block_ps_contact_form_block_init() {
 	register_block_type( __DIR__ . '/build' );
 }
-add_action( 'init', 'create_block_ps_contact_form_block_block_init' );
+
+function ps_handle_form_submit() {
+	// global $attributes;
+	// include './build/render.php';
+
+	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+		$name = sanitize_text_field($_POST['name']);
+		$email = sanitize_text_field($_POST['email']);
+		$phone = sanitize_text_field($_POST['phone']);
+		$message = sanitize_text_field($_POST['message']);
+
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'contact_form_submissions';
+		$data = array(
+			'name' => $name,
+			'email' => $email,
+			'phone' => $phone,
+			'message' => $message,
+			'submission_time' => current_time('mysql')
+		);
+		$insert_result = $wpdb->insert($table_name, $data);
+
+		if ($insert_result === false) {
+			$response = array(
+				'success' => false,
+				'message' => 'Error saving the form data.'
+			);
+		} else {
+			$response = array(
+				'success' => true,
+				'message' => 'Form data saved successfully.'
+			);
+		}
+
+		header('Content-Type: application/json');
+		echo json_encode($response);
+		exit;
+	}
+}
+
+function ps_display_contact_form_submissions_page() {
+
+	class Contact_Form_Table extends WP_List_Table {
+
+		public $table_name;
+		
+		public function __construct() {
+			parent::__contruct(array(
+				'singular' => 'singular_form',
+				'plural' => 'plural_form'
+			));
+		}
+		
+		public function get_columns() {
+			return array(
+				'cb' => array('<input type="checkbox"/>', true),
+				'name' => array('Name', true),
+				'email' => array('Email', true),
+				'phone' => array('Phone', true),
+				'message' => array('Message', true),
+				'submission_time' => array('Submission Time', true),
+				'id' => array('ID', true)
+			);
+		}
+		
+		public function process_bulk_action() {
+			$action = $this->current_action();
+			if ($action === 'delete') {
+				$delete_ids = esc_sql( $_POST['post'] );
+				foreach ($delete_ids as $did) {
+					global $wpdb;
+					$wpdb->query($wpdb->prepare( "DELETE FROM $this->table_name WHERE id=%d", $did ));
+				}
+			}
+		}
+		
+		public function prepare_items() {
+			global $wpdb;
+			$headers = [];
+			$hidden = [];
+
+			$this->screen = get_current_screen();
+			$this->table_name = $wpdb->prefix . 'contact_form_submissions';
+			
+			$this->process_bulk_action();
+			$this->items = $wpdb->get_results("SELECT * FROM $this->table_name WHERE name <> '' AND email <> '' AND phone <> ''
+			ORDER BY submission_time DESC", ARRAY_A);
+		
+			
+			foreach($this->get_columns() as $key => $value) {
+				if (!$value[1]) {
+					$hidden[] = $key;
+				}
+				$headers[$key] = $value[0];
+			}
+
+			$this->_column_headers = array(
+				$headers, $hidden, array(), 'submission_time'
+			);
+		}
+		
+		protected function column_default( $item, $column_name ) {
+			echo esc_html($item[$column_name]);
+		}
+		
+		protected function column_cb( $item ) {
+			echo '<input type="checkbox" name="post[]" value="' . $item['id'] . '"/>';
+		}
+		
+		protected function get_bulk_actions()
+		{
+			return array(
+				'delete' => 'Delete'
+			);
+		}
+		
+	}
+
+	echo '<form id="ps-contact-list-table" method="post" action="' . $_SERVER['PHP_SELF'] . '?page=contact_form_submissions">';
+	$contact_form_table = new Contact_Form_Table();
+	$contact_form_table->prepare_items();
+	$contact_form_table->display();
+	echo '</form>';
+}
+
+function ps_register_contact_form_submissions_page() {
+	add_menu_page(
+		'Contact Form Submissions',
+		'Form Submissions',
+		'manage_options',
+		'contact_form_submissions',
+		'ps_display_contact_form_submissions_page',
+		'dashicons-feedback'
+	);
+}
+
+
+add_action( 'admin_post_nopriv_contact_form', 'ps_handle_form_submit' );
+add_action( 'admin_post_contact_form', 'ps_handle_form_submit' );
+add_action( 'init', 'create_block_ps_contact_form_block_init' );
+add_action( 'admin_menu', 'ps_register_contact_form_submissions_page' );

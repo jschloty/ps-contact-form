@@ -54,38 +54,34 @@ __webpack_require__.r(__webpack_exports__);
  *
  * @return {Element} Element to render.
 */
+
 function Edit({
   attributes,
   setAttributes
 }) {
-  const currentYear = new Date().getFullYear().toString();
   const {
-    showStartingYear,
-    startingYear
+    inputs,
+    message
   } = attributes;
-  let displayDate;
-  if (showStartingYear && startingYear) {
-    displayDate = startingYear + '–' + currentYear;
-  } else {
-    displayDate = currentYear;
-  }
-  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.InspectorControls, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.PanelBody, {
-    title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Settings', 'ps-contact-form-block')
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.TextControl, {
-    label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Starting year', 'ps-contact-form-block'),
-    value: startingYear || '',
-    onChange: value => setAttributes({
-      startingYear: value
-    })
-  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.ToggleControl, {
-    checked: !!showStartingYear,
-    label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Show Starting Year', 'ps-contact-form-block'),
-    onChange: () => setAttributes({
-      showStartingYear: !showStartingYear
-    })
-  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
     ...(0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.useBlockProps)()
-  }, "\xA9 ", displayDate));
+  }, inputs.map(input => {
+    return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
+      key: input.id
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
+      htmlFor: input.label
+    }, input.name), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+      type: input.type,
+      id: input.id,
+      name: input.id,
+      required: input.required
+    }));
+  }), !!message ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
+    htmlFor: "message"
+  }, "Message"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("textarea", {
+    id: "message",
+    placeholder: "Enter message..."
+  })) : null);
 }
 
 /***/ }),
@@ -215,7 +211,7 @@ module.exports = window["wp"]["i18n"];
   \************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/ps-contact-form-block","version":"0.1.0","title":"Pet Stop Contact Form Block","category":"widgets","icon":"forms","description":"Custom contact form created for Pet Stop of Virginia/Central Florida.","example":{},"supports":{"color":{"background":false,"text":true},"html":false,"typography":{"fontSize":true}},"attributes":{"showStartingYear":{"type":"boolean"},"startingYear":{"type":"string"}},"textdomain":"ps-contact-form-block","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","render":"file:./render.php","viewScript":"file:./view.js"}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/ps-contact-form-block","version":"0.1.0","title":"Pet Stop Contact Form Block","category":"widgets","icon":"forms","description":"Custom contact form created for Pet Stop of Virginia/Central Florida.","example":{},"supports":{"color":{"background":true,"text":true},"html":false,"typography":{"fontSize":true,"lineHeight":true}},"attributes":{"inputs":{"type":"array","default":[{"name":"name","label":"Full name","id":"contact_name","type":"text","page":1,"required":true},{"name":"email","label":"Email address","id":"contact_email","type":"email","page":1,"required":true},{"name":"phone","label":"Phone number","id":"contact_phone","type":"tel","page":1,"required":true}]},"message":{"type":"boolean","default":true},"pages":{"type":"integer","default":1}},"textdomain":"ps-contact-form-block","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","render":"file:./render.php","viewScript":"file:./view.js"}');
 
 /***/ })
 

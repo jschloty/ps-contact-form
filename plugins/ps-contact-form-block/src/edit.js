@@ -31,45 +31,19 @@ import './editor.scss';
  *
  * @return {Element} Element to render.
 */
+
 export default function Edit( { attributes, setAttributes }) {
-	const currentYear = new Date().getFullYear().toString();
-	const { showStartingYear, startingYear } = attributes;
-	let displayDate;
-
-	if (showStartingYear && startingYear ) {
-		displayDate = startingYear + '–' + currentYear;
-	}
-	else {
-		displayDate = currentYear;
-	}
-
+	const { inputs, message } = attributes;
 
 	return (
-		<>
-		<InspectorControls>
-			<PanelBody title={__('Settings', 'ps-contact-form-block')}>
-				<TextControl 
-					label={__('Starting year', 'ps-contact-form-block')}
-					value={startingYear || ''}
-					onChange={ (value) =>
-						setAttributes( {startingYear: value} )
-					}
-				/>
-
-				<ToggleControl
-					checked={!! showStartingYear}
-					label={__('Show Starting Year', 'ps-contact-form-block')}
-					onChange={ () => 
-						setAttributes({
-							showStartingYear: ! showStartingYear
-						})
-					}
-				/>
-			</PanelBody>
-		</InspectorControls>
-		<p { ...useBlockProps() }>
-			© { displayDate }
-		</p>
-		</>
-	);
+	<form {...useBlockProps()}>
+		{inputs.map(input => { 
+			return (<li key={input.id}>
+				<label htmlFor={input.label}>{input.name}</label>
+				<input type={input.type} id={input.id} name={input.id} required={input.required}/>
+			</li>)
+		})}
+		{!!message ? (<div><label htmlFor="message">Message</label><textarea id="message" placeholder="Enter message..."></textarea></div>) : null}
+	</form>
+	)
 }
