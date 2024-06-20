@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { SlArrowLeft } from "react-icons/sl";
+import { checkInput } from '../scripts/form-validation'
 const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-admin/admin-post.php";
 
-async function formSubmit(e) {
-    const data = new FormData(e.currentTarget);
-    console.log(...data.entries());
+async function formSubmit(data) {
     let submission;
 
     try {
@@ -19,10 +18,8 @@ async function formSubmit(e) {
 
 function ContactForm (props) {
     let [page, setPage] = useState(1);
-    console.log("rendered");
     
     let currentInputs = props.inputs.map(input => {
-        console.log(input.page == page);
         return input.page == page ? (
         <li key={input.name + "_field"}>
             <label htmlFor={input.id}>{input.label}</label>
@@ -40,19 +37,20 @@ function ContactForm (props) {
 
     let CurrentPage = () => {
         return (<ul id={"page" + page} className="page" page={page}>
-            {currentInputs}
+            {page == 6 ? (<p>Unfortunately, you reside outside of our active service area.</p>) : currentInputs}
             {(page == 1 && props.message) ? 
             <li key="contact_message_field">
                 <label htmlFor="message">Message</label>
-                <textarea id="message" name="message" placeholder="Enter message..."></textarea>
+                <textarea id="message" name="message" max-length="250" placeholder="Enter message..."></textarea>
                 <span className="error"></span>
             </li> : null}
             <CurrentButtons />
         </ul>)
     }
     
-    function checkValidity(e) {
+   async function checkValidity(e) {
         e.preventDefault();
+        const data = new FormData(e.currentTarget);
 
         if (page == 5) {return;}
         if (page == 2) {setPage(page++); return;}
@@ -64,31 +62,39 @@ function ContactForm (props) {
         inputs.pop();
         if (page == 1) {inputs.push(document.querySelector("form#ps-contact-form textarea"));}
         console.log(inputs);
-        
-        inputs.forEach((input, i) => {
+
+        for (const input of inputs) {
             if (input.id === "hidden") {return;}
             let error = input.nextSibling;
-            console.log(error);
-            let isValid = true;
-    
-            if (!isValid) {
-                error.textContent = input.error.message;
+            let validity = await checkInput(input, e);
+
+            console.log(input.id + " " + validity.isValid);
+            if (!validity.isValid) {
+                error.textContent = validity.error;
                 error.className = "error active";
                 return;
             }
-            
+
+            if(!!validity.location) {
+                data.append('location', validity.location);
+                if (validity.location === "invalid") {
+                    setPage(6);
+                    break;
+                }
+            }
+
             error.textContent = "";
             error.className = "error";
-        })
-    
-        formSubmit(e);
+        }
+
+        formSubmit(data);
         setPage(page+1);
         console.log(page);
         return;
     }
 
     return (
-        <form id="ps-contact-form" onSubmit={checkValidity}>
+        <form noValidate id="ps-contact-form" onSubmit={checkValidity}>
             <CurrentPage />
             <input id="hidden" type="hidden" name="action" value="contact_form" />
         </form>

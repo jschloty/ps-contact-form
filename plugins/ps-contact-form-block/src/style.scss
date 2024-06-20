@@ -9,7 +9,22 @@
 	padding: 2px;
 }
 
-// #ps-contact-form {
-// 	background-color: #EBEBEB;
-// 	border: 2px solid #5B5B5B;
-// }
+#ps-contact-form {
+	ul {
+		margin: 20px 30px;
+	}
+	
+	.error {
+		display:hidden;
+	}
+	.error.active {
+		display:block;
+		color:red;
+	}
+	li {
+		list-style-type: none;
+	}
+
+	background-color: #fff;
+	border: 2px solid #5B5B5B;
+}

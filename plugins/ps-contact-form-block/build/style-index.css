@@ -11,4 +11,22 @@
   padding: 2px;
 }
 
+#ps-contact-form {
+  background-color: #fff;
+  border: 2px solid #5B5B5B;
+}
+#ps-contact-form ul {
+  margin: 20px 30px;
+}
+#ps-contact-form .error {
+  display: hidden;
+}
+#ps-contact-form .error.active {
+  display: block;
+  color: red;
+}
+#ps-contact-form li {
+  list-style-type: none;
+}
+
 /*# sourceMappingURL=style-index.css.map*/

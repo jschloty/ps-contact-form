@@ -37,6 +37,7 @@ function ps_handle_form_submit() {
 		$email = sanitize_text_field($_POST['email']);
 		$phone = sanitize_text_field($_POST['phone']);
 		$message = sanitize_text_field($_POST['message']);
+		$location = sanitize_text_field($_POST['location']);
 
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'contact_form_submissions';
@@ -45,6 +46,7 @@ function ps_handle_form_submit() {
 			'email' => $email,
 			'phone' => $phone,
 			'message' => $message,
+			'location' => $location,
 			'submission_time' => current_time('mysql')
 		);
 		$insert_result = $wpdb->insert($table_name, $data);
@@ -87,6 +89,7 @@ function ps_display_contact_form_submissions_page() {
 				'email' => array('Email', true),
 				'phone' => array('Phone', true),
 				'message' => array('Message', true),
+				'location' => array('Location', true),
 				'submission_time' => array('Submission Time', true),
 				'id' => array('ID', true)
 			);
@@ -113,7 +116,7 @@ function ps_display_contact_form_submissions_page() {
 			
 			$this->process_bulk_action();
 			$this->items = $wpdb->get_results("SELECT * FROM $this->table_name WHERE name <> '' AND email <> '' AND phone <> ''
-			ORDER BY submission_time DESC", ARRAY_A);
+			AND location <> '' ORDER BY submission_time DESC", ARRAY_A);
 		
 			
 			foreach($this->get_columns() as $key => $value) {
@@ -163,8 +166,52 @@ function ps_register_contact_form_submissions_page() {
 	);
 }
 
+function ps_handle_zip_request() {
+	class response {
+		public $rva = [];
+		public $vab = [];
+		public $fl = [];
+		
+		function __construct($rva, $vab, $fl) {
+			$this->rva = $rva;
+			$this->vab = $vab;
+			$this->fl = $fl;
+		}
+	}
+
+	$zips = array();
+
+	if (($handle = fopen(ABSPATH . 'wp-content/uploads/zip-codes.csv', 'r')) !== FALSE) {
+		while (($data = fgetcsv($handle, 100, ',')) !== FALSE) {
+			$row = array(
+				'rva' => (int) $data[0],
+				'vab' => (int) $data[1],
+				'fl' => (int) $data[2]
+			);
+			array_push($zips, $row);
+		}
+		
+
+		if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+			$rva = array_column($zips, 'rva');
+			$vab = array_column($zips, 'vab');
+			$fl = array_column($zips, 'fl');
+		
+			$response = new response($rva, $vab, $fl);
+			header('Content-Type: application/json');
+			echo json_encode($response);
+			exit;
+		}
+
+	}
+}
+
 
 add_action( 'admin_post_nopriv_contact_form', 'ps_handle_form_submit' );
 add_action( 'admin_post_contact_form', 'ps_handle_form_submit' );
+
+add_action( 'admin_post_nopriv_zip_request', 'ps_handle_zip_request' );
+add_action( 'admin_post_zip_request', 'ps_handle_zip_request' );
+
 add_action( 'init', 'create_block_ps_contact_form_block_init' );
 add_action( 'admin_menu', 'ps_register_contact_form_submissions_page' );

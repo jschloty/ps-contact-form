@@ -14,14 +14,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_icons_sl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-icons/sl */ "./node_modules/react-icons/sl/index.mjs");
+/* harmony import */ var react_icons_sl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-icons/sl */ "./node_modules/react-icons/sl/index.mjs");
+/* harmony import */ var _scripts_form_validation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../scripts/form-validation */ "./src/scripts/form-validation.js");
+
 
 
 
 const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-admin/admin-post.php";
-async function formSubmit(e) {
-  const data = new FormData(e.currentTarget);
-  console.log(...data.entries());
+async function formSubmit(data) {
   let submission;
   try {
     submission = await fetch(ADMIN_URL, {
@@ -37,9 +37,7 @@ async function formSubmit(e) {
 }
 function ContactForm(props) {
   let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1);
-  console.log("rendered");
   let currentInputs = props.inputs.map(input => {
-    console.log(input.page == page);
     return input.page == page ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
       key: input.name + "_field"
     }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
@@ -59,7 +57,7 @@ function ContactForm(props) {
       type: "submit"
     }, "Get a quote"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Existing customer? ", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", null, "Click here"), " to contact us.")) : page == 2 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "No thanks.", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("br", null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
       href: "google.com"
-    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_sl__WEBPACK_IMPORTED_MODULE_1__.SlArrowLeft, null), " Return to home")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_sl__WEBPACK_IMPORTED_MODULE_2__.SlArrowLeft, null), " Return to home")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
       id: "pg2_button",
       type: "submit"
     }, "Sign me up!")) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "placeholder");
@@ -69,20 +67,22 @@ function ContactForm(props) {
       id: "page" + page,
       className: "page",
       page: page
-    }, currentInputs, page == 1 && props.message ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
+    }, page == 6 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Unfortunately, you reside outside of our active service area.") : currentInputs, page == 1 && props.message ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
       key: "contact_message_field"
     }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
       htmlFor: "message"
     }, "Message"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("textarea", {
       id: "message",
       name: "message",
+      "max-length": "250",
       placeholder: "Enter message..."
     }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
       className: "error"
     })) : null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentButtons, null));
   };
-  function checkValidity(e) {
+  async function checkValidity(e) {
     e.preventDefault();
+    const data = new FormData(e.currentTarget);
     if (page == 5) {
       return;
     }
@@ -100,27 +100,35 @@ function ContactForm(props) {
       inputs.push(document.querySelector("form#ps-contact-form textarea"));
     }
     console.log(inputs);
-    inputs.forEach((input, i) => {
+    for (const input of inputs) {
       if (input.id === "hidden") {
         return;
       }
       let error = input.nextSibling;
-      console.log(error);
-      let isValid = true;
-      if (!isValid) {
-        error.textContent = input.error.message;
+      let validity = await (0,_scripts_form_validation__WEBPACK_IMPORTED_MODULE_1__.checkInput)(input, e);
+      console.log(input.id + " " + validity.isValid);
+      if (!validity.isValid) {
+        error.textContent = validity.error;
         error.className = "error active";
         return;
       }
+      if (!!validity.location) {
+        data.append('location', validity.location);
+        if (validity.location === "invalid") {
+          setPage(6);
+          break;
+        }
+      }
       error.textContent = "";
       error.className = "error";
-    });
-    formSubmit(e);
+    }
+    formSubmit(data);
     setPage(page + 1);
     console.log(page);
     return;
   }
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
+    noValidate: true,
     id: "ps-contact-form",
     onSubmit: checkValidity
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentPage, null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
@@ -131,6 +139,90 @@ function ContactForm(props) {
   }));
 }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ContactForm);
+
+/***/ }),
+
+/***/ "./src/scripts/form-validation.js":
+/*!****************************************!*\
+  !*** ./src/scripts/form-validation.js ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   checkInput: () => (/* binding */ checkInput)
+/* harmony export */ });
+const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-admin/admin-post.php";
+
+/** Checks the validity of all available input types
+ * @param input: HTMLInputElement || HTMLTextAreaElement
+ * @param e: submit Event
+ * @return object {isValid: bool, error: string || null, location: string || null}
+ */
+function checkInput(input, e) {
+  if (!input.id || !input.name) {
+    return {
+      isValid: false,
+      error: "Invalid input object"
+    };
+  }
+  let validity = {
+    isValid: false
+  };
+  const formdata = new FormData(e.target);
+  if (input.name === "message") {
+    if (input.validity.tooLong) {
+      validity.error = "Message must be less than 250 characters.";
+      return validity;
+    } else {
+      validity.isValid = true;
+      return validity;
+    }
+  } else if (input.type === "text") {
+    if (input.name === "zip") {
+      let userZip = parseInt(formdata.get('zip'));
+      if (!userZip.length == 5) {
+        validity.error = "Enter a 5-digit ZIP code.";
+        return validity;
+      }
+      if (input.validity.valueMissing) {
+        validity.error = "This field is required.";
+        return validity;
+      }
+      return fetch(ADMIN_URL + "?action=zip_request", {
+        method: "GET"
+      }).then(data => data.json()).then(zips => {
+        return zips.rva.includes(userZip) ? {
+          isValid: true,
+          location: 'RVA'
+        } : zips.vab.includes(userZip) ? {
+          isValid: true,
+          location: 'VAB'
+        } : zips.fl.includes(userZip) ? {
+          isValid: true,
+          location: 'FL'
+        } : {
+          isValid: true,
+          location: 'invalid'
+        };
+      }).catch(error => {
+        console.error(`Could not retrieve valid ZIPs: ${error.message}`);
+      });
+    } else {
+      validity.isValid = !input.validity.valueMissing;
+      validity.error = input.validity.valueMissing ? "This field is required." : "";
+      return validity;
+    }
+  } else if (input.type === "tel") {
+    validity.isValid = !input.validity.valueMissing;
+    validity.error = input.validity.valueMissing ? "This field is required." : "";
+    return validity;
+  } else if (input.type === "email") {
+    validity.isValid = !input.validity.valueMissing && !input.validity.typeMismatch;
+    validity.error = input.validity.valueMissing ? "This field is required." : input.validity.typeMismatch ? "Not a valid email address." : "";
+    return validity;
+  }
+}
 
 /***/ }),
 

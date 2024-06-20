@@ -46,6 +46,14 @@
           "type": "tel",
           "page": 1,
           "required": true
+        },
+        {
+          "name": "zip",
+          "label": "ZIP code",
+          "id": "zip",
+          "type": "text",
+          "page": 1,
+          "required": true
         }
       ]
     },
