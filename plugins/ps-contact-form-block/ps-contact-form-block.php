@@ -13,7 +13,11 @@
  * @package CreateBlock
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
+$ghl_authcode;
+$ghl_accesstoken;
+$ghl_refreshtoken;
+
+ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
@@ -28,16 +32,61 @@ if ( ! defined( 'ABSPATH' ) ) {
 	register_block_type( __DIR__ . '/build' );
 }
 
+add_action( 'init', 'create_block_ps_contact_form_block_init' );
+
+// function ps_handle_ghl_auth() {
+// 	if ($_SERVER['REQUEST_METHOD' === 'GET']) {
+// 		global $ghl_authcode;
+// 		global $ghl_accesstoken;
+// 		global $ghl_refreshtoken;
+
+// 		$ghl_authcode = $_GET['code'];
+
+// 		$client = new GuzzleHttp\Client();
+
+// 		$response = $client->request('POST', 'https://services.leadconnectorhq.com/oath/token', [
+// 			'form_params' => [
+// 				'client_id' => '',
+// 				'client_secret' => '',
+// 				'grant_type' => 'authorization_code',
+// 				'code' => $auth_code,
+// 				'user_type' => 'Company'
+// 			],
+// 			'headers' => [
+// 				'Accept' => 'application/json',
+// 				'Content-type' => 'application/x-www-form-urlencoded'
+// 			]
+// 			]);
+
+// 		echo $response->getBody();
+// 		$parsed = json_decode($response->getBody());
+// 		$ghl_accesstoken = $parsed['access_token'];
+// 		$ghl_refreshtoken = $parsed['refresh_token'];
+// 	}
+// }
+// 
+// add_action('admin_post_nopriv_api_auth', 'ps_handle_ghl_auth');
+// add_action('admin_post_api_auth', 'ps_handle_ghl_auth');
+
 function ps_handle_form_submit() {
 	// global $attributes;
 	// include './build/render.php';
 
 	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+		if ( !$_COOKIE['session_id'] ) {
+			setcookie('session_id', wp_generate_uuid4(), array(
+				'samesite' => 'Lax',
+				'httponly' => true,
+				'secure' => true
+			));
+		}
+
 		$name = sanitize_text_field($_POST['name']);
 		$email = sanitize_text_field($_POST['email']);
 		$phone = sanitize_text_field($_POST['phone']);
 		$message = sanitize_text_field($_POST['message']);
 		$location = sanitize_text_field($_POST['location']);
+		$session_id = $_COOKIE['session_id'];
 
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'contact_form_submissions';
@@ -47,6 +96,7 @@ function ps_handle_form_submit() {
 			'phone' => $phone,
 			'message' => $message,
 			'location' => $location,
+			'session_id' => $session_id,
 			'submission_time' => current_time('mysql')
 		);
 		$insert_result = $wpdb->insert($table_name, $data);
@@ -64,10 +114,16 @@ function ps_handle_form_submit() {
 		}
 
 		header('Content-Type: application/json');
+
+		
+
 		echo json_encode($response);
 		exit;
 	}
 }
+
+add_action( 'admin_post_nopriv_contact_form', 'ps_handle_form_submit' );
+add_action( 'admin_post_contact_form', 'ps_handle_form_submit' );
 
 function ps_display_contact_form_submissions_page() {
 
@@ -166,6 +222,8 @@ function ps_register_contact_form_submissions_page() {
 	);
 }
 
+add_action( 'admin_menu', 'ps_register_contact_form_submissions_page' );
+
 function ps_handle_zip_request() {
 	class response {
 		public $rva = [];
@@ -206,12 +264,10 @@ function ps_handle_zip_request() {
 	}
 }
 
-
-add_action( 'admin_post_nopriv_contact_form', 'ps_handle_form_submit' );
-add_action( 'admin_post_contact_form', 'ps_handle_form_submit' );
-
 add_action( 'admin_post_nopriv_zip_request', 'ps_handle_zip_request' );
 add_action( 'admin_post_zip_request', 'ps_handle_zip_request' );
 
-add_action( 'init', 'create_block_ps_contact_form_block_init' );
-add_action( 'admin_menu', 'ps_register_contact_form_submissions_page' );
+
+function ps_handle_appointment_request() {
+
+}

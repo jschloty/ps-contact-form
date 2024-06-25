@@ -14,13 +14,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_icons_sl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-icons/sl */ "./node_modules/react-icons/sl/index.mjs");
+/* harmony import */ var react_icons_sl__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-icons/sl */ "./node_modules/react-icons/sl/index.mjs");
 /* harmony import */ var _scripts_form_validation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../scripts/form-validation */ "./src/scripts/form-validation.js");
+/* harmony import */ var _DateTimeBooker__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./DateTimeBooker */ "./src/components/DateTimeBooker.js");
+
 
 
 
 
 const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-admin/admin-post.php";
+
+/**
+ * Submits a given FormData object to admin_post.php
+ * 
+ * @param {FormData} data Validated form data submitted from ContactForm.
+ */
 async function formSubmit(data) {
   let submission;
   try {
@@ -35,8 +43,21 @@ async function formSubmit(data) {
     console.error(e);
   }
 }
+
+/**
+ * The main ContactForm component.
+ * 
+ * Props include a list of inputs with page numbers to be displayed, an optional
+ * first page message box. Lots of discrete settings in here, needs to be reworked
+ * if turned into a dynamic plugin.
+ * 
+ * @param {Object} props List of properties passed from view.js
+ * @returns Rendered contact form JSX.
+ */
 function ContactForm(props) {
-  let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1);
+  let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(3); //CHANGE THIS BACK TO 1
+
+  // Inputs that match page number
   let currentInputs = props.inputs.map(input => {
     return input.page == page ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
       key: input.name + "_field"
@@ -51,23 +72,33 @@ function ContactForm(props) {
       className: "error"
     })) : null;
   });
+
+  /**
+   * CurrentButtons component.
+   * @returns Current buttons based on component page state.
+   */
   let CurrentButtons = () => {
     return page == 1 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
       id: "pg1_button",
       type: "submit"
     }, "Get a quote"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Existing customer? ", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", null, "Click here"), " to contact us.")) : page == 2 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "No thanks.", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("br", null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
       href: "google.com"
-    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_sl__WEBPACK_IMPORTED_MODULE_2__.SlArrowLeft, null), " Return to home")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_sl__WEBPACK_IMPORTED_MODULE_3__.SlArrowLeft, null), " Return to home")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
       id: "pg2_button",
       type: "submit"
-    }, "Sign me up!")) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "placeholder");
+    }, "Sign me up!")) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null);
   };
+
+  /**
+   * CurrentPage component.
+   * @returns Rendered page of the form, including inputs, error fields, and CurrentButtons.
+   */
   let CurrentPage = () => {
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", {
       id: "page" + page,
       className: "page",
       page: page
-    }, page == 6 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Unfortunately, you reside outside of our active service area.") : currentInputs, page == 1 && props.message ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
+    }, page == 6 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Unfortunately, you reside outside of our service area.") : page == 3 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_DateTimeBooker__WEBPACK_IMPORTED_MODULE_2__["default"], null) : currentInputs, page == 1 && props.message ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
       key: "contact_message_field"
     }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
       htmlFor: "message"
@@ -80,6 +111,16 @@ function ContactForm(props) {
       className: "error"
     })) : null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentButtons, null));
   };
+
+  /**
+   * Submit handler function for ContactForm. Checks validity of each input using checkInput
+   * and either renders first validity error or passes the FormData to formSubmit.
+   * 
+   * @param {Event} e The HTML <form> submit event.
+   * 
+   * @note Special case: if contact ZIP code is not in service area, form is submitted and
+   *       contact is sent to page 6.
+   */
   async function checkValidity(e) {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
@@ -110,13 +151,15 @@ function ContactForm(props) {
       if (!validity.isValid) {
         error.textContent = validity.error;
         error.className = "error active";
+        input.focus();
         return;
       }
       if (!!validity.location) {
         data.append('location', validity.location);
         if (validity.location === "invalid") {
           setPage(6);
-          break;
+          formSubmit(data);
+          return;
         }
       }
       error.textContent = "";
@@ -142,6 +185,171 @@ function ContactForm(props) {
 
 /***/ }),
 
+/***/ "./src/components/DateTimeBooker.js":
+/*!******************************************!*\
+  !*** ./src/components/DateTimeBooker.js ***!
+  \******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ DateTimeBooker)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react_calendar__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-calendar */ "./node_modules/react-calendar/dist/esm/Calendar.js");
+/* harmony import */ var clsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! clsx */ "./node_modules/clsx/dist/clsx.mjs");
+
+
+
+
+const defaultStartTime = value => {
+  const startTime = new Date(value.getTime());
+  startTime.setHours(8, 0, 0, 0);
+  return startTime;
+};
+const defaultEndTime = value => {
+  const endTime = new Date(value.getTime());
+  endTime.setHours(17, 0, 0, 0);
+  return endTime;
+};
+
+/**
+ * Handler function for TimeSlot button click. 
+ * @param {Event} e 
+ * @param {Function} onChange 
+ * @returns Calls the setter function of value in DateTimeBooker with the
+ *          newly selected time.
+ */
+function handleClick(e, onChange) {
+  let prev;
+  if (prev) {
+    prev.classList.remove("selected");
+  }
+  prev = e;
+  let newTime = e.target.value;
+  e.target.classList.add("selected");
+  return onChange(new Date(newTime));
+}
+
+/**
+ * The TimeSlot component. Represents an individual time slot button.
+ * 
+ * @param {Date} value The currently selected date
+ * @param {Function} onChange Callback function called when selected time changes 
+ * @param {boolean} disabled Indicates whether the time slot is disabled
+ * @returns 
+ */
+function TimeSlot({
+  children,
+  onChange,
+  disabled
+}) {
+  /**
+   * Simple time formatting function   * 
+   * @param {Date} value 
+   * @returns formatted time string to display
+   */
+
+  const value = children;
+  const formatTime = value => {
+    const suffix = value.getHours() >= 12 ? "PM" : "AM";
+    return (value.getHours() > 12 ? value.getHours() - 12 : value.getHours()) + ":" + value.getMinutes().toString().padEnd(2, "0") + " " + suffix;
+  };
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    className: 'timeslot',
+    onClick: e => {
+      handleClick(e, onChange);
+    },
+    disabled: disabled,
+    value: value,
+    type: "button"
+  }, formatTime(value));
+}
+
+/**
+ * TimeGrid component. Displays a grid of buttons with available time slots on them.
+ * 
+ * @param {Date} value The current value of DateTimeBooker
+ * @param {Function} onChange Pass a function to call when selected time is changed.
+ * @param {Array[Date]} timeDisabled An array of Dates describing disabled time slots.
+ * @param {[Date, Date]} timeRange Array containing start time and end time
+ * @param {int} interval Interval of displayed times in minutes
+ */
+function TimeGrid({
+  value,
+  onChange,
+  timeDisabled = [],
+  timeRange = [defaultStartTime(value), defaultEndTime(value)],
+  interval = 60
+}) {
+  if (interval < 15) {
+    throw new Error("Interval cannot be less than 15 minutes.");
+  }
+  let coeff = 1000 * 60 * interval;
+  const current = new Date(Math.round(value.getTime() / coeff) * coeff);
+  const now = new Date();
+  const nowRounded = new Date(Math.round(now.getTime() / coeff) * coeff);
+  const [startTime, endTime] = timeRange;
+  let times = [];
+  for (let time = startTime.getTime(); time <= endTime.getTime(); time += coeff) {
+    times.push(time);
+  }
+  const timeSlots = times.map(time => {
+    let disabled = false;
+    if (current == nowRounded || timeDisabled.includes(current)) {
+      disabled = true;
+    }
+    return {
+      time: new Date(time),
+      disabled: disabled
+    };
+  });
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "timegrid"
+  }, timeSlots.map((slot, i) => {
+    return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TimeSlot, {
+      key: "timeslot" + i,
+      disabled: slot.disabled,
+      onChange: onChange
+    }, slot.time);
+  }));
+}
+function DateTimeBooker() {
+  const [value, onChange] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(new Date());
+  console.log(value.toLocaleString());
+
+  // get array of disabled dates []
+
+  const disabled = [new Date(2024, 5, 15)];
+  const isDisabled = args => {
+    const {
+      date
+    } = args;
+    let isDisabled = false;
+    disabled.forEach(disabledDate => {
+      if (disabledDate.getTime() == date.getTime() || date.getTime() < Date.now()) {
+        isDisabled = true;
+      }
+    });
+    return isDisabled;
+  };
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "date-time-booker-container"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_calendar__WEBPACK_IMPORTED_MODULE_2__["default"], {
+    onChange: onChange,
+    minDetail: "month",
+    value: value,
+    tileDisabled: isDisabled
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TimeGrid, {
+    onChange: onChange,
+    value: value,
+    interval: 30
+  }));
+}
+
+/***/ }),
+
 /***/ "./src/scripts/form-validation.js":
 /*!****************************************!*\
   !*** ./src/scripts/form-validation.js ***!
@@ -154,10 +362,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-admin/admin-post.php";
 
-/** Checks the validity of all available input types
+/** Checks the validity of all accepted input types. If input is ZIP code, returns
+ * user location: RVA, VAB, FL, or invalid.
+ * 
  * @param input: HTMLInputElement || HTMLTextAreaElement
  * @param e: submit Event
- * @return object {isValid: bool, error: string || null, location: string || null}
+ * @returns object {isValid: bool, error: string || null, location: string || null}
  */
 function checkInput(input, e) {
   if (!input.id || !input.name) {
@@ -226,6 +436,1698 @@ function checkInput(input, e) {
 
 /***/ }),
 
+/***/ "./node_modules/map-age-cleaner/dist/index.js":
+/*!****************************************************!*\
+  !*** ./node_modules/map-age-cleaner/dist/index.js ***!
+  \****************************************************/
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const p_defer_1 = __importDefault(__webpack_require__(/*! p-defer */ "./node_modules/p-defer/index.js"));
+function mapAgeCleaner(map, property = 'maxAge') {
+    let processingKey;
+    let processingTimer;
+    let processingDeferred;
+    const cleanup = () => __awaiter(this, void 0, void 0, function* () {
+        if (processingKey !== undefined) {
+            // If we are already processing an item, we can safely exit
+            return;
+        }
+        const setupTimer = (item) => __awaiter(this, void 0, void 0, function* () {
+            processingDeferred = p_defer_1.default();
+            const delay = item[1][property] - Date.now();
+            if (delay <= 0) {
+                // Remove the item immediately if the delay is equal to or below 0
+                map.delete(item[0]);
+                processingDeferred.resolve();
+                return;
+            }
+            // Keep track of the current processed key
+            processingKey = item[0];
+            processingTimer = setTimeout(() => {
+                // Remove the item when the timeout fires
+                map.delete(item[0]);
+                if (processingDeferred) {
+                    processingDeferred.resolve();
+                }
+            }, delay);
+            // tslint:disable-next-line:strict-type-predicates
+            if (typeof processingTimer.unref === 'function') {
+                // Don't hold up the process from exiting
+                processingTimer.unref();
+            }
+            return processingDeferred.promise;
+        });
+        try {
+            for (const entry of map) {
+                yield setupTimer(entry);
+            }
+        }
+        catch (_a) {
+            // Do nothing if an error occurs, this means the timer was cleaned up and we should stop processing
+        }
+        processingKey = undefined;
+    });
+    const reset = () => {
+        processingKey = undefined;
+        if (processingTimer !== undefined) {
+            clearTimeout(processingTimer);
+            processingTimer = undefined;
+        }
+        if (processingDeferred !== undefined) { // tslint:disable-line:early-exit
+            processingDeferred.reject(undefined);
+            processingDeferred = undefined;
+        }
+    };
+    const originalSet = map.set.bind(map);
+    map.set = (key, value) => {
+        if (map.has(key)) {
+            // If the key already exist, remove it so we can add it back at the end of the map.
+            map.delete(key);
+        }
+        // Call the original `map.set`
+        const result = originalSet(key, value);
+        // If we are already processing a key and the key added is the current processed key, stop processing it
+        if (processingKey && processingKey === key) {
+            reset();
+        }
+        // Always run the cleanup method in case it wasn't started yet
+        cleanup(); // tslint:disable-line:no-floating-promises
+        return result;
+    };
+    cleanup(); // tslint:disable-line:no-floating-promises
+    return map;
+}
+exports["default"] = mapAgeCleaner;
+// Add support for CJS
+module.exports = mapAgeCleaner;
+module.exports["default"] = mapAgeCleaner;
+
+
+/***/ }),
+
+/***/ "./node_modules/mem/dist/index.js":
+/*!****************************************!*\
+  !*** ./node_modules/mem/dist/index.js ***!
+  \****************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+
+const mimicFn = __webpack_require__(/*! mimic-fn */ "./node_modules/mem/node_modules/mimic-fn/index.js");
+const mapAgeCleaner = __webpack_require__(/*! map-age-cleaner */ "./node_modules/map-age-cleaner/dist/index.js");
+const decoratorInstanceMap = new WeakMap();
+const cacheStore = new WeakMap();
+/**
+[Memoize](https://en.wikipedia.org/wiki/Memoization) functions - An optimization used to speed up consecutive function calls by caching the result of calls with identical input.
+
+@param fn - Function to be memoized.
+
+@example
+```
+import mem = require('mem');
+
+let i = 0;
+const counter = () => ++i;
+const memoized = mem(counter);
+
+memoized('foo');
+//=> 1
+
+// Cached as it's the same arguments
+memoized('foo');
+//=> 1
+
+// Not cached anymore as the arguments changed
+memoized('bar');
+//=> 2
+
+memoized('bar');
+//=> 2
+```
+*/
+const mem = (fn, { cacheKey, cache = new Map(), maxAge } = {}) => {
+    if (typeof maxAge === 'number') {
+        // TODO: Drop after https://github.com/SamVerschueren/map-age-cleaner/issues/5
+        // @ts-expect-error
+        mapAgeCleaner(cache);
+    }
+    const memoized = function (...arguments_) {
+        const key = cacheKey ? cacheKey(arguments_) : arguments_[0];
+        const cacheItem = cache.get(key);
+        if (cacheItem) {
+            return cacheItem.data;
+        }
+        const result = fn.apply(this, arguments_);
+        cache.set(key, {
+            data: result,
+            maxAge: maxAge ? Date.now() + maxAge : Number.POSITIVE_INFINITY
+        });
+        return result;
+    };
+    mimicFn(memoized, fn, {
+        ignoreNonConfigurable: true
+    });
+    cacheStore.set(memoized, cache);
+    return memoized;
+};
+/**
+@returns A [decorator](https://github.com/tc39/proposal-decorators) to memoize class methods or static class methods.
+
+@example
+```
+import mem = require('mem');
+
+class Example {
+    index = 0
+
+    @mem.decorator()
+    counter() {
+        return ++this.index;
+    }
+}
+
+class ExampleWithOptions {
+    index = 0
+
+    @mem.decorator({maxAge: 1000})
+    counter() {
+        return ++this.index;
+    }
+}
+```
+*/
+mem.decorator = (options = {}) => (target, propertyKey, descriptor) => {
+    const input = target[propertyKey];
+    if (typeof input !== 'function') {
+        throw new TypeError('The decorated value must be a function');
+    }
+    delete descriptor.value;
+    delete descriptor.writable;
+    descriptor.get = function () {
+        if (!decoratorInstanceMap.has(this)) {
+            const value = mem(input, options);
+            decoratorInstanceMap.set(this, value);
+            return value;
+        }
+        return decoratorInstanceMap.get(this);
+    };
+};
+/**
+Clear all cached data of a memoized function.
+
+@param fn - Memoized function.
+*/
+mem.clear = (fn) => {
+    const cache = cacheStore.get(fn);
+    if (!cache) {
+        throw new TypeError('Can\'t clear a function that was not memoized!');
+    }
+    if (typeof cache.clear !== 'function') {
+        throw new TypeError('The cache Map can\'t be cleared!');
+    }
+    cache.clear();
+};
+module.exports = mem;
+
+
+/***/ }),
+
+/***/ "./node_modules/mem/node_modules/mimic-fn/index.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/mem/node_modules/mimic-fn/index.js ***!
+  \*********************************************************/
+/***/ ((module) => {
+
+
+
+const copyProperty = (to, from, property, ignoreNonConfigurable) => {
+	// `Function#length` should reflect the parameters of `to` not `from` since we keep its body.
+	// `Function#prototype` is non-writable and non-configurable so can never be modified.
+	if (property === 'length' || property === 'prototype') {
+		return;
+	}
+
+	// `Function#arguments` and `Function#caller` should not be copied. They were reported to be present in `Reflect.ownKeys` for some devices in React Native (#41), so we explicitly ignore them here.
+	if (property === 'arguments' || property === 'caller') {
+		return;
+	}
+
+	const toDescriptor = Object.getOwnPropertyDescriptor(to, property);
+	const fromDescriptor = Object.getOwnPropertyDescriptor(from, property);
+
+	if (!canCopyProperty(toDescriptor, fromDescriptor) && ignoreNonConfigurable) {
+		return;
+	}
+
+	Object.defineProperty(to, property, fromDescriptor);
+};
+
+// `Object.defineProperty()` throws if the property exists, is not configurable and either:
+//  - one its descriptors is changed
+//  - it is non-writable and its value is changed
+const canCopyProperty = function (toDescriptor, fromDescriptor) {
+	return toDescriptor === undefined || toDescriptor.configurable || (
+		toDescriptor.writable === fromDescriptor.writable &&
+		toDescriptor.enumerable === fromDescriptor.enumerable &&
+		toDescriptor.configurable === fromDescriptor.configurable &&
+		(toDescriptor.writable || toDescriptor.value === fromDescriptor.value)
+	);
+};
+
+const changePrototype = (to, from) => {
+	const fromPrototype = Object.getPrototypeOf(from);
+	if (fromPrototype === Object.getPrototypeOf(to)) {
+		return;
+	}
+
+	Object.setPrototypeOf(to, fromPrototype);
+};
+
+const wrappedToString = (withName, fromBody) => `/* Wrapped ${withName}*/\n${fromBody}`;
+
+const toStringDescriptor = Object.getOwnPropertyDescriptor(Function.prototype, 'toString');
+const toStringName = Object.getOwnPropertyDescriptor(Function.prototype.toString, 'name');
+
+// We call `from.toString()` early (not lazily) to ensure `from` can be garbage collected.
+// We use `bind()` instead of a closure for the same reason.
+// Calling `from.toString()` early also allows caching it in case `to.toString()` is called several times.
+const changeToString = (to, from, name) => {
+	const withName = name === '' ? '' : `with ${name.trim()}() `;
+	const newToString = wrappedToString.bind(null, withName, from.toString());
+	// Ensure `to.toString.toString` is non-enumerable and has the same `same`
+	Object.defineProperty(newToString, 'name', toStringName);
+	Object.defineProperty(to, 'toString', {...toStringDescriptor, value: newToString});
+};
+
+const mimicFn = (to, from, {ignoreNonConfigurable = false} = {}) => {
+	const {name} = to;
+
+	for (const property of Reflect.ownKeys(from)) {
+		copyProperty(to, from, property, ignoreNonConfigurable);
+	}
+
+	changePrototype(to, from);
+	changeToString(to, from, name);
+
+	return to;
+};
+
+module.exports = mimicFn;
+
+
+/***/ }),
+
+/***/ "./node_modules/p-defer/index.js":
+/*!***************************************!*\
+  !*** ./node_modules/p-defer/index.js ***!
+  \***************************************/
+/***/ ((module) => {
+
+
+module.exports = () => {
+	const ret = {};
+
+	ret.promise = new Promise((resolve, reject) => {
+		ret.resolve = resolve;
+		ret.reject = reject;
+	});
+
+	return ret;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/react/cjs/react-jsx-runtime.development.js":
+/*!*****************************************************************!*\
+  !*** ./node_modules/react/cjs/react-jsx-runtime.development.js ***!
+  \*****************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+/**
+ * @license React
+ * react-jsx-runtime.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+
+
+if (true) {
+  (function() {
+'use strict';
+
+var React = __webpack_require__(/*! react */ "react");
+
+// ATTENTION
+// When adding new symbols to this file,
+// Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
+// The Symbol used to tag the ReactElement-like types.
+var REACT_ELEMENT_TYPE = Symbol.for('react.element');
+var REACT_PORTAL_TYPE = Symbol.for('react.portal');
+var REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
+var REACT_STRICT_MODE_TYPE = Symbol.for('react.strict_mode');
+var REACT_PROFILER_TYPE = Symbol.for('react.profiler');
+var REACT_PROVIDER_TYPE = Symbol.for('react.provider');
+var REACT_CONTEXT_TYPE = Symbol.for('react.context');
+var REACT_FORWARD_REF_TYPE = Symbol.for('react.forward_ref');
+var REACT_SUSPENSE_TYPE = Symbol.for('react.suspense');
+var REACT_SUSPENSE_LIST_TYPE = Symbol.for('react.suspense_list');
+var REACT_MEMO_TYPE = Symbol.for('react.memo');
+var REACT_LAZY_TYPE = Symbol.for('react.lazy');
+var REACT_OFFSCREEN_TYPE = Symbol.for('react.offscreen');
+var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+var FAUX_ITERATOR_SYMBOL = '@@iterator';
+function getIteratorFn(maybeIterable) {
+  if (maybeIterable === null || typeof maybeIterable !== 'object') {
+    return null;
+  }
+
+  var maybeIterator = MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL] || maybeIterable[FAUX_ITERATOR_SYMBOL];
+
+  if (typeof maybeIterator === 'function') {
+    return maybeIterator;
+  }
+
+  return null;
+}
+
+var ReactSharedInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+
+function error(format) {
+  {
+    {
+      for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+        args[_key2 - 1] = arguments[_key2];
+      }
+
+      printWarning('error', format, args);
+    }
+  }
+}
+
+function printWarning(level, format, args) {
+  // When changing this logic, you might want to also
+  // update consoleWithStackDev.www.js as well.
+  {
+    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+    var stack = ReactDebugCurrentFrame.getStackAddendum();
+
+    if (stack !== '') {
+      format += '%s';
+      args = args.concat([stack]);
+    } // eslint-disable-next-line react-internal/safe-string-coercion
+
+
+    var argsWithFormat = args.map(function (item) {
+      return String(item);
+    }); // Careful: RN currently depends on this prefix
+
+    argsWithFormat.unshift('Warning: ' + format); // We intentionally don't use spread (or .apply) directly because it
+    // breaks IE9: https://github.com/facebook/react/issues/13610
+    // eslint-disable-next-line react-internal/no-production-logging
+
+    Function.prototype.apply.call(console[level], console, argsWithFormat);
+  }
+}
+
+// -----------------------------------------------------------------------------
+
+var enableScopeAPI = false; // Experimental Create Event Handle API.
+var enableCacheElement = false;
+var enableTransitionTracing = false; // No known bugs, but needs performance testing
+
+var enableLegacyHidden = false; // Enables unstable_avoidThisFallback feature in Fiber
+// stuff. Intended to enable React core members to more easily debug scheduling
+// issues in DEV builds.
+
+var enableDebugTracing = false; // Track which Fiber(s) schedule render work.
+
+var REACT_MODULE_REFERENCE;
+
+{
+  REACT_MODULE_REFERENCE = Symbol.for('react.module.reference');
+}
+
+function isValidElementType(type) {
+  if (typeof type === 'string' || typeof type === 'function') {
+    return true;
+  } // Note: typeof might be other than 'symbol' or 'number' (e.g. if it's a polyfill).
+
+
+  if (type === REACT_FRAGMENT_TYPE || type === REACT_PROFILER_TYPE || enableDebugTracing  || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || type === REACT_SUSPENSE_LIST_TYPE || enableLegacyHidden  || type === REACT_OFFSCREEN_TYPE || enableScopeAPI  || enableCacheElement  || enableTransitionTracing ) {
+    return true;
+  }
+
+  if (typeof type === 'object' && type !== null) {
+    if (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
+    // types supported by any Flight configuration anywhere since
+    // we don't know which Flight build this will end up being used
+    // with.
+    type.$$typeof === REACT_MODULE_REFERENCE || type.getModuleId !== undefined) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function getWrappedName(outerType, innerType, wrapperName) {
+  var displayName = outerType.displayName;
+
+  if (displayName) {
+    return displayName;
+  }
+
+  var functionName = innerType.displayName || innerType.name || '';
+  return functionName !== '' ? wrapperName + "(" + functionName + ")" : wrapperName;
+} // Keep in sync with react-reconciler/getComponentNameFromFiber
+
+
+function getContextName(type) {
+  return type.displayName || 'Context';
+} // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
+
+
+function getComponentNameFromType(type) {
+  if (type == null) {
+    // Host root, text node or just invalid type.
+    return null;
+  }
+
+  {
+    if (typeof type.tag === 'number') {
+      error('Received an unexpected object in getComponentNameFromType(). ' + 'This is likely a bug in React. Please file an issue.');
+    }
+  }
+
+  if (typeof type === 'function') {
+    return type.displayName || type.name || null;
+  }
+
+  if (typeof type === 'string') {
+    return type;
+  }
+
+  switch (type) {
+    case REACT_FRAGMENT_TYPE:
+      return 'Fragment';
+
+    case REACT_PORTAL_TYPE:
+      return 'Portal';
+
+    case REACT_PROFILER_TYPE:
+      return 'Profiler';
+
+    case REACT_STRICT_MODE_TYPE:
+      return 'StrictMode';
+
+    case REACT_SUSPENSE_TYPE:
+      return 'Suspense';
+
+    case REACT_SUSPENSE_LIST_TYPE:
+      return 'SuspenseList';
+
+  }
+
+  if (typeof type === 'object') {
+    switch (type.$$typeof) {
+      case REACT_CONTEXT_TYPE:
+        var context = type;
+        return getContextName(context) + '.Consumer';
+
+      case REACT_PROVIDER_TYPE:
+        var provider = type;
+        return getContextName(provider._context) + '.Provider';
+
+      case REACT_FORWARD_REF_TYPE:
+        return getWrappedName(type, type.render, 'ForwardRef');
+
+      case REACT_MEMO_TYPE:
+        var outerName = type.displayName || null;
+
+        if (outerName !== null) {
+          return outerName;
+        }
+
+        return getComponentNameFromType(type.type) || 'Memo';
+
+      case REACT_LAZY_TYPE:
+        {
+          var lazyComponent = type;
+          var payload = lazyComponent._payload;
+          var init = lazyComponent._init;
+
+          try {
+            return getComponentNameFromType(init(payload));
+          } catch (x) {
+            return null;
+          }
+        }
+
+      // eslint-disable-next-line no-fallthrough
+    }
+  }
+
+  return null;
+}
+
+var assign = Object.assign;
+
+// Helpers to patch console.logs to avoid logging during side-effect free
+// replaying on render function. This currently only patches the object
+// lazily which won't cover if the log function was extracted eagerly.
+// We could also eagerly patch the method.
+var disabledDepth = 0;
+var prevLog;
+var prevInfo;
+var prevWarn;
+var prevError;
+var prevGroup;
+var prevGroupCollapsed;
+var prevGroupEnd;
+
+function disabledLog() {}
+
+disabledLog.__reactDisabledLog = true;
+function disableLogs() {
+  {
+    if (disabledDepth === 0) {
+      /* eslint-disable react-internal/no-production-logging */
+      prevLog = console.log;
+      prevInfo = console.info;
+      prevWarn = console.warn;
+      prevError = console.error;
+      prevGroup = console.group;
+      prevGroupCollapsed = console.groupCollapsed;
+      prevGroupEnd = console.groupEnd; // https://github.com/facebook/react/issues/19099
+
+      var props = {
+        configurable: true,
+        enumerable: true,
+        value: disabledLog,
+        writable: true
+      }; // $FlowFixMe Flow thinks console is immutable.
+
+      Object.defineProperties(console, {
+        info: props,
+        log: props,
+        warn: props,
+        error: props,
+        group: props,
+        groupCollapsed: props,
+        groupEnd: props
+      });
+      /* eslint-enable react-internal/no-production-logging */
+    }
+
+    disabledDepth++;
+  }
+}
+function reenableLogs() {
+  {
+    disabledDepth--;
+
+    if (disabledDepth === 0) {
+      /* eslint-disable react-internal/no-production-logging */
+      var props = {
+        configurable: true,
+        enumerable: true,
+        writable: true
+      }; // $FlowFixMe Flow thinks console is immutable.
+
+      Object.defineProperties(console, {
+        log: assign({}, props, {
+          value: prevLog
+        }),
+        info: assign({}, props, {
+          value: prevInfo
+        }),
+        warn: assign({}, props, {
+          value: prevWarn
+        }),
+        error: assign({}, props, {
+          value: prevError
+        }),
+        group: assign({}, props, {
+          value: prevGroup
+        }),
+        groupCollapsed: assign({}, props, {
+          value: prevGroupCollapsed
+        }),
+        groupEnd: assign({}, props, {
+          value: prevGroupEnd
+        })
+      });
+      /* eslint-enable react-internal/no-production-logging */
+    }
+
+    if (disabledDepth < 0) {
+      error('disabledDepth fell below zero. ' + 'This is a bug in React. Please file an issue.');
+    }
+  }
+}
+
+var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+var prefix;
+function describeBuiltInComponentFrame(name, source, ownerFn) {
+  {
+    if (prefix === undefined) {
+      // Extract the VM specific prefix used by each line.
+      try {
+        throw Error();
+      } catch (x) {
+        var match = x.stack.trim().match(/\n( *(at )?)/);
+        prefix = match && match[1] || '';
+      }
+    } // We use the prefix to ensure our stacks line up with native stack frames.
+
+
+    return '\n' + prefix + name;
+  }
+}
+var reentry = false;
+var componentFrameCache;
+
+{
+  var PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+  componentFrameCache = new PossiblyWeakMap();
+}
+
+function describeNativeComponentFrame(fn, construct) {
+  // If something asked for a stack inside a fake render, it should get ignored.
+  if ( !fn || reentry) {
+    return '';
+  }
+
+  {
+    var frame = componentFrameCache.get(fn);
+
+    if (frame !== undefined) {
+      return frame;
+    }
+  }
+
+  var control;
+  reentry = true;
+  var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe It does accept undefined.
+
+  Error.prepareStackTrace = undefined;
+  var previousDispatcher;
+
+  {
+    previousDispatcher = ReactCurrentDispatcher.current; // Set the dispatcher in DEV because this might be call in the render function
+    // for warnings.
+
+    ReactCurrentDispatcher.current = null;
+    disableLogs();
+  }
+
+  try {
+    // This should throw.
+    if (construct) {
+      // Something should be setting the props in the constructor.
+      var Fake = function () {
+        throw Error();
+      }; // $FlowFixMe
+
+
+      Object.defineProperty(Fake.prototype, 'props', {
+        set: function () {
+          // We use a throwing setter instead of frozen or non-writable props
+          // because that won't throw in a non-strict mode function.
+          throw Error();
+        }
+      });
+
+      if (typeof Reflect === 'object' && Reflect.construct) {
+        // We construct a different control for this case to include any extra
+        // frames added by the construct call.
+        try {
+          Reflect.construct(Fake, []);
+        } catch (x) {
+          control = x;
+        }
+
+        Reflect.construct(fn, [], Fake);
+      } else {
+        try {
+          Fake.call();
+        } catch (x) {
+          control = x;
+        }
+
+        fn.call(Fake.prototype);
+      }
+    } else {
+      try {
+        throw Error();
+      } catch (x) {
+        control = x;
+      }
+
+      fn();
+    }
+  } catch (sample) {
+    // This is inlined manually because closure doesn't do it for us.
+    if (sample && control && typeof sample.stack === 'string') {
+      // This extracts the first frame from the sample that isn't also in the control.
+      // Skipping one frame that we assume is the frame that calls the two.
+      var sampleLines = sample.stack.split('\n');
+      var controlLines = control.stack.split('\n');
+      var s = sampleLines.length - 1;
+      var c = controlLines.length - 1;
+
+      while (s >= 1 && c >= 0 && sampleLines[s] !== controlLines[c]) {
+        // We expect at least one stack frame to be shared.
+        // Typically this will be the root most one. However, stack frames may be
+        // cut off due to maximum stack limits. In this case, one maybe cut off
+        // earlier than the other. We assume that the sample is longer or the same
+        // and there for cut off earlier. So we should find the root most frame in
+        // the sample somewhere in the control.
+        c--;
+      }
+
+      for (; s >= 1 && c >= 0; s--, c--) {
+        // Next we find the first one that isn't the same which should be the
+        // frame that called our sample function and the control.
+        if (sampleLines[s] !== controlLines[c]) {
+          // In V8, the first line is describing the message but other VMs don't.
+          // If we're about to return the first line, and the control is also on the same
+          // line, that's a pretty good indicator that our sample threw at same line as
+          // the control. I.e. before we entered the sample frame. So we ignore this result.
+          // This can happen if you passed a class to function component, or non-function.
+          if (s !== 1 || c !== 1) {
+            do {
+              s--;
+              c--; // We may still have similar intermediate frames from the construct call.
+              // The next one that isn't the same should be our match though.
+
+              if (c < 0 || sampleLines[s] !== controlLines[c]) {
+                // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
+                var _frame = '\n' + sampleLines[s].replace(' at new ', ' at '); // If our component frame is labeled "<anonymous>"
+                // but we have a user-provided "displayName"
+                // splice it in to make the stack more readable.
+
+
+                if (fn.displayName && _frame.includes('<anonymous>')) {
+                  _frame = _frame.replace('<anonymous>', fn.displayName);
+                }
+
+                {
+                  if (typeof fn === 'function') {
+                    componentFrameCache.set(fn, _frame);
+                  }
+                } // Return the line we found.
+
+
+                return _frame;
+              }
+            } while (s >= 1 && c >= 0);
+          }
+
+          break;
+        }
+      }
+    }
+  } finally {
+    reentry = false;
+
+    {
+      ReactCurrentDispatcher.current = previousDispatcher;
+      reenableLogs();
+    }
+
+    Error.prepareStackTrace = previousPrepareStackTrace;
+  } // Fallback to just using the name if we couldn't make it throw.
+
+
+  var name = fn ? fn.displayName || fn.name : '';
+  var syntheticFrame = name ? describeBuiltInComponentFrame(name) : '';
+
+  {
+    if (typeof fn === 'function') {
+      componentFrameCache.set(fn, syntheticFrame);
+    }
+  }
+
+  return syntheticFrame;
+}
+function describeFunctionComponentFrame(fn, source, ownerFn) {
+  {
+    return describeNativeComponentFrame(fn, false);
+  }
+}
+
+function shouldConstruct(Component) {
+  var prototype = Component.prototype;
+  return !!(prototype && prototype.isReactComponent);
+}
+
+function describeUnknownElementTypeFrameInDEV(type, source, ownerFn) {
+
+  if (type == null) {
+    return '';
+  }
+
+  if (typeof type === 'function') {
+    {
+      return describeNativeComponentFrame(type, shouldConstruct(type));
+    }
+  }
+
+  if (typeof type === 'string') {
+    return describeBuiltInComponentFrame(type);
+  }
+
+  switch (type) {
+    case REACT_SUSPENSE_TYPE:
+      return describeBuiltInComponentFrame('Suspense');
+
+    case REACT_SUSPENSE_LIST_TYPE:
+      return describeBuiltInComponentFrame('SuspenseList');
+  }
+
+  if (typeof type === 'object') {
+    switch (type.$$typeof) {
+      case REACT_FORWARD_REF_TYPE:
+        return describeFunctionComponentFrame(type.render);
+
+      case REACT_MEMO_TYPE:
+        // Memo may contain any component type so we recursively resolve it.
+        return describeUnknownElementTypeFrameInDEV(type.type, source, ownerFn);
+
+      case REACT_LAZY_TYPE:
+        {
+          var lazyComponent = type;
+          var payload = lazyComponent._payload;
+          var init = lazyComponent._init;
+
+          try {
+            // Lazy may contain any component type so we recursively resolve it.
+            return describeUnknownElementTypeFrameInDEV(init(payload), source, ownerFn);
+          } catch (x) {}
+        }
+    }
+  }
+
+  return '';
+}
+
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+var loggedTypeFailures = {};
+var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+
+function setCurrentlyValidatingElement(element) {
+  {
+    if (element) {
+      var owner = element._owner;
+      var stack = describeUnknownElementTypeFrameInDEV(element.type, element._source, owner ? owner.type : null);
+      ReactDebugCurrentFrame.setExtraStackFrame(stack);
+    } else {
+      ReactDebugCurrentFrame.setExtraStackFrame(null);
+    }
+  }
+}
+
+function checkPropTypes(typeSpecs, values, location, componentName, element) {
+  {
+    // $FlowFixMe This is okay but Flow doesn't know it.
+    var has = Function.call.bind(hasOwnProperty);
+
+    for (var typeSpecName in typeSpecs) {
+      if (has(typeSpecs, typeSpecName)) {
+        var error$1 = void 0; // Prop type validation may throw. In case they do, we don't want to
+        // fail the render phase where it didn't fail before. So we log it.
+        // After these have been cleaned up, we'll let them throw.
+
+        try {
+          // This is intentionally an invariant that gets caught. It's the same
+          // behavior as without this statement except with a better message.
+          if (typeof typeSpecs[typeSpecName] !== 'function') {
+            // eslint-disable-next-line react-internal/prod-error-codes
+            var err = Error((componentName || 'React class') + ': ' + location + ' type `' + typeSpecName + '` is invalid; ' + 'it must be a function, usually from the `prop-types` package, but received `' + typeof typeSpecs[typeSpecName] + '`.' + 'This often happens because of typos such as `PropTypes.function` instead of `PropTypes.func`.');
+            err.name = 'Invariant Violation';
+            throw err;
+          }
+
+          error$1 = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED');
+        } catch (ex) {
+          error$1 = ex;
+        }
+
+        if (error$1 && !(error$1 instanceof Error)) {
+          setCurrentlyValidatingElement(element);
+
+          error('%s: type specification of %s' + ' `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error$1);
+
+          setCurrentlyValidatingElement(null);
+        }
+
+        if (error$1 instanceof Error && !(error$1.message in loggedTypeFailures)) {
+          // Only monitor this failure once because there tends to be a lot of the
+          // same error.
+          loggedTypeFailures[error$1.message] = true;
+          setCurrentlyValidatingElement(element);
+
+          error('Failed %s type: %s', location, error$1.message);
+
+          setCurrentlyValidatingElement(null);
+        }
+      }
+    }
+  }
+}
+
+var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
+
+function isArray(a) {
+  return isArrayImpl(a);
+}
+
+/*
+ * The `'' + value` pattern (used in in perf-sensitive code) throws for Symbol
+ * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
+ *
+ * The functions in this module will throw an easier-to-understand,
+ * easier-to-debug exception with a clear errors message message explaining the
+ * problem. (Instead of a confusing exception thrown inside the implementation
+ * of the `value` object).
+ */
+// $FlowFixMe only called in DEV, so void return is not possible.
+function typeName(value) {
+  {
+    // toStringTag is needed for namespaced types like Temporal.Instant
+    var hasToStringTag = typeof Symbol === 'function' && Symbol.toStringTag;
+    var type = hasToStringTag && value[Symbol.toStringTag] || value.constructor.name || 'Object';
+    return type;
+  }
+} // $FlowFixMe only called in DEV, so void return is not possible.
+
+
+function willCoercionThrow(value) {
+  {
+    try {
+      testStringCoercion(value);
+      return false;
+    } catch (e) {
+      return true;
+    }
+  }
+}
+
+function testStringCoercion(value) {
+  // If you ended up here by following an exception call stack, here's what's
+  // happened: you supplied an object or symbol value to React (as a prop, key,
+  // DOM attribute, CSS property, string ref, etc.) and when React tried to
+  // coerce it to a string using `'' + value`, an exception was thrown.
+  //
+  // The most common types that will cause this exception are `Symbol` instances
+  // and Temporal objects like `Temporal.Instant`. But any object that has a
+  // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
+  // exception. (Library authors do this to prevent users from using built-in
+  // numeric operators like `+` or comparison operators like `>=` because custom
+  // methods are needed to perform accurate arithmetic or comparison.)
+  //
+  // To fix the problem, coerce this object or symbol value to a string before
+  // passing it to React. The most reliable way is usually `String(value)`.
+  //
+  // To find which value is throwing, check the browser or debugger console.
+  // Before this exception was thrown, there should be `console.error` output
+  // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
+  // problem and how that type was used: key, atrribute, input value prop, etc.
+  // In most cases, this console output also shows the component and its
+  // ancestor components where the exception happened.
+  //
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  return '' + value;
+}
+function checkKeyStringCoercion(value) {
+  {
+    if (willCoercionThrow(value)) {
+      error('The provided key is an unsupported type %s.' + ' This value must be coerced to a string before before using it here.', typeName(value));
+
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+
+var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+var RESERVED_PROPS = {
+  key: true,
+  ref: true,
+  __self: true,
+  __source: true
+};
+var specialPropKeyWarningShown;
+var specialPropRefWarningShown;
+var didWarnAboutStringRefs;
+
+{
+  didWarnAboutStringRefs = {};
+}
+
+function hasValidRef(config) {
+  {
+    if (hasOwnProperty.call(config, 'ref')) {
+      var getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
+
+      if (getter && getter.isReactWarning) {
+        return false;
+      }
+    }
+  }
+
+  return config.ref !== undefined;
+}
+
+function hasValidKey(config) {
+  {
+    if (hasOwnProperty.call(config, 'key')) {
+      var getter = Object.getOwnPropertyDescriptor(config, 'key').get;
+
+      if (getter && getter.isReactWarning) {
+        return false;
+      }
+    }
+  }
+
+  return config.key !== undefined;
+}
+
+function warnIfStringRefCannotBeAutoConverted(config, self) {
+  {
+    if (typeof config.ref === 'string' && ReactCurrentOwner.current && self && ReactCurrentOwner.current.stateNode !== self) {
+      var componentName = getComponentNameFromType(ReactCurrentOwner.current.type);
+
+      if (!didWarnAboutStringRefs[componentName]) {
+        error('Component "%s" contains the string ref "%s". ' + 'Support for string refs will be removed in a future major release. ' + 'This case cannot be automatically converted to an arrow function. ' + 'We ask you to manually fix this case by using useRef() or createRef() instead. ' + 'Learn more about using refs safely here: ' + 'https://reactjs.org/link/strict-mode-string-ref', getComponentNameFromType(ReactCurrentOwner.current.type), config.ref);
+
+        didWarnAboutStringRefs[componentName] = true;
+      }
+    }
+  }
+}
+
+function defineKeyPropWarningGetter(props, displayName) {
+  {
+    var warnAboutAccessingKey = function () {
+      if (!specialPropKeyWarningShown) {
+        specialPropKeyWarningShown = true;
+
+        error('%s: `key` is not a prop. Trying to access it will result ' + 'in `undefined` being returned. If you need to access the same ' + 'value within the child component, you should pass it as a different ' + 'prop. (https://reactjs.org/link/special-props)', displayName);
+      }
+    };
+
+    warnAboutAccessingKey.isReactWarning = true;
+    Object.defineProperty(props, 'key', {
+      get: warnAboutAccessingKey,
+      configurable: true
+    });
+  }
+}
+
+function defineRefPropWarningGetter(props, displayName) {
+  {
+    var warnAboutAccessingRef = function () {
+      if (!specialPropRefWarningShown) {
+        specialPropRefWarningShown = true;
+
+        error('%s: `ref` is not a prop. Trying to access it will result ' + 'in `undefined` being returned. If you need to access the same ' + 'value within the child component, you should pass it as a different ' + 'prop. (https://reactjs.org/link/special-props)', displayName);
+      }
+    };
+
+    warnAboutAccessingRef.isReactWarning = true;
+    Object.defineProperty(props, 'ref', {
+      get: warnAboutAccessingRef,
+      configurable: true
+    });
+  }
+}
+/**
+ * Factory method to create a new React element. This no longer adheres to
+ * the class pattern, so do not use new to call it. Also, instanceof check
+ * will not work. Instead test $$typeof field against Symbol.for('react.element') to check
+ * if something is a React Element.
+ *
+ * @param {*} type
+ * @param {*} props
+ * @param {*} key
+ * @param {string|object} ref
+ * @param {*} owner
+ * @param {*} self A *temporary* helper to detect places where `this` is
+ * different from the `owner` when React.createElement is called, so that we
+ * can warn. We want to get rid of owner and replace string `ref`s with arrow
+ * functions, and as long as `this` and owner are the same, there will be no
+ * change in behavior.
+ * @param {*} source An annotation object (added by a transpiler or otherwise)
+ * indicating filename, line number, and/or other information.
+ * @internal
+ */
+
+
+var ReactElement = function (type, key, ref, self, source, owner, props) {
+  var element = {
+    // This tag allows us to uniquely identify this as a React Element
+    $$typeof: REACT_ELEMENT_TYPE,
+    // Built-in properties that belong on the element
+    type: type,
+    key: key,
+    ref: ref,
+    props: props,
+    // Record the component responsible for creating this element.
+    _owner: owner
+  };
+
+  {
+    // The validation flag is currently mutative. We put it on
+    // an external backing store so that we can freeze the whole object.
+    // This can be replaced with a WeakMap once they are implemented in
+    // commonly used development environments.
+    element._store = {}; // To make comparing ReactElements easier for testing purposes, we make
+    // the validation flag non-enumerable (where possible, which should
+    // include every environment we run tests in), so the test framework
+    // ignores it.
+
+    Object.defineProperty(element._store, 'validated', {
+      configurable: false,
+      enumerable: false,
+      writable: true,
+      value: false
+    }); // self and source are DEV only properties.
+
+    Object.defineProperty(element, '_self', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: self
+    }); // Two elements created in two different places should be considered
+    // equal for testing purposes and therefore we hide it from enumeration.
+
+    Object.defineProperty(element, '_source', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: source
+    });
+
+    if (Object.freeze) {
+      Object.freeze(element.props);
+      Object.freeze(element);
+    }
+  }
+
+  return element;
+};
+/**
+ * https://github.com/reactjs/rfcs/pull/107
+ * @param {*} type
+ * @param {object} props
+ * @param {string} key
+ */
+
+function jsxDEV(type, config, maybeKey, source, self) {
+  {
+    var propName; // Reserved names are extracted
+
+    var props = {};
+    var key = null;
+    var ref = null; // Currently, key can be spread in as a prop. This causes a potential
+    // issue if key is also explicitly declared (ie. <div {...props} key="Hi" />
+    // or <div key="Hi" {...props} /> ). We want to deprecate key spread,
+    // but as an intermediary step, we will use jsxDEV for everything except
+    // <div {...props} key="Hi" />, because we aren't currently able to tell if
+    // key is explicitly declared to be undefined or not.
+
+    if (maybeKey !== undefined) {
+      {
+        checkKeyStringCoercion(maybeKey);
+      }
+
+      key = '' + maybeKey;
+    }
+
+    if (hasValidKey(config)) {
+      {
+        checkKeyStringCoercion(config.key);
+      }
+
+      key = '' + config.key;
+    }
+
+    if (hasValidRef(config)) {
+      ref = config.ref;
+      warnIfStringRefCannotBeAutoConverted(config, self);
+    } // Remaining properties are added to a new props object
+
+
+    for (propName in config) {
+      if (hasOwnProperty.call(config, propName) && !RESERVED_PROPS.hasOwnProperty(propName)) {
+        props[propName] = config[propName];
+      }
+    } // Resolve default props
+
+
+    if (type && type.defaultProps) {
+      var defaultProps = type.defaultProps;
+
+      for (propName in defaultProps) {
+        if (props[propName] === undefined) {
+          props[propName] = defaultProps[propName];
+        }
+      }
+    }
+
+    if (key || ref) {
+      var displayName = typeof type === 'function' ? type.displayName || type.name || 'Unknown' : type;
+
+      if (key) {
+        defineKeyPropWarningGetter(props, displayName);
+      }
+
+      if (ref) {
+        defineRefPropWarningGetter(props, displayName);
+      }
+    }
+
+    return ReactElement(type, key, ref, self, source, ReactCurrentOwner.current, props);
+  }
+}
+
+var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
+var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
+
+function setCurrentlyValidatingElement$1(element) {
+  {
+    if (element) {
+      var owner = element._owner;
+      var stack = describeUnknownElementTypeFrameInDEV(element.type, element._source, owner ? owner.type : null);
+      ReactDebugCurrentFrame$1.setExtraStackFrame(stack);
+    } else {
+      ReactDebugCurrentFrame$1.setExtraStackFrame(null);
+    }
+  }
+}
+
+var propTypesMisspellWarningShown;
+
+{
+  propTypesMisspellWarningShown = false;
+}
+/**
+ * Verifies the object is a ReactElement.
+ * See https://reactjs.org/docs/react-api.html#isvalidelement
+ * @param {?object} object
+ * @return {boolean} True if `object` is a ReactElement.
+ * @final
+ */
+
+
+function isValidElement(object) {
+  {
+    return typeof object === 'object' && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
+  }
+}
+
+function getDeclarationErrorAddendum() {
+  {
+    if (ReactCurrentOwner$1.current) {
+      var name = getComponentNameFromType(ReactCurrentOwner$1.current.type);
+
+      if (name) {
+        return '\n\nCheck the render method of `' + name + '`.';
+      }
+    }
+
+    return '';
+  }
+}
+
+function getSourceInfoErrorAddendum(source) {
+  {
+    if (source !== undefined) {
+      var fileName = source.fileName.replace(/^.*[\\\/]/, '');
+      var lineNumber = source.lineNumber;
+      return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
+    }
+
+    return '';
+  }
+}
+/**
+ * Warn if there's no key explicitly set on dynamic arrays of children or
+ * object keys are not valid. This allows us to keep track of children between
+ * updates.
+ */
+
+
+var ownerHasKeyUseWarning = {};
+
+function getCurrentComponentErrorInfo(parentType) {
+  {
+    var info = getDeclarationErrorAddendum();
+
+    if (!info) {
+      var parentName = typeof parentType === 'string' ? parentType : parentType.displayName || parentType.name;
+
+      if (parentName) {
+        info = "\n\nCheck the top-level render call using <" + parentName + ">.";
+      }
+    }
+
+    return info;
+  }
+}
+/**
+ * Warn if the element doesn't have an explicit key assigned to it.
+ * This element is in an array. The array could grow and shrink or be
+ * reordered. All children that haven't already been validated are required to
+ * have a "key" property assigned to it. Error statuses are cached so a warning
+ * will only be shown once.
+ *
+ * @internal
+ * @param {ReactElement} element Element that requires a key.
+ * @param {*} parentType element's parent's type.
+ */
+
+
+function validateExplicitKey(element, parentType) {
+  {
+    if (!element._store || element._store.validated || element.key != null) {
+      return;
+    }
+
+    element._store.validated = true;
+    var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
+
+    if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
+      return;
+    }
+
+    ownerHasKeyUseWarning[currentComponentErrorInfo] = true; // Usually the current owner is the offender, but if it accepts children as a
+    // property, it may be the creator of the child that's responsible for
+    // assigning it a key.
+
+    var childOwner = '';
+
+    if (element && element._owner && element._owner !== ReactCurrentOwner$1.current) {
+      // Give the component that originally created this child.
+      childOwner = " It was passed a child from " + getComponentNameFromType(element._owner.type) + ".";
+    }
+
+    setCurrentlyValidatingElement$1(element);
+
+    error('Each child in a list should have a unique "key" prop.' + '%s%s See https://reactjs.org/link/warning-keys for more information.', currentComponentErrorInfo, childOwner);
+
+    setCurrentlyValidatingElement$1(null);
+  }
+}
+/**
+ * Ensure that every element either is passed in a static location, in an
+ * array with an explicit keys property defined, or in an object literal
+ * with valid key property.
+ *
+ * @internal
+ * @param {ReactNode} node Statically passed child of any type.
+ * @param {*} parentType node's parent's type.
+ */
+
+
+function validateChildKeys(node, parentType) {
+  {
+    if (typeof node !== 'object') {
+      return;
+    }
+
+    if (isArray(node)) {
+      for (var i = 0; i < node.length; i++) {
+        var child = node[i];
+
+        if (isValidElement(child)) {
+          validateExplicitKey(child, parentType);
+        }
+      }
+    } else if (isValidElement(node)) {
+      // This element was passed in a valid location.
+      if (node._store) {
+        node._store.validated = true;
+      }
+    } else if (node) {
+      var iteratorFn = getIteratorFn(node);
+
+      if (typeof iteratorFn === 'function') {
+        // Entry iterators used to provide implicit keys,
+        // but now we print a separate warning for them later.
+        if (iteratorFn !== node.entries) {
+          var iterator = iteratorFn.call(node);
+          var step;
+
+          while (!(step = iterator.next()).done) {
+            if (isValidElement(step.value)) {
+              validateExplicitKey(step.value, parentType);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+/**
+ * Given an element, validate that its props follow the propTypes definition,
+ * provided by the type.
+ *
+ * @param {ReactElement} element
+ */
+
+
+function validatePropTypes(element) {
+  {
+    var type = element.type;
+
+    if (type === null || type === undefined || typeof type === 'string') {
+      return;
+    }
+
+    var propTypes;
+
+    if (typeof type === 'function') {
+      propTypes = type.propTypes;
+    } else if (typeof type === 'object' && (type.$$typeof === REACT_FORWARD_REF_TYPE || // Note: Memo only checks outer props here.
+    // Inner props are checked in the reconciler.
+    type.$$typeof === REACT_MEMO_TYPE)) {
+      propTypes = type.propTypes;
+    } else {
+      return;
+    }
+
+    if (propTypes) {
+      // Intentionally inside to avoid triggering lazy initializers:
+      var name = getComponentNameFromType(type);
+      checkPropTypes(propTypes, element.props, 'prop', name, element);
+    } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
+      propTypesMisspellWarningShown = true; // Intentionally inside to avoid triggering lazy initializers:
+
+      var _name = getComponentNameFromType(type);
+
+      error('Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?', _name || 'Unknown');
+    }
+
+    if (typeof type.getDefaultProps === 'function' && !type.getDefaultProps.isReactClassApproved) {
+      error('getDefaultProps is only used on classic React.createClass ' + 'definitions. Use a static property named `defaultProps` instead.');
+    }
+  }
+}
+/**
+ * Given a fragment, validate that it can only be provided with fragment props
+ * @param {ReactElement} fragment
+ */
+
+
+function validateFragmentProps(fragment) {
+  {
+    var keys = Object.keys(fragment.props);
+
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+
+      if (key !== 'children' && key !== 'key') {
+        setCurrentlyValidatingElement$1(fragment);
+
+        error('Invalid prop `%s` supplied to `React.Fragment`. ' + 'React.Fragment can only have `key` and `children` props.', key);
+
+        setCurrentlyValidatingElement$1(null);
+        break;
+      }
+    }
+
+    if (fragment.ref !== null) {
+      setCurrentlyValidatingElement$1(fragment);
+
+      error('Invalid attribute `ref` supplied to `React.Fragment`.');
+
+      setCurrentlyValidatingElement$1(null);
+    }
+  }
+}
+
+var didWarnAboutKeySpread = {};
+function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
+  {
+    var validType = isValidElementType(type); // We warn in this case but don't throw. We expect the element creation to
+    // succeed and there will likely be errors in render.
+
+    if (!validType) {
+      var info = '';
+
+      if (type === undefined || typeof type === 'object' && type !== null && Object.keys(type).length === 0) {
+        info += ' You likely forgot to export your component from the file ' + "it's defined in, or you might have mixed up default and named imports.";
+      }
+
+      var sourceInfo = getSourceInfoErrorAddendum(source);
+
+      if (sourceInfo) {
+        info += sourceInfo;
+      } else {
+        info += getDeclarationErrorAddendum();
+      }
+
+      var typeString;
+
+      if (type === null) {
+        typeString = 'null';
+      } else if (isArray(type)) {
+        typeString = 'array';
+      } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
+        typeString = "<" + (getComponentNameFromType(type.type) || 'Unknown') + " />";
+        info = ' Did you accidentally export a JSX literal instead of a component?';
+      } else {
+        typeString = typeof type;
+      }
+
+      error('React.jsx: type is invalid -- expected a string (for ' + 'built-in components) or a class/function (for composite ' + 'components) but got: %s.%s', typeString, info);
+    }
+
+    var element = jsxDEV(type, props, key, source, self); // The result can be nullish if a mock or a custom function is used.
+    // TODO: Drop this when these are no longer allowed as the type argument.
+
+    if (element == null) {
+      return element;
+    } // Skip key warning if the type isn't valid since our key validation logic
+    // doesn't expect a non-string/function type and can throw confusing errors.
+    // We don't want exception behavior to differ between dev and prod.
+    // (Rendering will throw with a helpful message and as soon as the type is
+    // fixed, the key warnings will appear.)
+
+
+    if (validType) {
+      var children = props.children;
+
+      if (children !== undefined) {
+        if (isStaticChildren) {
+          if (isArray(children)) {
+            for (var i = 0; i < children.length; i++) {
+              validateChildKeys(children[i], type);
+            }
+
+            if (Object.freeze) {
+              Object.freeze(children);
+            }
+          } else {
+            error('React.jsx: Static children should always be an array. ' + 'You are likely explicitly calling React.jsxs or React.jsxDEV. ' + 'Use the Babel transform instead.');
+          }
+        } else {
+          validateChildKeys(children, type);
+        }
+      }
+    }
+
+    {
+      if (hasOwnProperty.call(props, 'key')) {
+        var componentName = getComponentNameFromType(type);
+        var keys = Object.keys(props).filter(function (k) {
+          return k !== 'key';
+        });
+        var beforeExample = keys.length > 0 ? '{key: someKey, ' + keys.join(': ..., ') + ': ...}' : '{key: someKey}';
+
+        if (!didWarnAboutKeySpread[componentName + beforeExample]) {
+          var afterExample = keys.length > 0 ? '{' + keys.join(': ..., ') + ': ...}' : '{}';
+
+          error('A props object containing a "key" prop is being spread into JSX:\n' + '  let props = %s;\n' + '  <%s {...props} />\n' + 'React keys must be passed directly to JSX without using spread:\n' + '  let props = %s;\n' + '  <%s key={someKey} {...props} />', beforeExample, componentName, afterExample, componentName);
+
+          didWarnAboutKeySpread[componentName + beforeExample] = true;
+        }
+      }
+    }
+
+    if (type === REACT_FRAGMENT_TYPE) {
+      validateFragmentProps(element);
+    } else {
+      validatePropTypes(element);
+    }
+
+    return element;
+  }
+} // These two functions exist to still get child warnings in dev
+// even with the prod transform. This means that jsxDEV is purely
+// opt-in behavior for better messages but that we won't stop
+// giving you warnings if you use production apis.
+
+function jsxWithValidationStatic(type, props, key) {
+  {
+    return jsxWithValidation(type, props, key, true);
+  }
+}
+function jsxWithValidationDynamic(type, props, key) {
+  {
+    return jsxWithValidation(type, props, key, false);
+  }
+}
+
+var jsx =  jsxWithValidationDynamic ; // we may want to special case jsxs internally to take advantage of static children.
+// for now we can ship identical prod functions
+
+var jsxs =  jsxWithValidationStatic ;
+
+exports.Fragment = REACT_FRAGMENT_TYPE;
+exports.jsx = jsx;
+exports.jsxs = jsxs;
+  })();
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react/jsx-runtime.js":
+/*!*******************************************!*\
+  !*** ./node_modules/react/jsx-runtime.js ***!
+  \*******************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+
+
+if (false) {} else {
+  module.exports = __webpack_require__(/*! ./cjs/react-jsx-runtime.development.js */ "./node_modules/react/cjs/react-jsx-runtime.development.js");
+}
+
+
+/***/ }),
+
 /***/ "react":
 /*!************************!*\
   !*** external "React" ***!
@@ -243,6 +2145,2931 @@ module.exports = window["React"];
 /***/ ((module) => {
 
 module.exports = window["ReactDOM"];
+
+/***/ }),
+
+/***/ "./node_modules/@wojtekmaj/date-utils/dist/esm/index.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/@wojtekmaj/date-utils/dist/esm/index.js ***!
+  \**************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getCenturyEnd: () => (/* binding */ getCenturyEnd),
+/* harmony export */   getCenturyRange: () => (/* binding */ getCenturyRange),
+/* harmony export */   getCenturyStart: () => (/* binding */ getCenturyStart),
+/* harmony export */   getDate: () => (/* binding */ getDate),
+/* harmony export */   getDayEnd: () => (/* binding */ getDayEnd),
+/* harmony export */   getDayRange: () => (/* binding */ getDayRange),
+/* harmony export */   getDayStart: () => (/* binding */ getDayStart),
+/* harmony export */   getDaysInMonth: () => (/* binding */ getDaysInMonth),
+/* harmony export */   getDecadeEnd: () => (/* binding */ getDecadeEnd),
+/* harmony export */   getDecadeRange: () => (/* binding */ getDecadeRange),
+/* harmony export */   getDecadeStart: () => (/* binding */ getDecadeStart),
+/* harmony export */   getHours: () => (/* binding */ getHours),
+/* harmony export */   getHoursMinutes: () => (/* binding */ getHoursMinutes),
+/* harmony export */   getHoursMinutesSeconds: () => (/* binding */ getHoursMinutesSeconds),
+/* harmony export */   getISOLocalDate: () => (/* binding */ getISOLocalDate),
+/* harmony export */   getISOLocalDateTime: () => (/* binding */ getISOLocalDateTime),
+/* harmony export */   getISOLocalMonth: () => (/* binding */ getISOLocalMonth),
+/* harmony export */   getMilliseconds: () => (/* binding */ getMilliseconds),
+/* harmony export */   getMinutes: () => (/* binding */ getMinutes),
+/* harmony export */   getMonth: () => (/* binding */ getMonth),
+/* harmony export */   getMonthEnd: () => (/* binding */ getMonthEnd),
+/* harmony export */   getMonthHuman: () => (/* binding */ getMonthHuman),
+/* harmony export */   getMonthRange: () => (/* binding */ getMonthRange),
+/* harmony export */   getMonthStart: () => (/* binding */ getMonthStart),
+/* harmony export */   getNextCenturyEnd: () => (/* binding */ getNextCenturyEnd),
+/* harmony export */   getNextCenturyStart: () => (/* binding */ getNextCenturyStart),
+/* harmony export */   getNextDayEnd: () => (/* binding */ getNextDayEnd),
+/* harmony export */   getNextDayStart: () => (/* binding */ getNextDayStart),
+/* harmony export */   getNextDecadeEnd: () => (/* binding */ getNextDecadeEnd),
+/* harmony export */   getNextDecadeStart: () => (/* binding */ getNextDecadeStart),
+/* harmony export */   getNextMonthEnd: () => (/* binding */ getNextMonthEnd),
+/* harmony export */   getNextMonthStart: () => (/* binding */ getNextMonthStart),
+/* harmony export */   getNextYearEnd: () => (/* binding */ getNextYearEnd),
+/* harmony export */   getNextYearStart: () => (/* binding */ getNextYearStart),
+/* harmony export */   getPreviousCenturyEnd: () => (/* binding */ getPreviousCenturyEnd),
+/* harmony export */   getPreviousCenturyStart: () => (/* binding */ getPreviousCenturyStart),
+/* harmony export */   getPreviousDayEnd: () => (/* binding */ getPreviousDayEnd),
+/* harmony export */   getPreviousDayStart: () => (/* binding */ getPreviousDayStart),
+/* harmony export */   getPreviousDecadeEnd: () => (/* binding */ getPreviousDecadeEnd),
+/* harmony export */   getPreviousDecadeStart: () => (/* binding */ getPreviousDecadeStart),
+/* harmony export */   getPreviousMonthEnd: () => (/* binding */ getPreviousMonthEnd),
+/* harmony export */   getPreviousMonthStart: () => (/* binding */ getPreviousMonthStart),
+/* harmony export */   getPreviousYearEnd: () => (/* binding */ getPreviousYearEnd),
+/* harmony export */   getPreviousYearStart: () => (/* binding */ getPreviousYearStart),
+/* harmony export */   getSeconds: () => (/* binding */ getSeconds),
+/* harmony export */   getYear: () => (/* binding */ getYear),
+/* harmony export */   getYearEnd: () => (/* binding */ getYearEnd),
+/* harmony export */   getYearRange: () => (/* binding */ getYearRange),
+/* harmony export */   getYearStart: () => (/* binding */ getYearStart)
+/* harmony export */ });
+/**
+ * Utils
+ */
+function makeGetEdgeOfNeighbor(getPeriod, getEdgeOfPeriod, defaultOffset) {
+    return function makeGetEdgeOfNeighborInternal(date, offset) {
+        if (offset === void 0) { offset = defaultOffset; }
+        var previousPeriod = getPeriod(date) + offset;
+        return getEdgeOfPeriod(previousPeriod);
+    };
+}
+function makeGetEnd(getBeginOfNextPeriod) {
+    return function makeGetEndInternal(date) {
+        return new Date(getBeginOfNextPeriod(date).getTime() - 1);
+    };
+}
+function makeGetRange(getStart, getEnd) {
+    return function makeGetRangeInternal(date) {
+        return [getStart(date), getEnd(date)];
+    };
+}
+/**
+ * Simple getters - getting a property of a given point in time
+ */
+/**
+ * Gets year from a given date.
+ *
+ * @param {DateLike} date Date to get year from
+ * @returns {number} Year
+ */
+function getYear(date) {
+    if (date instanceof Date) {
+        return date.getFullYear();
+    }
+    if (typeof date === 'number') {
+        return date;
+    }
+    var year = parseInt(date, 10);
+    if (typeof date === 'string' && !isNaN(year)) {
+        return year;
+    }
+    throw new Error("Failed to get year from date: ".concat(date, "."));
+}
+/**
+ * Gets month from a given date.
+ *
+ * @param {Date} date Date to get month from
+ * @returns {number} Month
+ */
+function getMonth(date) {
+    if (date instanceof Date) {
+        return date.getMonth();
+    }
+    throw new Error("Failed to get month from date: ".concat(date, "."));
+}
+/**
+ * Gets human-readable month from a given date.
+ *
+ * @param {Date} date Date to get human-readable month from
+ * @returns {number} Human-readable month
+ */
+function getMonthHuman(date) {
+    if (date instanceof Date) {
+        return date.getMonth() + 1;
+    }
+    throw new Error("Failed to get human-readable month from date: ".concat(date, "."));
+}
+/**
+ * Gets day of the month from a given date.
+ *
+ * @param {Date} date Date to get day of the month from
+ * @returns {number} Day of the month
+ */
+function getDate(date) {
+    if (date instanceof Date) {
+        return date.getDate();
+    }
+    throw new Error("Failed to get year from date: ".concat(date, "."));
+}
+/**
+ * Gets hours from a given date.
+ *
+ * @param {Date | string} date Date to get hours from
+ * @returns {number} Hours
+ */
+function getHours(date) {
+    if (date instanceof Date) {
+        return date.getHours();
+    }
+    if (typeof date === 'string') {
+        var datePieces = date.split(':');
+        if (datePieces.length >= 2) {
+            var hoursString = datePieces[0];
+            if (hoursString) {
+                var hours = parseInt(hoursString, 10);
+                if (!isNaN(hours)) {
+                    return hours;
+                }
+            }
+        }
+    }
+    throw new Error("Failed to get hours from date: ".concat(date, "."));
+}
+/**
+ * Gets minutes from a given date.
+ *
+ * @param {Date | string} date Date to get minutes from
+ * @returns {number} Minutes
+ */
+function getMinutes(date) {
+    if (date instanceof Date) {
+        return date.getMinutes();
+    }
+    if (typeof date === 'string') {
+        var datePieces = date.split(':');
+        if (datePieces.length >= 2) {
+            var minutesString = datePieces[1] || '0';
+            var minutes = parseInt(minutesString, 10);
+            if (!isNaN(minutes)) {
+                return minutes;
+            }
+        }
+    }
+    throw new Error("Failed to get minutes from date: ".concat(date, "."));
+}
+/**
+ * Gets seconds from a given date.
+ *
+ * @param {Date | string} date Date to get seconds from
+ * @returns {number} Seconds
+ */
+function getSeconds(date) {
+    if (date instanceof Date) {
+        return date.getSeconds();
+    }
+    if (typeof date === 'string') {
+        var datePieces = date.split(':');
+        if (datePieces.length >= 2) {
+            var secondsWithMillisecondsString = datePieces[2] || '0';
+            var seconds = parseInt(secondsWithMillisecondsString, 10);
+            if (!isNaN(seconds)) {
+                return seconds;
+            }
+        }
+    }
+    throw new Error("Failed to get seconds from date: ".concat(date, "."));
+}
+/**
+ * Gets milliseconds from a given date.
+ *
+ * @param {Date | string} date Date to get milliseconds from
+ * @returns {number} Milliseconds
+ */
+function getMilliseconds(date) {
+    if (date instanceof Date) {
+        return date.getMilliseconds();
+    }
+    if (typeof date === 'string') {
+        var datePieces = date.split(':');
+        if (datePieces.length >= 2) {
+            var secondsWithMillisecondsString = datePieces[2] || '0';
+            var millisecondsString = secondsWithMillisecondsString.split('.')[1] || '0';
+            var milliseconds = parseInt(millisecondsString, 10);
+            if (!isNaN(milliseconds)) {
+                return milliseconds;
+            }
+        }
+    }
+    throw new Error("Failed to get seconds from date: ".concat(date, "."));
+}
+/**
+ * Century
+ */
+/**
+ * Gets century start date from a given date.
+ *
+ * @param {DateLike} date Date to get century start from
+ * @returns {Date} Century start date
+ */
+function getCenturyStart(date) {
+    var year = getYear(date);
+    var centuryStartYear = year + ((-year + 1) % 100);
+    var centuryStartDate = new Date();
+    centuryStartDate.setFullYear(centuryStartYear, 0, 1);
+    centuryStartDate.setHours(0, 0, 0, 0);
+    return centuryStartDate;
+}
+/**
+ * Gets previous century start date from a given date.
+ *
+ * @param {DateLike} date Date to get previous century start from
+ * @returns {Date} Previous century start date
+ */
+var getPreviousCenturyStart = makeGetEdgeOfNeighbor(getYear, getCenturyStart, -100);
+/**
+ * Gets next century start date from a given date.
+ *
+ * @param {DateLike} date Date to get next century start from
+ * @returns {Date} Next century start date
+ */
+var getNextCenturyStart = makeGetEdgeOfNeighbor(getYear, getCenturyStart, 100);
+/**
+ * Gets century end date from a given date.
+ *
+ * @param {DateLike} date Date to get century end from
+ * @returns {Date} Century end date
+ */
+var getCenturyEnd = makeGetEnd(getNextCenturyStart);
+/**
+ * Gets previous century end date from a given date.
+ *
+ * @param {DateLike} date Date to get previous century end from
+ * @returns {Date} Previous century end date
+ */
+var getPreviousCenturyEnd = makeGetEdgeOfNeighbor(getYear, getCenturyEnd, -100);
+/**
+ * Gets next century end date from a given date.
+ *
+ * @param {DateLike} date Date to get next century end from
+ * @returns {Date} Next century end date
+ */
+var getNextCenturyEnd = makeGetEdgeOfNeighbor(getYear, getCenturyEnd, 100);
+/**
+ * Gets century start and end dates from a given date.
+ *
+ * @param {DateLike} date Date to get century start and end from
+ * @returns {[Date, Date]} Century start and end dates
+ */
+var getCenturyRange = makeGetRange(getCenturyStart, getCenturyEnd);
+/**
+ * Decade
+ */
+/**
+ * Gets decade start date from a given date.
+ *
+ * @param {DateLike} date Date to get decade start from
+ * @returns {Date} Decade start date
+ */
+function getDecadeStart(date) {
+    var year = getYear(date);
+    var decadeStartYear = year + ((-year + 1) % 10);
+    var decadeStartDate = new Date();
+    decadeStartDate.setFullYear(decadeStartYear, 0, 1);
+    decadeStartDate.setHours(0, 0, 0, 0);
+    return decadeStartDate;
+}
+/**
+ * Gets previous decade start date from a given date.
+ *
+ * @param {DateLike} date Date to get previous decade start from
+ * @returns {Date} Previous decade start date
+ */
+var getPreviousDecadeStart = makeGetEdgeOfNeighbor(getYear, getDecadeStart, -10);
+/**
+ * Gets next decade start date from a given date.
+ *
+ * @param {DateLike} date Date to get next decade start from
+ * @returns {Date} Next decade start date
+ */
+var getNextDecadeStart = makeGetEdgeOfNeighbor(getYear, getDecadeStart, 10);
+/**
+ * Gets decade end date from a given date.
+ *
+ * @param {DateLike} date Date to get decade end from
+ * @returns {Date} Decade end date
+ */
+var getDecadeEnd = makeGetEnd(getNextDecadeStart);
+/**
+ * Gets previous decade end date from a given date.
+ *
+ * @param {DateLike} date Date to get previous decade end from
+ * @returns {Date} Previous decade end date
+ */
+var getPreviousDecadeEnd = makeGetEdgeOfNeighbor(getYear, getDecadeEnd, -10);
+/**
+ * Gets next decade end date from a given date.
+ *
+ * @param {DateLike} date Date to get next decade end from
+ * @returns {Date} Next decade end date
+ */
+var getNextDecadeEnd = makeGetEdgeOfNeighbor(getYear, getDecadeEnd, 10);
+/**
+ * Gets decade start and end dates from a given date.
+ *
+ * @param {DateLike} date Date to get decade start and end from
+ * @returns {[Date, Date]} Decade start and end dates
+ */
+var getDecadeRange = makeGetRange(getDecadeStart, getDecadeEnd);
+/**
+ * Year
+ */
+/**
+ * Gets year start date from a given date.
+ *
+ * @param {DateLike} date Date to get year start from
+ * @returns {Date} Year start date
+ */
+function getYearStart(date) {
+    var year = getYear(date);
+    var yearStartDate = new Date();
+    yearStartDate.setFullYear(year, 0, 1);
+    yearStartDate.setHours(0, 0, 0, 0);
+    return yearStartDate;
+}
+/**
+ * Gets previous year start date from a given date.
+ *
+ * @param {DateLike} date Date to get previous year start from
+ * @returns {Date} Previous year start date
+ */
+var getPreviousYearStart = makeGetEdgeOfNeighbor(getYear, getYearStart, -1);
+/**
+ * Gets next year start date from a given date.
+ *
+ * @param {DateLike} date Date to get next year start from
+ * @returns {Date} Next year start date
+ */
+var getNextYearStart = makeGetEdgeOfNeighbor(getYear, getYearStart, 1);
+/**
+ * Gets year end date from a given date.
+ *
+ * @param {DateLike} date Date to get year end from
+ * @returns {Date} Year end date
+ */
+var getYearEnd = makeGetEnd(getNextYearStart);
+/**
+ * Gets previous year end date from a given date.
+ *
+ * @param {DateLike} date Date to get previous year end from
+ * @returns {Date} Previous year end date
+ */
+var getPreviousYearEnd = makeGetEdgeOfNeighbor(getYear, getYearEnd, -1);
+/**
+ * Gets next year end date from a given date.
+ *
+ * @param {DateLike} date Date to get next year end from
+ * @returns {Date} Next year end date
+ */
+var getNextYearEnd = makeGetEdgeOfNeighbor(getYear, getYearEnd, 1);
+/**
+ * Gets year start and end dates from a given date.
+ *
+ * @param {DateLike} date Date to get year start and end from
+ * @returns {[Date, Date]} Year start and end dates
+ */
+var getYearRange = makeGetRange(getYearStart, getYearEnd);
+/**
+ * Month
+ */
+function makeGetEdgeOfNeighborMonth(getEdgeOfPeriod, defaultOffset) {
+    return function makeGetEdgeOfNeighborMonthInternal(date, offset) {
+        if (offset === void 0) { offset = defaultOffset; }
+        var year = getYear(date);
+        var month = getMonth(date) + offset;
+        var previousPeriod = new Date();
+        previousPeriod.setFullYear(year, month, 1);
+        previousPeriod.setHours(0, 0, 0, 0);
+        return getEdgeOfPeriod(previousPeriod);
+    };
+}
+/**
+ * Gets month start date from a given date.
+ *
+ * @param {DateLike} date Date to get month start from
+ * @returns {Date} Month start date
+ */
+function getMonthStart(date) {
+    var year = getYear(date);
+    var month = getMonth(date);
+    var monthStartDate = new Date();
+    monthStartDate.setFullYear(year, month, 1);
+    monthStartDate.setHours(0, 0, 0, 0);
+    return monthStartDate;
+}
+/**
+ * Gets previous month start date from a given date.
+ *
+ * @param {DateLike} date Date to get previous month start from
+ * @returns {Date} Previous month start date
+ */
+var getPreviousMonthStart = makeGetEdgeOfNeighborMonth(getMonthStart, -1);
+/**
+ * Gets next month start date from a given date.
+ *
+ * @param {DateLike} date Date to get next month start from
+ * @returns {Date} Next month start date
+ */
+var getNextMonthStart = makeGetEdgeOfNeighborMonth(getMonthStart, 1);
+/**
+ * Gets month end date from a given date.
+ *
+ * @param {DateLike} date Date to get month end from
+ * @returns {Date} Month end date
+ */
+var getMonthEnd = makeGetEnd(getNextMonthStart);
+/**
+ * Gets previous month end date from a given date.
+ *
+ * @param {DateLike} date Date to get previous month end from
+ * @returns {Date} Previous month end date
+ */
+var getPreviousMonthEnd = makeGetEdgeOfNeighborMonth(getMonthEnd, -1);
+/**
+ * Gets next month end date from a given date.
+ *
+ * @param {DateLike} date Date to get next month end from
+ * @returns {Date} Next month end date
+ */
+var getNextMonthEnd = makeGetEdgeOfNeighborMonth(getMonthEnd, 1);
+/**
+ * Gets month start and end dates from a given date.
+ *
+ * @param {DateLike} date Date to get month start and end from
+ * @returns {[Date, Date]} Month start and end dates
+ */
+var getMonthRange = makeGetRange(getMonthStart, getMonthEnd);
+/**
+ * Day
+ */
+function makeGetEdgeOfNeighborDay(getEdgeOfPeriod, defaultOffset) {
+    return function makeGetEdgeOfNeighborDayInternal(date, offset) {
+        if (offset === void 0) { offset = defaultOffset; }
+        var year = getYear(date);
+        var month = getMonth(date);
+        var day = getDate(date) + offset;
+        var previousPeriod = new Date();
+        previousPeriod.setFullYear(year, month, day);
+        previousPeriod.setHours(0, 0, 0, 0);
+        return getEdgeOfPeriod(previousPeriod);
+    };
+}
+/**
+ * Gets day start date from a given date.
+ *
+ * @param {DateLike} date Date to get day start from
+ * @returns {Date} Day start date
+ */
+function getDayStart(date) {
+    var year = getYear(date);
+    var month = getMonth(date);
+    var day = getDate(date);
+    var dayStartDate = new Date();
+    dayStartDate.setFullYear(year, month, day);
+    dayStartDate.setHours(0, 0, 0, 0);
+    return dayStartDate;
+}
+/**
+ * Gets previous day start date from a given date.
+ *
+ * @param {DateLike} date Date to get previous day start from
+ * @returns {Date} Previous day start date
+ */
+var getPreviousDayStart = makeGetEdgeOfNeighborDay(getDayStart, -1);
+/**
+ * Gets next day start date from a given date.
+ *
+ * @param {DateLike} date Date to get next day start from
+ * @returns {Date} Next day start date
+ */
+var getNextDayStart = makeGetEdgeOfNeighborDay(getDayStart, 1);
+/**
+ * Gets day end date from a given date.
+ *
+ * @param {DateLike} date Date to get day end from
+ * @returns {Date} Day end date
+ */
+var getDayEnd = makeGetEnd(getNextDayStart);
+/**
+ * Gets previous day end date from a given date.
+ *
+ * @param {DateLike} date Date to get previous day end from
+ * @returns {Date} Previous day end date
+ */
+var getPreviousDayEnd = makeGetEdgeOfNeighborDay(getDayEnd, -1);
+/**
+ * Gets next day end date from a given date.
+ *
+ * @param {DateLike} date Date to get next day end from
+ * @returns {Date} Next day end date
+ */
+var getNextDayEnd = makeGetEdgeOfNeighborDay(getDayEnd, 1);
+/**
+ * Gets day start and end dates from a given date.
+ *
+ * @param {DateLike} date Date to get day start and end from
+ * @returns {[Date, Date]} Day start and end dates
+ */
+var getDayRange = makeGetRange(getDayStart, getDayEnd);
+/**
+ * Other
+ */
+/**
+ * Returns a number of days in a month of a given date.
+ *
+ * @param {Date} date Date
+ * @returns {number} Number of days in a month
+ */
+function getDaysInMonth(date) {
+    return getDate(getMonthEnd(date));
+}
+function padStart(num, val) {
+    if (val === void 0) { val = 2; }
+    var numStr = "".concat(num);
+    if (numStr.length >= val) {
+        return num;
+    }
+    return "0000".concat(numStr).slice(-val);
+}
+/**
+ * Returns local hours and minutes (hh:mm).
+ *
+ * @param {Date | string} date Date to get hours and minutes from
+ * @returns {string} Local hours and minutes
+ */
+function getHoursMinutes(date) {
+    var hours = padStart(getHours(date));
+    var minutes = padStart(getMinutes(date));
+    return "".concat(hours, ":").concat(minutes);
+}
+/**
+ * Returns local hours, minutes and seconds (hh:mm:ss).
+ *
+ * @param {Date | string} date Date to get hours, minutes and seconds from
+ * @returns {string} Local hours, minutes and seconds
+ */
+function getHoursMinutesSeconds(date) {
+    var hours = padStart(getHours(date));
+    var minutes = padStart(getMinutes(date));
+    var seconds = padStart(getSeconds(date));
+    return "".concat(hours, ":").concat(minutes, ":").concat(seconds);
+}
+/**
+ * Returns local month in ISO-like format (YYYY-MM).
+ *
+ * @param {Date} date Date to get month in ISO-like format from
+ * @returns {string} Local month in ISO-like format
+ */
+function getISOLocalMonth(date) {
+    var year = padStart(getYear(date), 4);
+    var month = padStart(getMonthHuman(date));
+    return "".concat(year, "-").concat(month);
+}
+/**
+ * Returns local date in ISO-like format (YYYY-MM-DD).
+ *
+ * @param {Date} date Date to get date in ISO-like format from
+ * @returns {string} Local date in ISO-like format
+ */
+function getISOLocalDate(date) {
+    var year = padStart(getYear(date), 4);
+    var month = padStart(getMonthHuman(date));
+    var day = padStart(getDate(date));
+    return "".concat(year, "-").concat(month, "-").concat(day);
+}
+/**
+ * Returns local date & time in ISO-like format (YYYY-MM-DDThh:mm:ss).
+ *
+ * @param {Date} date Date to get date & time in ISO-like format from
+ * @returns {string} Local date & time in ISO-like format
+ */
+function getISOLocalDateTime(date) {
+    return "".concat(getISOLocalDate(date), "T").concat(getHoursMinutesSeconds(date));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/clsx/dist/clsx.mjs":
+/*!*****************************************!*\
+  !*** ./node_modules/clsx/dist/clsx.mjs ***!
+  \*****************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   clsx: () => (/* binding */ clsx),
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+function r(e){var t,f,n="";if("string"==typeof e||"number"==typeof e)n+=e;else if("object"==typeof e)if(Array.isArray(e)){var o=e.length;for(t=0;t<o;t++)e[t]&&(f=r(e[t]))&&(n&&(n+=" "),n+=f)}else for(f in e)e[f]&&(n&&(n+=" "),n+=f);return n}function clsx(){for(var e,t,f=0,n="",o=arguments.length;f<o;f++)(e=arguments[f])&&(t=r(e))&&(n&&(n+=" "),n+=t);return n}/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (clsx);
+
+/***/ }),
+
+/***/ "./node_modules/get-user-locale/dist/esm/index.js":
+/*!********************************************************!*\
+  !*** ./node_modules/get-user-locale/dist/esm/index.js ***!
+  \********************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   getUserLocale: () => (/* binding */ getUserLocale),
+/* harmony export */   getUserLocales: () => (/* binding */ getUserLocales)
+/* harmony export */ });
+/* harmony import */ var mem__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! mem */ "./node_modules/mem/dist/index.js");
+
+function isString(el) {
+    return typeof el === 'string';
+}
+function isUnique(el, index, arr) {
+    return arr.indexOf(el) === index;
+}
+function isAllLowerCase(el) {
+    return el.toLowerCase() === el;
+}
+function fixCommas(el) {
+    return el.indexOf(',') === -1 ? el : el.split(',');
+}
+function normalizeLocale(locale) {
+    if (!locale) {
+        return locale;
+    }
+    if (locale === 'C' || locale === 'posix' || locale === 'POSIX') {
+        return 'en-US';
+    }
+    // If there's a dot (.) in the locale, it's likely in the format of "en-US.UTF-8", so we only take the first part
+    if (locale.indexOf('.') !== -1) {
+        var _a = locale.split('.')[0], actualLocale = _a === void 0 ? '' : _a;
+        return normalizeLocale(actualLocale);
+    }
+    // If there's an at sign (@) in the locale, it's likely in the format of "en-US@posix", so we only take the first part
+    if (locale.indexOf('@') !== -1) {
+        var _b = locale.split('@')[0], actualLocale = _b === void 0 ? '' : _b;
+        return normalizeLocale(actualLocale);
+    }
+    // If there's a dash (-) in the locale and it's not all lower case, it's already in the format of "en-US", so we return it
+    if (locale.indexOf('-') === -1 || !isAllLowerCase(locale)) {
+        return locale;
+    }
+    var _c = locale.split('-'), splitEl1 = _c[0], _d = _c[1], splitEl2 = _d === void 0 ? '' : _d;
+    return "".concat(splitEl1, "-").concat(splitEl2.toUpperCase());
+}
+function getUserLocalesInternal(_a) {
+    var _b = _a === void 0 ? {} : _a, _c = _b.useFallbackLocale, useFallbackLocale = _c === void 0 ? true : _c, _d = _b.fallbackLocale, fallbackLocale = _d === void 0 ? 'en-US' : _d;
+    var languageList = [];
+    if (typeof navigator !== 'undefined') {
+        var rawLanguages = navigator.languages || [];
+        var languages = [];
+        for (var _i = 0, rawLanguages_1 = rawLanguages; _i < rawLanguages_1.length; _i++) {
+            var rawLanguagesItem = rawLanguages_1[_i];
+            languages = languages.concat(fixCommas(rawLanguagesItem));
+        }
+        var rawLanguage = navigator.language;
+        var language = rawLanguage ? fixCommas(rawLanguage) : rawLanguage;
+        languageList = languageList.concat(languages, language);
+    }
+    if (useFallbackLocale) {
+        languageList.push(fallbackLocale);
+    }
+    return languageList.filter(isString).map(normalizeLocale).filter(isUnique);
+}
+var getUserLocales = mem__WEBPACK_IMPORTED_MODULE_0__(getUserLocalesInternal, { cacheKey: JSON.stringify });
+function getUserLocaleInternal(options) {
+    return getUserLocales(options)[0] || null;
+}
+var getUserLocale = mem__WEBPACK_IMPORTED_MODULE_0__(getUserLocaleInternal, { cacheKey: JSON.stringify });
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (getUserLocale);
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/Calendar.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/Calendar.js ***!
+  \**********************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var clsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! clsx */ "./node_modules/clsx/dist/clsx.mjs");
+/* harmony import */ var _Calendar_Navigation_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./Calendar/Navigation.js */ "./node_modules/react-calendar/dist/esm/Calendar/Navigation.js");
+/* harmony import */ var _CenturyView_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./CenturyView.js */ "./node_modules/react-calendar/dist/esm/CenturyView.js");
+/* harmony import */ var _DecadeView_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./DecadeView.js */ "./node_modules/react-calendar/dist/esm/DecadeView.js");
+/* harmony import */ var _YearView_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./YearView.js */ "./node_modules/react-calendar/dist/esm/YearView.js");
+/* harmony import */ var _MonthView_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./MonthView.js */ "./node_modules/react-calendar/dist/esm/MonthView.js");
+/* harmony import */ var _shared_dates_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./shared/dates.js */ "./node_modules/react-calendar/dist/esm/shared/dates.js");
+/* harmony import */ var _shared_utils_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./shared/utils.js */ "./node_modules/react-calendar/dist/esm/shared/utils.js");
+'use client';
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+
+
+
+
+
+
+
+
+
+
+var baseClassName = 'react-calendar';
+var allViews = ['century', 'decade', 'year', 'month'];
+var allValueTypes = ['decade', 'year', 'month', 'day'];
+var defaultMinDate = new Date();
+defaultMinDate.setFullYear(1, 0, 1);
+defaultMinDate.setHours(0, 0, 0, 0);
+var defaultMaxDate = new Date(8.64e15);
+function toDate(value) {
+    if (value instanceof Date) {
+        return value;
+    }
+    return new Date(value);
+}
+/**
+ * Returns views array with disallowed values cut off.
+ */
+function getLimitedViews(minDetail, maxDetail) {
+    return allViews.slice(allViews.indexOf(minDetail), allViews.indexOf(maxDetail) + 1);
+}
+/**
+ * Determines whether a given view is allowed with currently applied settings.
+ */
+function isViewAllowed(view, minDetail, maxDetail) {
+    var views = getLimitedViews(minDetail, maxDetail);
+    return views.indexOf(view) !== -1;
+}
+/**
+ * Gets either provided view if allowed by minDetail and maxDetail, or gets
+ * the default view if not allowed.
+ */
+function getView(view, minDetail, maxDetail) {
+    if (!view) {
+        return maxDetail;
+    }
+    if (isViewAllowed(view, minDetail, maxDetail)) {
+        return view;
+    }
+    return maxDetail;
+}
+/**
+ * Returns value type that can be returned with currently applied settings.
+ */
+function getValueType(view) {
+    var index = allViews.indexOf(view);
+    return allValueTypes[index];
+}
+function getValue(value, index) {
+    var rawValue = Array.isArray(value) ? value[index] : value;
+    if (!rawValue) {
+        return null;
+    }
+    var valueDate = toDate(rawValue);
+    if (isNaN(valueDate.getTime())) {
+        throw new Error("Invalid date: ".concat(value));
+    }
+    return valueDate;
+}
+function getDetailValue(_a, index) {
+    var value = _a.value, minDate = _a.minDate, maxDate = _a.maxDate, maxDetail = _a.maxDetail;
+    var valuePiece = getValue(value, index);
+    if (!valuePiece) {
+        return null;
+    }
+    var valueType = getValueType(maxDetail);
+    var detailValueFrom = (function () {
+        switch (index) {
+            case 0:
+                return (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_3__.getBegin)(valueType, valuePiece);
+            case 1:
+                return (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_3__.getEnd)(valueType, valuePiece);
+            default:
+                throw new Error("Invalid index value: ".concat(index));
+        }
+    })();
+    return (0,_shared_utils_js__WEBPACK_IMPORTED_MODULE_4__.between)(detailValueFrom, minDate, maxDate);
+}
+var getDetailValueFrom = function (args) { return getDetailValue(args, 0); };
+var getDetailValueTo = function (args) { return getDetailValue(args, 1); };
+var getDetailValueArray = function (args) {
+    return [getDetailValueFrom, getDetailValueTo].map(function (fn) { return fn(args); });
+};
+function getActiveStartDate(_a) {
+    var maxDate = _a.maxDate, maxDetail = _a.maxDetail, minDate = _a.minDate, minDetail = _a.minDetail, value = _a.value, view = _a.view;
+    var rangeType = getView(view, minDetail, maxDetail);
+    var valueFrom = getDetailValueFrom({
+        value: value,
+        minDate: minDate,
+        maxDate: maxDate,
+        maxDetail: maxDetail,
+    }) || new Date();
+    return (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_3__.getBegin)(rangeType, valueFrom);
+}
+function getInitialActiveStartDate(_a) {
+    var activeStartDate = _a.activeStartDate, defaultActiveStartDate = _a.defaultActiveStartDate, defaultValue = _a.defaultValue, defaultView = _a.defaultView, maxDate = _a.maxDate, maxDetail = _a.maxDetail, minDate = _a.minDate, minDetail = _a.minDetail, value = _a.value, view = _a.view;
+    var rangeType = getView(view, minDetail, maxDetail);
+    var valueFrom = activeStartDate || defaultActiveStartDate;
+    if (valueFrom) {
+        return (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_3__.getBegin)(rangeType, valueFrom);
+    }
+    return getActiveStartDate({
+        maxDate: maxDate,
+        maxDetail: maxDetail,
+        minDate: minDate,
+        minDetail: minDetail,
+        value: value || defaultValue,
+        view: view || defaultView,
+    });
+}
+function getIsSingleValue(value) {
+    return value && (!Array.isArray(value) || value.length === 1);
+}
+function areDatesEqual(date1, date2) {
+    return date1 instanceof Date && date2 instanceof Date && date1.getTime() === date2.getTime();
+}
+var Calendar = (0,react__WEBPACK_IMPORTED_MODULE_1__.forwardRef)(function Calendar(props, ref) {
+    var activeStartDateProps = props.activeStartDate, allowPartialRange = props.allowPartialRange, calendarType = props.calendarType, className = props.className, defaultActiveStartDate = props.defaultActiveStartDate, defaultValue = props.defaultValue, defaultView = props.defaultView, formatDay = props.formatDay, formatLongDate = props.formatLongDate, formatMonth = props.formatMonth, formatMonthYear = props.formatMonthYear, formatShortWeekday = props.formatShortWeekday, formatWeekday = props.formatWeekday, formatYear = props.formatYear, _a = props.goToRangeStartOnSelect, goToRangeStartOnSelect = _a === void 0 ? true : _a, inputRef = props.inputRef, locale = props.locale, _b = props.maxDate, maxDate = _b === void 0 ? defaultMaxDate : _b, _c = props.maxDetail, maxDetail = _c === void 0 ? 'month' : _c, _d = props.minDate, minDate = _d === void 0 ? defaultMinDate : _d, _e = props.minDetail, minDetail = _e === void 0 ? 'century' : _e, navigationAriaLabel = props.navigationAriaLabel, navigationAriaLive = props.navigationAriaLive, navigationLabel = props.navigationLabel, next2AriaLabel = props.next2AriaLabel, next2Label = props.next2Label, nextAriaLabel = props.nextAriaLabel, nextLabel = props.nextLabel, onActiveStartDateChange = props.onActiveStartDateChange, onChangeProps = props.onChange, onClickDay = props.onClickDay, onClickDecade = props.onClickDecade, onClickMonth = props.onClickMonth, onClickWeekNumber = props.onClickWeekNumber, onClickYear = props.onClickYear, onDrillDown = props.onDrillDown, onDrillUp = props.onDrillUp, onViewChange = props.onViewChange, prev2AriaLabel = props.prev2AriaLabel, prev2Label = props.prev2Label, prevAriaLabel = props.prevAriaLabel, prevLabel = props.prevLabel, _f = props.returnValue, returnValue = _f === void 0 ? 'start' : _f, selectRange = props.selectRange, showDoubleView = props.showDoubleView, showFixedNumberOfWeeks = props.showFixedNumberOfWeeks, _g = props.showNavigation, showNavigation = _g === void 0 ? true : _g, showNeighboringCentury = props.showNeighboringCentury, showNeighboringDecade = props.showNeighboringDecade, _h = props.showNeighboringMonth, showNeighboringMonth = _h === void 0 ? true : _h, showWeekNumbers = props.showWeekNumbers, tileClassName = props.tileClassName, tileContent = props.tileContent, tileDisabled = props.tileDisabled, valueProps = props.value, viewProps = props.view;
+    var _j = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(defaultActiveStartDate), activeStartDateState = _j[0], setActiveStartDateState = _j[1];
+    var _k = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(null), hoverState = _k[0], setHoverState = _k[1];
+    var _l = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(Array.isArray(defaultValue)
+        ? defaultValue.map(function (el) { return (el !== null ? toDate(el) : null); })
+        : defaultValue !== null && defaultValue !== undefined
+            ? toDate(defaultValue)
+            : null), valueState = _l[0], setValueState = _l[1];
+    var _m = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(defaultView), viewState = _m[0], setViewState = _m[1];
+    var activeStartDate = activeStartDateProps ||
+        activeStartDateState ||
+        getInitialActiveStartDate({
+            activeStartDate: activeStartDateProps,
+            defaultActiveStartDate: defaultActiveStartDate,
+            defaultValue: defaultValue,
+            defaultView: defaultView,
+            maxDate: maxDate,
+            maxDetail: maxDetail,
+            minDate: minDate,
+            minDetail: minDetail,
+            value: valueProps,
+            view: viewProps,
+        });
+    var value = (function () {
+        var rawValue = (function () {
+            // In the middle of range selection, use value from state
+            if (selectRange && getIsSingleValue(valueState)) {
+                return valueState;
+            }
+            return valueProps !== undefined ? valueProps : valueState;
+        })();
+        if (!rawValue) {
+            return null;
+        }
+        return Array.isArray(rawValue)
+            ? rawValue.map(function (el) { return (el !== null ? toDate(el) : null); })
+            : rawValue !== null
+                ? toDate(rawValue)
+                : null;
+    })();
+    var valueType = getValueType(maxDetail);
+    var view = getView(viewProps || viewState, minDetail, maxDetail);
+    var views = getLimitedViews(minDetail, maxDetail);
+    var hover = selectRange ? hoverState : null;
+    var drillDownAvailable = views.indexOf(view) < views.length - 1;
+    var drillUpAvailable = views.indexOf(view) > 0;
+    var getProcessedValue = (0,react__WEBPACK_IMPORTED_MODULE_1__.useCallback)(function (value) {
+        var processFunction = (function () {
+            switch (returnValue) {
+                case 'start':
+                    return getDetailValueFrom;
+                case 'end':
+                    return getDetailValueTo;
+                case 'range':
+                    return getDetailValueArray;
+                default:
+                    throw new Error('Invalid returnValue.');
+            }
+        })();
+        return processFunction({
+            maxDate: maxDate,
+            maxDetail: maxDetail,
+            minDate: minDate,
+            value: value,
+        });
+    }, [maxDate, maxDetail, minDate, returnValue]);
+    var setActiveStartDate = (0,react__WEBPACK_IMPORTED_MODULE_1__.useCallback)(function (nextActiveStartDate, action) {
+        setActiveStartDateState(nextActiveStartDate);
+        var args = {
+            action: action,
+            activeStartDate: nextActiveStartDate,
+            value: value,
+            view: view,
+        };
+        if (onActiveStartDateChange && !areDatesEqual(activeStartDate, nextActiveStartDate)) {
+            onActiveStartDateChange(args);
+        }
+    }, [activeStartDate, onActiveStartDateChange, value, view]);
+    var onClickTile = (0,react__WEBPACK_IMPORTED_MODULE_1__.useCallback)(function (value, event) {
+        var callback = (function () {
+            switch (view) {
+                case 'century':
+                    return onClickDecade;
+                case 'decade':
+                    return onClickYear;
+                case 'year':
+                    return onClickMonth;
+                case 'month':
+                    return onClickDay;
+                default:
+                    throw new Error("Invalid view: ".concat(view, "."));
+            }
+        })();
+        if (callback)
+            callback(value, event);
+    }, [onClickDay, onClickDecade, onClickMonth, onClickYear, view]);
+    var drillDown = (0,react__WEBPACK_IMPORTED_MODULE_1__.useCallback)(function (nextActiveStartDate, event) {
+        if (!drillDownAvailable) {
+            return;
+        }
+        onClickTile(nextActiveStartDate, event);
+        var nextView = views[views.indexOf(view) + 1];
+        if (!nextView) {
+            throw new Error('Attempted to drill down from the lowest view.');
+        }
+        setActiveStartDateState(nextActiveStartDate);
+        setViewState(nextView);
+        var args = {
+            action: 'drillDown',
+            activeStartDate: nextActiveStartDate,
+            value: value,
+            view: nextView,
+        };
+        if (onActiveStartDateChange && !areDatesEqual(activeStartDate, nextActiveStartDate)) {
+            onActiveStartDateChange(args);
+        }
+        if (onViewChange && view !== nextView) {
+            onViewChange(args);
+        }
+        if (onDrillDown) {
+            onDrillDown(args);
+        }
+    }, [
+        activeStartDate,
+        drillDownAvailable,
+        onActiveStartDateChange,
+        onClickTile,
+        onDrillDown,
+        onViewChange,
+        value,
+        view,
+        views,
+    ]);
+    var drillUp = (0,react__WEBPACK_IMPORTED_MODULE_1__.useCallback)(function () {
+        if (!drillUpAvailable) {
+            return;
+        }
+        var nextView = views[views.indexOf(view) - 1];
+        if (!nextView) {
+            throw new Error('Attempted to drill up from the highest view.');
+        }
+        var nextActiveStartDate = (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_3__.getBegin)(nextView, activeStartDate);
+        setActiveStartDateState(nextActiveStartDate);
+        setViewState(nextView);
+        var args = {
+            action: 'drillUp',
+            activeStartDate: nextActiveStartDate,
+            value: value,
+            view: nextView,
+        };
+        if (onActiveStartDateChange && !areDatesEqual(activeStartDate, nextActiveStartDate)) {
+            onActiveStartDateChange(args);
+        }
+        if (onViewChange && view !== nextView) {
+            onViewChange(args);
+        }
+        if (onDrillUp) {
+            onDrillUp(args);
+        }
+    }, [
+        activeStartDate,
+        drillUpAvailable,
+        onActiveStartDateChange,
+        onDrillUp,
+        onViewChange,
+        value,
+        view,
+        views,
+    ]);
+    var onChange = (0,react__WEBPACK_IMPORTED_MODULE_1__.useCallback)(function (rawNextValue, event) {
+        var previousValue = value;
+        onClickTile(rawNextValue, event);
+        var isFirstValueInRange = selectRange && !getIsSingleValue(previousValue);
+        var nextValue;
+        if (selectRange) {
+            // Range selection turned on
+            if (isFirstValueInRange) {
+                // Value has 0 or 2 elements - either way we're starting a new array
+                // First value
+                nextValue = (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_3__.getBegin)(valueType, rawNextValue);
+            }
+            else {
+                if (!previousValue) {
+                    throw new Error('previousValue is required');
+                }
+                if (Array.isArray(previousValue)) {
+                    throw new Error('previousValue must not be an array');
+                }
+                // Second value
+                nextValue = (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_3__.getValueRange)(valueType, previousValue, rawNextValue);
+            }
+        }
+        else {
+            // Range selection turned off
+            nextValue = getProcessedValue(rawNextValue);
+        }
+        var nextActiveStartDate = 
+        // Range selection turned off
+        !selectRange ||
+            // Range selection turned on, first value
+            isFirstValueInRange ||
+            // Range selection turned on, second value, goToRangeStartOnSelect toggled on
+            goToRangeStartOnSelect
+            ? getActiveStartDate({
+                maxDate: maxDate,
+                maxDetail: maxDetail,
+                minDate: minDate,
+                minDetail: minDetail,
+                value: nextValue,
+                view: view,
+            })
+            : null;
+        event.persist();
+        setActiveStartDateState(nextActiveStartDate);
+        setValueState(nextValue);
+        var args = {
+            action: 'onChange',
+            activeStartDate: nextActiveStartDate,
+            value: nextValue,
+            view: view,
+        };
+        if (onActiveStartDateChange && !areDatesEqual(activeStartDate, nextActiveStartDate)) {
+            onActiveStartDateChange(args);
+        }
+        if (onChangeProps) {
+            if (selectRange) {
+                var isSingleValue = getIsSingleValue(nextValue);
+                if (!isSingleValue) {
+                    onChangeProps(nextValue || null, event);
+                }
+                else if (allowPartialRange) {
+                    if (Array.isArray(nextValue)) {
+                        throw new Error('value must not be an array');
+                    }
+                    onChangeProps([nextValue || null, null], event);
+                }
+            }
+            else {
+                onChangeProps(nextValue || null, event);
+            }
+        }
+    }, [
+        activeStartDate,
+        allowPartialRange,
+        getProcessedValue,
+        goToRangeStartOnSelect,
+        maxDate,
+        maxDetail,
+        minDate,
+        minDetail,
+        onActiveStartDateChange,
+        onChangeProps,
+        onClickTile,
+        selectRange,
+        value,
+        valueType,
+        view,
+    ]);
+    function onMouseOver(nextHover) {
+        setHoverState(nextHover);
+    }
+    function onMouseLeave() {
+        setHoverState(null);
+    }
+    (0,react__WEBPACK_IMPORTED_MODULE_1__.useImperativeHandle)(ref, function () { return ({
+        activeStartDate: activeStartDate,
+        drillDown: drillDown,
+        drillUp: drillUp,
+        onChange: onChange,
+        setActiveStartDate: setActiveStartDate,
+        value: value,
+        view: view,
+    }); }, [activeStartDate, drillDown, drillUp, onChange, setActiveStartDate, value, view]);
+    function renderContent(next) {
+        var currentActiveStartDate = next
+            ? (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_3__.getBeginNext)(view, activeStartDate)
+            : (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_3__.getBegin)(view, activeStartDate);
+        var onClick = drillDownAvailable ? drillDown : onChange;
+        var commonProps = {
+            activeStartDate: currentActiveStartDate,
+            hover: hover,
+            locale: locale,
+            maxDate: maxDate,
+            minDate: minDate,
+            onClick: onClick,
+            onMouseOver: selectRange ? onMouseOver : undefined,
+            tileClassName: tileClassName,
+            tileContent: tileContent,
+            tileDisabled: tileDisabled,
+            value: value,
+            valueType: valueType,
+        };
+        switch (view) {
+            case 'century': {
+                return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_CenturyView_js__WEBPACK_IMPORTED_MODULE_5__["default"], __assign({ formatYear: formatYear, showNeighboringCentury: showNeighboringCentury }, commonProps)));
+            }
+            case 'decade': {
+                return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_DecadeView_js__WEBPACK_IMPORTED_MODULE_6__["default"], __assign({ formatYear: formatYear, showNeighboringDecade: showNeighboringDecade }, commonProps)));
+            }
+            case 'year': {
+                return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_YearView_js__WEBPACK_IMPORTED_MODULE_7__["default"], __assign({ formatMonth: formatMonth, formatMonthYear: formatMonthYear }, commonProps)));
+            }
+            case 'month': {
+                return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_MonthView_js__WEBPACK_IMPORTED_MODULE_8__["default"], __assign({ calendarType: calendarType, formatDay: formatDay, formatLongDate: formatLongDate, formatShortWeekday: formatShortWeekday, formatWeekday: formatWeekday, onClickWeekNumber: onClickWeekNumber, onMouseLeave: selectRange ? onMouseLeave : undefined, showFixedNumberOfWeeks: typeof showFixedNumberOfWeeks !== 'undefined'
+                        ? showFixedNumberOfWeeks
+                        : showDoubleView, showNeighboringMonth: showNeighboringMonth, showWeekNumbers: showWeekNumbers }, commonProps)));
+            }
+            default:
+                throw new Error("Invalid view: ".concat(view, "."));
+        }
+    }
+    function renderNavigation() {
+        if (!showNavigation) {
+            return null;
+        }
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Calendar_Navigation_js__WEBPACK_IMPORTED_MODULE_9__["default"], { activeStartDate: activeStartDate, drillUp: drillUp, formatMonthYear: formatMonthYear, formatYear: formatYear, locale: locale, maxDate: maxDate, minDate: minDate, navigationAriaLabel: navigationAriaLabel, navigationAriaLive: navigationAriaLive, navigationLabel: navigationLabel, next2AriaLabel: next2AriaLabel, next2Label: next2Label, nextAriaLabel: nextAriaLabel, nextLabel: nextLabel, prev2AriaLabel: prev2AriaLabel, prev2Label: prev2Label, prevAriaLabel: prevAriaLabel, prevLabel: prevLabel, setActiveStartDate: setActiveStartDate, showDoubleView: showDoubleView, view: view, views: views }));
+    }
+    var valueArray = Array.isArray(value) ? value : [value];
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: (0,clsx__WEBPACK_IMPORTED_MODULE_2__["default"])(baseClassName, selectRange && valueArray.length === 1 && "".concat(baseClassName, "--selectRange"), showDoubleView && "".concat(baseClassName, "--doubleView"), className), ref: inputRef, children: [renderNavigation(), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: "".concat(baseClassName, "__viewContainer"), onBlur: selectRange ? onMouseLeave : undefined, onMouseLeave: selectRange ? onMouseLeave : undefined, children: [renderContent(), showDoubleView ? renderContent(true) : null] })] }));
+});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Calendar);
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/Calendar/Navigation.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/Calendar/Navigation.js ***!
+  \*********************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Navigation)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var get_user_locale__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! get-user-locale */ "./node_modules/get-user-locale/dist/esm/index.js");
+/* harmony import */ var _shared_dates_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../shared/dates.js */ "./node_modules/react-calendar/dist/esm/shared/dates.js");
+/* harmony import */ var _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../shared/dateFormatter.js */ "./node_modules/react-calendar/dist/esm/shared/dateFormatter.js");
+'use client';
+
+
+
+
+var className = 'react-calendar__navigation';
+function Navigation(_a) {
+    var activeStartDate = _a.activeStartDate, drillUp = _a.drillUp, _b = _a.formatMonthYear, formatMonthYear = _b === void 0 ? _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__.formatMonthYear : _b, _c = _a.formatYear, formatYear = _c === void 0 ? _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__.formatYear : _c, locale = _a.locale, maxDate = _a.maxDate, minDate = _a.minDate, _d = _a.navigationAriaLabel, navigationAriaLabel = _d === void 0 ? '' : _d, navigationAriaLive = _a.navigationAriaLive, navigationLabel = _a.navigationLabel, _e = _a.next2AriaLabel, next2AriaLabel = _e === void 0 ? '' : _e, _f = _a.next2Label, next2Label = _f === void 0 ? '»' : _f, _g = _a.nextAriaLabel, nextAriaLabel = _g === void 0 ? '' : _g, _h = _a.nextLabel, nextLabel = _h === void 0 ? '›' : _h, _j = _a.prev2AriaLabel, prev2AriaLabel = _j === void 0 ? '' : _j, _k = _a.prev2Label, prev2Label = _k === void 0 ? '«' : _k, _l = _a.prevAriaLabel, prevAriaLabel = _l === void 0 ? '' : _l, _m = _a.prevLabel, prevLabel = _m === void 0 ? '‹' : _m, setActiveStartDate = _a.setActiveStartDate, showDoubleView = _a.showDoubleView, view = _a.view, views = _a.views;
+    var drillUpAvailable = views.indexOf(view) > 0;
+    var shouldShowPrevNext2Buttons = view !== 'century';
+    var previousActiveStartDate = (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getBeginPrevious)(view, activeStartDate);
+    var previousActiveStartDate2 = shouldShowPrevNext2Buttons
+        ? (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getBeginPrevious2)(view, activeStartDate)
+        : undefined;
+    var nextActiveStartDate = (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getBeginNext)(view, activeStartDate);
+    var nextActiveStartDate2 = shouldShowPrevNext2Buttons
+        ? (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getBeginNext2)(view, activeStartDate)
+        : undefined;
+    var prevButtonDisabled = (function () {
+        if (previousActiveStartDate.getFullYear() < 0) {
+            return true;
+        }
+        var previousActiveEndDate = (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getEndPrevious)(view, activeStartDate);
+        return minDate && minDate >= previousActiveEndDate;
+    })();
+    var prev2ButtonDisabled = shouldShowPrevNext2Buttons &&
+        (function () {
+            if (previousActiveStartDate2.getFullYear() < 0) {
+                return true;
+            }
+            var previousActiveEndDate = (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getEndPrevious2)(view, activeStartDate);
+            return minDate && minDate >= previousActiveEndDate;
+        })();
+    var nextButtonDisabled = maxDate && maxDate < nextActiveStartDate;
+    var next2ButtonDisabled = shouldShowPrevNext2Buttons && maxDate && maxDate < nextActiveStartDate2;
+    function onClickPrevious() {
+        setActiveStartDate(previousActiveStartDate, 'prev');
+    }
+    function onClickPrevious2() {
+        setActiveStartDate(previousActiveStartDate2, 'prev2');
+    }
+    function onClickNext() {
+        setActiveStartDate(nextActiveStartDate, 'next');
+    }
+    function onClickNext2() {
+        setActiveStartDate(nextActiveStartDate2, 'next2');
+    }
+    function renderLabel(date) {
+        var label = (function () {
+            switch (view) {
+                case 'century':
+                    return (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getCenturyLabel)(locale, formatYear, date);
+                case 'decade':
+                    return (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getDecadeLabel)(locale, formatYear, date);
+                case 'year':
+                    return formatYear(locale, date);
+                case 'month':
+                    return formatMonthYear(locale, date);
+                default:
+                    throw new Error("Invalid view: ".concat(view, "."));
+            }
+        })();
+        return navigationLabel
+            ? navigationLabel({
+                date: date,
+                label: label,
+                locale: locale || (0,get_user_locale__WEBPACK_IMPORTED_MODULE_3__.getUserLocale)() || undefined,
+                view: view,
+            })
+            : label;
+    }
+    function renderButton() {
+        var labelClassName = "".concat(className, "__label");
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("button", { "aria-label": navigationAriaLabel, "aria-live": navigationAriaLive, className: labelClassName, disabled: !drillUpAvailable, onClick: drillUp, style: { flexGrow: 1 }, type: "button", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "".concat(labelClassName, "__labelText ").concat(labelClassName, "__labelText--from"), children: renderLabel(activeStartDate) }), showDoubleView ? ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.Fragment, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "".concat(labelClassName, "__divider"), children: " \u2013 " }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { className: "".concat(labelClassName, "__labelText ").concat(labelClassName, "__labelText--to"), children: renderLabel(nextActiveStartDate) })] })) : null] }));
+    }
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { className: className, children: [prev2Label !== null && shouldShowPrevNext2Buttons ? ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { "aria-label": prev2AriaLabel, className: "".concat(className, "__arrow ").concat(className, "__prev2-button"), disabled: prev2ButtonDisabled, onClick: onClickPrevious2, type: "button", children: prev2Label })) : null, prevLabel !== null && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { "aria-label": prevAriaLabel, className: "".concat(className, "__arrow ").concat(className, "__prev-button"), disabled: prevButtonDisabled, onClick: onClickPrevious, type: "button", children: prevLabel })), renderButton(), nextLabel !== null && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { "aria-label": nextAriaLabel, className: "".concat(className, "__arrow ").concat(className, "__next-button"), disabled: nextButtonDisabled, onClick: onClickNext, type: "button", children: nextLabel })), next2Label !== null && shouldShowPrevNext2Buttons ? ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { "aria-label": next2AriaLabel, className: "".concat(className, "__arrow ").concat(className, "__next2-button"), disabled: next2ButtonDisabled, onClick: onClickNext2, type: "button", children: next2Label })) : null] }));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/CenturyView.js":
+/*!*************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/CenturyView.js ***!
+  \*************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ CenturyView)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _CenturyView_Decades_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CenturyView/Decades.js */ "./node_modules/react-calendar/dist/esm/CenturyView/Decades.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+
+
+/**
+ * Displays a given century.
+ */
+function CenturyView(props) {
+    function renderDecades() {
+        return (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_CenturyView_Decades_js__WEBPACK_IMPORTED_MODULE_1__["default"], __assign({}, props));
+    }
+    return (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { className: "react-calendar__century-view", children: renderDecades() });
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/CenturyView/Decade.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/CenturyView/Decade.js ***!
+  \********************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Decade)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @wojtekmaj/date-utils */ "./node_modules/@wojtekmaj/date-utils/dist/esm/index.js");
+/* harmony import */ var _Tile_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Tile.js */ "./node_modules/react-calendar/dist/esm/Tile.js");
+/* harmony import */ var _shared_dates_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../shared/dates.js */ "./node_modules/react-calendar/dist/esm/shared/dates.js");
+/* harmony import */ var _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../shared/dateFormatter.js */ "./node_modules/react-calendar/dist/esm/shared/dateFormatter.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __rest = (undefined && undefined.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+
+
+
+
+
+var className = 'react-calendar__century-view__decades__decade';
+function Decade(_a) {
+    var _b = _a.classes, classes = _b === void 0 ? [] : _b, currentCentury = _a.currentCentury, _c = _a.formatYear, formatYear = _c === void 0 ? _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__.formatYear : _c, otherProps = __rest(_a, ["classes", "currentCentury", "formatYear"]);
+    var date = otherProps.date, locale = otherProps.locale;
+    var classesProps = [];
+    if (classes) {
+        classesProps.push.apply(classesProps, classes);
+    }
+    if (className) {
+        classesProps.push(className);
+    }
+    if ((0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_2__.getCenturyStart)(date).getFullYear() !== currentCentury) {
+        classesProps.push("".concat(className, "--neighboringCentury"));
+    }
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Tile_js__WEBPACK_IMPORTED_MODULE_3__["default"], __assign({}, otherProps, { classes: classesProps, maxDateTransform: _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_2__.getDecadeEnd, minDateTransform: _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_2__.getDecadeStart, view: "century", children: (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_4__.getDecadeLabel)(locale, formatYear, date) })));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/CenturyView/Decades.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/CenturyView/Decades.js ***!
+  \*********************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Decades)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @wojtekmaj/date-utils */ "./node_modules/@wojtekmaj/date-utils/dist/esm/index.js");
+/* harmony import */ var _TileGroup_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../TileGroup.js */ "./node_modules/react-calendar/dist/esm/TileGroup.js");
+/* harmony import */ var _Decade_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./Decade.js */ "./node_modules/react-calendar/dist/esm/CenturyView/Decade.js");
+/* harmony import */ var _shared_dates_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../shared/dates.js */ "./node_modules/react-calendar/dist/esm/shared/dates.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __rest = (undefined && undefined.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+
+
+
+
+
+function Decades(props) {
+    var activeStartDate = props.activeStartDate, hover = props.hover, showNeighboringCentury = props.showNeighboringCentury, value = props.value, valueType = props.valueType, otherProps = __rest(props, ["activeStartDate", "hover", "showNeighboringCentury", "value", "valueType"]);
+    var start = (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_1__.getBeginOfCenturyYear)(activeStartDate);
+    var end = start + (showNeighboringCentury ? 119 : 99);
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_TileGroup_js__WEBPACK_IMPORTED_MODULE_2__["default"], { className: "react-calendar__century-view__decades", dateTransform: _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_3__.getDecadeStart, dateType: "decade", end: end, hover: hover, renderTile: function (_a) {
+            var date = _a.date, otherTileProps = __rest(_a, ["date"]);
+            return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Decade_js__WEBPACK_IMPORTED_MODULE_4__["default"], __assign({}, otherProps, otherTileProps, { activeStartDate: activeStartDate, currentCentury: start, date: date }), date.getTime()));
+        }, start: start, step: 10, value: value, valueType: valueType }));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/DecadeView.js":
+/*!************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/DecadeView.js ***!
+  \************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ DecadeView)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _DecadeView_Years_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./DecadeView/Years.js */ "./node_modules/react-calendar/dist/esm/DecadeView/Years.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+
+
+/**
+ * Displays a given decade.
+ */
+function DecadeView(props) {
+    function renderYears() {
+        return (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_DecadeView_Years_js__WEBPACK_IMPORTED_MODULE_1__["default"], __assign({}, props));
+    }
+    return (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { className: "react-calendar__decade-view", children: renderYears() });
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/DecadeView/Year.js":
+/*!*****************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/DecadeView/Year.js ***!
+  \*****************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Year)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @wojtekmaj/date-utils */ "./node_modules/@wojtekmaj/date-utils/dist/esm/index.js");
+/* harmony import */ var _Tile_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Tile.js */ "./node_modules/react-calendar/dist/esm/Tile.js");
+/* harmony import */ var _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../shared/dateFormatter.js */ "./node_modules/react-calendar/dist/esm/shared/dateFormatter.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __rest = (undefined && undefined.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+
+
+
+
+var className = 'react-calendar__decade-view__years__year';
+function Year(_a) {
+    var _b = _a.classes, classes = _b === void 0 ? [] : _b, currentDecade = _a.currentDecade, _c = _a.formatYear, formatYear = _c === void 0 ? _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__.formatYear : _c, otherProps = __rest(_a, ["classes", "currentDecade", "formatYear"]);
+    var date = otherProps.date, locale = otherProps.locale;
+    var classesProps = [];
+    if (classes) {
+        classesProps.push.apply(classesProps, classes);
+    }
+    if (className) {
+        classesProps.push(className);
+    }
+    if ((0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_2__.getDecadeStart)(date).getFullYear() !== currentDecade) {
+        classesProps.push("".concat(className, "--neighboringDecade"));
+    }
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Tile_js__WEBPACK_IMPORTED_MODULE_3__["default"], __assign({}, otherProps, { classes: classesProps, maxDateTransform: _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_2__.getYearEnd, minDateTransform: _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_2__.getYearStart, view: "decade", children: formatYear(locale, date) })));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/DecadeView/Years.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/DecadeView/Years.js ***!
+  \******************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Years)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @wojtekmaj/date-utils */ "./node_modules/@wojtekmaj/date-utils/dist/esm/index.js");
+/* harmony import */ var _TileGroup_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../TileGroup.js */ "./node_modules/react-calendar/dist/esm/TileGroup.js");
+/* harmony import */ var _Year_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./Year.js */ "./node_modules/react-calendar/dist/esm/DecadeView/Year.js");
+/* harmony import */ var _shared_dates_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../shared/dates.js */ "./node_modules/react-calendar/dist/esm/shared/dates.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __rest = (undefined && undefined.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+
+
+
+
+
+function Years(props) {
+    var activeStartDate = props.activeStartDate, hover = props.hover, showNeighboringDecade = props.showNeighboringDecade, value = props.value, valueType = props.valueType, otherProps = __rest(props, ["activeStartDate", "hover", "showNeighboringDecade", "value", "valueType"]);
+    var start = (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_1__.getBeginOfDecadeYear)(activeStartDate);
+    var end = start + (showNeighboringDecade ? 11 : 9);
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_TileGroup_js__WEBPACK_IMPORTED_MODULE_2__["default"], { className: "react-calendar__decade-view__years", dateTransform: _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_3__.getYearStart, dateType: "year", end: end, hover: hover, renderTile: function (_a) {
+            var date = _a.date, otherTileProps = __rest(_a, ["date"]);
+            return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Year_js__WEBPACK_IMPORTED_MODULE_4__["default"], __assign({}, otherProps, otherTileProps, { activeStartDate: activeStartDate, currentDecade: start, date: date }), date.getTime()));
+        }, start: start, value: value, valueType: valueType }));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/Flex.js":
+/*!******************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/Flex.js ***!
+  \******************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Flex)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "react");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __rest = (undefined && undefined.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+
+
+function toPercent(num) {
+    return "".concat(num, "%");
+}
+function Flex(_a) {
+    var children = _a.children, className = _a.className, count = _a.count, direction = _a.direction, offset = _a.offset, style = _a.style, wrap = _a.wrap, otherProps = __rest(_a, ["children", "className", "count", "direction", "offset", "style", "wrap"]);
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", __assign({ className: className, style: __assign({ display: 'flex', flexDirection: direction, flexWrap: wrap ? 'wrap' : 'nowrap' }, style) }, otherProps, { children: react__WEBPACK_IMPORTED_MODULE_1__.Children.map(children, function (child, index) {
+            var marginInlineStart = offset && index === 0 ? toPercent((100 * offset) / count) : null;
+            return (0,react__WEBPACK_IMPORTED_MODULE_1__.cloneElement)(child, __assign(__assign({}, child.props), { style: {
+                    flexBasis: toPercent(100 / count),
+                    flexShrink: 0,
+                    flexGrow: 0,
+                    overflow: 'hidden',
+                    marginLeft: marginInlineStart,
+                    marginInlineStart: marginInlineStart,
+                    marginInlineEnd: 0,
+                } }));
+        }) })));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/MonthView.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/MonthView.js ***!
+  \***********************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ MonthView)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var clsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! clsx */ "./node_modules/clsx/dist/clsx.mjs");
+/* harmony import */ var _MonthView_Days_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./MonthView/Days.js */ "./node_modules/react-calendar/dist/esm/MonthView/Days.js");
+/* harmony import */ var _MonthView_Weekdays_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./MonthView/Weekdays.js */ "./node_modules/react-calendar/dist/esm/MonthView/Weekdays.js");
+/* harmony import */ var _MonthView_WeekNumbers_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./MonthView/WeekNumbers.js */ "./node_modules/react-calendar/dist/esm/MonthView/WeekNumbers.js");
+/* harmony import */ var _shared_const_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./shared/const.js */ "./node_modules/react-calendar/dist/esm/shared/const.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __rest = (undefined && undefined.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+
+
+
+
+
+
+function getCalendarTypeFromLocale(locale) {
+    if (locale) {
+        for (var _i = 0, _a = Object.entries(_shared_const_js__WEBPACK_IMPORTED_MODULE_2__.CALENDAR_TYPE_LOCALES); _i < _a.length; _i++) {
+            var _b = _a[_i], calendarType = _b[0], locales = _b[1];
+            if (locales.includes(locale)) {
+                return calendarType;
+            }
+        }
+    }
+    return _shared_const_js__WEBPACK_IMPORTED_MODULE_2__.CALENDAR_TYPES.ISO_8601;
+}
+/**
+ * Displays a given month.
+ */
+function MonthView(props) {
+    var activeStartDate = props.activeStartDate, locale = props.locale, onMouseLeave = props.onMouseLeave, showFixedNumberOfWeeks = props.showFixedNumberOfWeeks;
+    var _a = props.calendarType, calendarType = _a === void 0 ? getCalendarTypeFromLocale(locale) : _a, formatShortWeekday = props.formatShortWeekday, formatWeekday = props.formatWeekday, onClickWeekNumber = props.onClickWeekNumber, showWeekNumbers = props.showWeekNumbers, childProps = __rest(props, ["calendarType", "formatShortWeekday", "formatWeekday", "onClickWeekNumber", "showWeekNumbers"]);
+    function renderWeekdays() {
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_MonthView_Weekdays_js__WEBPACK_IMPORTED_MODULE_3__["default"], { calendarType: calendarType, formatShortWeekday: formatShortWeekday, formatWeekday: formatWeekday, locale: locale, onMouseLeave: onMouseLeave }));
+    }
+    function renderWeekNumbers() {
+        if (!showWeekNumbers) {
+            return null;
+        }
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_MonthView_WeekNumbers_js__WEBPACK_IMPORTED_MODULE_4__["default"], { activeStartDate: activeStartDate, calendarType: calendarType, onClickWeekNumber: onClickWeekNumber, onMouseLeave: onMouseLeave, showFixedNumberOfWeeks: showFixedNumberOfWeeks }));
+    }
+    function renderDays() {
+        return (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_MonthView_Days_js__WEBPACK_IMPORTED_MODULE_5__["default"], __assign({ calendarType: calendarType }, childProps));
+    }
+    var className = 'react-calendar__month-view';
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { className: (0,clsx__WEBPACK_IMPORTED_MODULE_1__["default"])(className, showWeekNumbers ? "".concat(className, "--weekNumbers") : ''), children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: {
+                display: 'flex',
+                alignItems: 'flex-end',
+            }, children: [renderWeekNumbers(), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: {
+                        flexGrow: 1,
+                        width: '100%',
+                    }, children: [renderWeekdays(), renderDays()] })] }) }));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/MonthView/Day.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/MonthView/Day.js ***!
+  \***************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Day)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @wojtekmaj/date-utils */ "./node_modules/@wojtekmaj/date-utils/dist/esm/index.js");
+/* harmony import */ var _Tile_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Tile.js */ "./node_modules/react-calendar/dist/esm/Tile.js");
+/* harmony import */ var _shared_dates_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../shared/dates.js */ "./node_modules/react-calendar/dist/esm/shared/dates.js");
+/* harmony import */ var _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../shared/dateFormatter.js */ "./node_modules/react-calendar/dist/esm/shared/dateFormatter.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __rest = (undefined && undefined.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+
+
+
+
+
+var className = 'react-calendar__month-view__days__day';
+function Day(_a) {
+    var calendarType = _a.calendarType, _b = _a.classes, classes = _b === void 0 ? [] : _b, currentMonthIndex = _a.currentMonthIndex, _c = _a.formatDay, formatDay = _c === void 0 ? _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__.formatDay : _c, _d = _a.formatLongDate, formatLongDate = _d === void 0 ? _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__.formatLongDate : _d, otherProps = __rest(_a, ["calendarType", "classes", "currentMonthIndex", "formatDay", "formatLongDate"]);
+    var date = otherProps.date, locale = otherProps.locale;
+    var classesProps = [];
+    if (classes) {
+        classesProps.push.apply(classesProps, classes);
+    }
+    if (className) {
+        classesProps.push(className);
+    }
+    if ((0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.isWeekend)(date, calendarType)) {
+        classesProps.push("".concat(className, "--weekend"));
+    }
+    if (date.getMonth() !== currentMonthIndex) {
+        classesProps.push("".concat(className, "--neighboringMonth"));
+    }
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Tile_js__WEBPACK_IMPORTED_MODULE_3__["default"], __assign({}, otherProps, { classes: classesProps, formatAbbr: formatLongDate, maxDateTransform: _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_4__.getDayEnd, minDateTransform: _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_4__.getDayStart, view: "month", children: formatDay(locale, date) })));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/MonthView/Days.js":
+/*!****************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/MonthView/Days.js ***!
+  \****************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Days)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wojtekmaj/date-utils */ "./node_modules/@wojtekmaj/date-utils/dist/esm/index.js");
+/* harmony import */ var _TileGroup_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../TileGroup.js */ "./node_modules/react-calendar/dist/esm/TileGroup.js");
+/* harmony import */ var _Day_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./Day.js */ "./node_modules/react-calendar/dist/esm/MonthView/Day.js");
+/* harmony import */ var _shared_dates_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../shared/dates.js */ "./node_modules/react-calendar/dist/esm/shared/dates.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __rest = (undefined && undefined.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+
+
+
+
+
+function Days(props) {
+    var activeStartDate = props.activeStartDate, calendarType = props.calendarType, hover = props.hover, showFixedNumberOfWeeks = props.showFixedNumberOfWeeks, showNeighboringMonth = props.showNeighboringMonth, value = props.value, valueType = props.valueType, otherProps = __rest(props, ["activeStartDate", "calendarType", "hover", "showFixedNumberOfWeeks", "showNeighboringMonth", "value", "valueType"]);
+    var year = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getYear)(activeStartDate);
+    var monthIndex = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getMonth)(activeStartDate);
+    var hasFixedNumberOfWeeks = showFixedNumberOfWeeks || showNeighboringMonth;
+    var dayOfWeek = (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getDayOfWeek)(activeStartDate, calendarType);
+    var offset = hasFixedNumberOfWeeks ? 0 : dayOfWeek;
+    /**
+     * Defines on which day of the month the grid shall start. If we simply show current
+     * month, we obviously start on day one, but if showNeighboringMonth is set to
+     * true, we need to find the beginning of the week the first day of the month is in.
+     */
+    var start = (hasFixedNumberOfWeeks ? -dayOfWeek : 0) + 1;
+    /**
+     * Defines on which day of the month the grid shall end. If we simply show current
+     * month, we need to stop on the last day of the month, but if showNeighboringMonth
+     * is set to true, we need to find the end of the week the last day of the month is in.
+     */
+    var end = (function () {
+        if (showFixedNumberOfWeeks) {
+            // Always show 6 weeks
+            return start + 6 * 7 - 1;
+        }
+        var daysInMonth = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getDaysInMonth)(activeStartDate);
+        if (showNeighboringMonth) {
+            var activeEndDate = new Date();
+            activeEndDate.setFullYear(year, monthIndex, daysInMonth);
+            activeEndDate.setHours(0, 0, 0, 0);
+            var daysUntilEndOfTheWeek = 7 - (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getDayOfWeek)(activeEndDate, calendarType) - 1;
+            return daysInMonth + daysUntilEndOfTheWeek;
+        }
+        return daysInMonth;
+    })();
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_TileGroup_js__WEBPACK_IMPORTED_MODULE_3__["default"], { className: "react-calendar__month-view__days", count: 7, dateTransform: function (day) {
+            var date = new Date();
+            date.setFullYear(year, monthIndex, day);
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getDayStart)(date);
+        }, dateType: "day", hover: hover, end: end, renderTile: function (_a) {
+            var date = _a.date, otherTileProps = __rest(_a, ["date"]);
+            return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Day_js__WEBPACK_IMPORTED_MODULE_4__["default"], __assign({}, otherProps, otherTileProps, { activeStartDate: activeStartDate, calendarType: calendarType, currentMonthIndex: monthIndex, date: date }), date.getTime()));
+        }, offset: offset, start: start, value: value, valueType: valueType }));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/MonthView/WeekNumber.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/MonthView/WeekNumber.js ***!
+  \**********************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ WeekNumber)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __rest = (undefined && undefined.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+
+var className = 'react-calendar__tile';
+function WeekNumber(props) {
+    var onClickWeekNumber = props.onClickWeekNumber, weekNumber = props.weekNumber;
+    var children = (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", { children: weekNumber });
+    if (onClickWeekNumber) {
+        var date_1 = props.date, onClickWeekNumber_1 = props.onClickWeekNumber, weekNumber_1 = props.weekNumber, otherProps = __rest(props, ["date", "onClickWeekNumber", "weekNumber"]);
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", __assign({}, otherProps, { className: className, onClick: function (event) { return onClickWeekNumber_1(weekNumber_1, date_1, event); }, type: "button", children: children })));
+    }
+    else {
+        var date = props.date, onClickWeekNumber_2 = props.onClickWeekNumber, weekNumber_2 = props.weekNumber, otherProps = __rest(props, ["date", "onClickWeekNumber", "weekNumber"]);
+        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", __assign({}, otherProps, { className: className, children: children })));
+    }
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/MonthView/WeekNumbers.js":
+/*!***********************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/MonthView/WeekNumbers.js ***!
+  \***********************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ WeekNumbers)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wojtekmaj/date-utils */ "./node_modules/@wojtekmaj/date-utils/dist/esm/index.js");
+/* harmony import */ var _WeekNumber_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./WeekNumber.js */ "./node_modules/react-calendar/dist/esm/MonthView/WeekNumber.js");
+/* harmony import */ var _Flex_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Flex.js */ "./node_modules/react-calendar/dist/esm/Flex.js");
+/* harmony import */ var _shared_dates_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../shared/dates.js */ "./node_modules/react-calendar/dist/esm/shared/dates.js");
+
+
+
+
+
+function WeekNumbers(props) {
+    var activeStartDate = props.activeStartDate, calendarType = props.calendarType, onClickWeekNumber = props.onClickWeekNumber, onMouseLeave = props.onMouseLeave, showFixedNumberOfWeeks = props.showFixedNumberOfWeeks;
+    var numberOfWeeks = (function () {
+        if (showFixedNumberOfWeeks) {
+            return 6;
+        }
+        var numberOfDays = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getDaysInMonth)(activeStartDate);
+        var startWeekday = (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getDayOfWeek)(activeStartDate, calendarType);
+        var days = numberOfDays - (7 - startWeekday);
+        return 1 + Math.ceil(days / 7);
+    })();
+    var dates = (function () {
+        var year = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getYear)(activeStartDate);
+        var monthIndex = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getMonth)(activeStartDate);
+        var day = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getDate)(activeStartDate);
+        var result = [];
+        for (var index = 0; index < numberOfWeeks; index += 1) {
+            result.push((0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getBeginOfWeek)(new Date(year, monthIndex, day + index * 7), calendarType));
+        }
+        return result;
+    })();
+    var weekNumbers = dates.map(function (date) { return (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_2__.getWeekNumber)(date, calendarType); });
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Flex_js__WEBPACK_IMPORTED_MODULE_3__["default"], { className: "react-calendar__month-view__weekNumbers", count: numberOfWeeks, direction: "column", onFocus: onMouseLeave, onMouseOver: onMouseLeave, style: { flexBasis: 'calc(100% * (1 / 8)', flexShrink: 0 }, children: weekNumbers.map(function (weekNumber, weekIndex) {
+            var date = dates[weekIndex];
+            if (!date) {
+                throw new Error('date is not defined');
+            }
+            return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_WeekNumber_js__WEBPACK_IMPORTED_MODULE_4__["default"], { date: date, onClickWeekNumber: onClickWeekNumber, weekNumber: weekNumber }, weekNumber));
+        }) }));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/MonthView/Weekdays.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/MonthView/Weekdays.js ***!
+  \********************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Weekdays)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var clsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! clsx */ "./node_modules/clsx/dist/clsx.mjs");
+/* harmony import */ var _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @wojtekmaj/date-utils */ "./node_modules/@wojtekmaj/date-utils/dist/esm/index.js");
+/* harmony import */ var _Flex_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../Flex.js */ "./node_modules/react-calendar/dist/esm/Flex.js");
+/* harmony import */ var _shared_dates_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../shared/dates.js */ "./node_modules/react-calendar/dist/esm/shared/dates.js");
+/* harmony import */ var _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../shared/dateFormatter.js */ "./node_modules/react-calendar/dist/esm/shared/dateFormatter.js");
+
+
+
+
+
+
+var className = 'react-calendar__month-view__weekdays';
+var weekdayClassName = "".concat(className, "__weekday");
+function Weekdays(props) {
+    var calendarType = props.calendarType, _a = props.formatShortWeekday, formatShortWeekday = _a === void 0 ? _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_2__.formatShortWeekday : _a, _b = props.formatWeekday, formatWeekday = _b === void 0 ? _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_2__.formatWeekday : _b, locale = props.locale, onMouseLeave = props.onMouseLeave;
+    var anyDate = new Date();
+    var beginOfMonth = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_3__.getMonthStart)(anyDate);
+    var year = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_3__.getYear)(beginOfMonth);
+    var monthIndex = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_3__.getMonth)(beginOfMonth);
+    var weekdays = [];
+    for (var weekday = 1; weekday <= 7; weekday += 1) {
+        var weekdayDate = new Date(year, monthIndex, weekday - (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_4__.getDayOfWeek)(beginOfMonth, calendarType));
+        var abbr = formatWeekday(locale, weekdayDate);
+        weekdays.push((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { className: (0,clsx__WEBPACK_IMPORTED_MODULE_1__["default"])(weekdayClassName, (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_4__.isCurrentDayOfWeek)(weekdayDate) && "".concat(weekdayClassName, "--current"), (0,_shared_dates_js__WEBPACK_IMPORTED_MODULE_4__.isWeekend)(weekdayDate, calendarType) && "".concat(weekdayClassName, "--weekend")), children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("abbr", { "aria-label": abbr, title: abbr, children: formatShortWeekday(locale, weekdayDate).replace('.', '') }) }, weekday));
+    }
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Flex_js__WEBPACK_IMPORTED_MODULE_5__["default"], { className: className, count: 7, onFocus: onMouseLeave, onMouseOver: onMouseLeave, children: weekdays }));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/Tile.js":
+/*!******************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/Tile.js ***!
+  \******************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Tile)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var clsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! clsx */ "./node_modules/clsx/dist/clsx.mjs");
+
+
+
+function Tile(props) {
+    var activeStartDate = props.activeStartDate, children = props.children, classes = props.classes, date = props.date, formatAbbr = props.formatAbbr, locale = props.locale, maxDate = props.maxDate, maxDateTransform = props.maxDateTransform, minDate = props.minDate, minDateTransform = props.minDateTransform, onClick = props.onClick, onMouseOver = props.onMouseOver, style = props.style, tileClassNameProps = props.tileClassName, tileContentProps = props.tileContent, tileDisabled = props.tileDisabled, view = props.view;
+    var tileClassName = (0,react__WEBPACK_IMPORTED_MODULE_1__.useMemo)(function () {
+        var args = { activeStartDate: activeStartDate, date: date, view: view };
+        return typeof tileClassNameProps === 'function' ? tileClassNameProps(args) : tileClassNameProps;
+    }, [activeStartDate, date, tileClassNameProps, view]);
+    var tileContent = (0,react__WEBPACK_IMPORTED_MODULE_1__.useMemo)(function () {
+        var args = { activeStartDate: activeStartDate, date: date, view: view };
+        return typeof tileContentProps === 'function' ? tileContentProps(args) : tileContentProps;
+    }, [activeStartDate, date, tileContentProps, view]);
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("button", { className: (0,clsx__WEBPACK_IMPORTED_MODULE_2__["default"])(classes, tileClassName), disabled: (minDate && minDateTransform(minDate) > date) ||
+            (maxDate && maxDateTransform(maxDate) < date) ||
+            (tileDisabled && tileDisabled({ activeStartDate: activeStartDate, date: date, view: view })), onClick: onClick ? function (event) { return onClick(date, event); } : undefined, onFocus: onMouseOver ? function () { return onMouseOver(date); } : undefined, onMouseOver: onMouseOver ? function () { return onMouseOver(date); } : undefined, style: style, type: "button", children: [formatAbbr ? (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("abbr", { "aria-label": formatAbbr(locale, date), children: children }) : children, tileContent] }));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/TileGroup.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/TileGroup.js ***!
+  \***********************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ TileGroup)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _Flex_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Flex.js */ "./node_modules/react-calendar/dist/esm/Flex.js");
+/* harmony import */ var _shared_utils_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./shared/utils.js */ "./node_modules/react-calendar/dist/esm/shared/utils.js");
+
+
+
+function TileGroup(_a) {
+    var className = _a.className, _b = _a.count, count = _b === void 0 ? 3 : _b, dateTransform = _a.dateTransform, dateType = _a.dateType, end = _a.end, hover = _a.hover, offset = _a.offset, renderTile = _a.renderTile, start = _a.start, _c = _a.step, step = _c === void 0 ? 1 : _c, value = _a.value, valueType = _a.valueType;
+    var tiles = [];
+    for (var point = start; point <= end; point += step) {
+        var date = dateTransform(point);
+        tiles.push(renderTile({
+            classes: (0,_shared_utils_js__WEBPACK_IMPORTED_MODULE_1__.getTileClasses)({
+                date: date,
+                dateType: dateType,
+                hover: hover,
+                value: value,
+                valueType: valueType,
+            }),
+            date: date,
+        }));
+    }
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Flex_js__WEBPACK_IMPORTED_MODULE_2__["default"], { className: className, count: count, offset: offset, wrap: true, children: tiles }));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/YearView.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/YearView.js ***!
+  \**********************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ YearView)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _YearView_Months_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./YearView/Months.js */ "./node_modules/react-calendar/dist/esm/YearView/Months.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+
+
+/**
+ * Displays a given year.
+ */
+function YearView(props) {
+    function renderMonths() {
+        return (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_YearView_Months_js__WEBPACK_IMPORTED_MODULE_1__["default"], __assign({}, props));
+    }
+    return (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { className: "react-calendar__year-view", children: renderMonths() });
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/YearView/Month.js":
+/*!****************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/YearView/Month.js ***!
+  \****************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Month)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @wojtekmaj/date-utils */ "./node_modules/@wojtekmaj/date-utils/dist/esm/index.js");
+/* harmony import */ var _Tile_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../Tile.js */ "./node_modules/react-calendar/dist/esm/Tile.js");
+/* harmony import */ var _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../shared/dateFormatter.js */ "./node_modules/react-calendar/dist/esm/shared/dateFormatter.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __rest = (undefined && undefined.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+var __spreadArray = (undefined && undefined.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
+
+
+
+
+var className = 'react-calendar__year-view__months__month';
+function Month(_a) {
+    var _b = _a.classes, classes = _b === void 0 ? [] : _b, _c = _a.formatMonth, formatMonth = _c === void 0 ? _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__.formatMonth : _c, _d = _a.formatMonthYear, formatMonthYear = _d === void 0 ? _shared_dateFormatter_js__WEBPACK_IMPORTED_MODULE_1__.formatMonthYear : _d, otherProps = __rest(_a, ["classes", "formatMonth", "formatMonthYear"]);
+    var date = otherProps.date, locale = otherProps.locale;
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Tile_js__WEBPACK_IMPORTED_MODULE_2__["default"], __assign({}, otherProps, { classes: __spreadArray(__spreadArray([], classes, true), [className], false), formatAbbr: formatMonthYear, maxDateTransform: _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_3__.getMonthEnd, minDateTransform: _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_3__.getMonthStart, view: "year", children: formatMonth(locale, date) })));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/YearView/Months.js":
+/*!*****************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/YearView/Months.js ***!
+  \*****************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Months)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+/* harmony import */ var _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wojtekmaj/date-utils */ "./node_modules/@wojtekmaj/date-utils/dist/esm/index.js");
+/* harmony import */ var _TileGroup_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../TileGroup.js */ "./node_modules/react-calendar/dist/esm/TileGroup.js");
+/* harmony import */ var _Month_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./Month.js */ "./node_modules/react-calendar/dist/esm/YearView/Month.js");
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __rest = (undefined && undefined.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+
+
+
+
+function Months(props) {
+    var activeStartDate = props.activeStartDate, hover = props.hover, value = props.value, valueType = props.valueType, otherProps = __rest(props, ["activeStartDate", "hover", "value", "valueType"]);
+    var start = 0;
+    var end = 11;
+    var year = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getYear)(activeStartDate);
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_TileGroup_js__WEBPACK_IMPORTED_MODULE_2__["default"], { className: "react-calendar__year-view__months", dateTransform: function (monthIndex) {
+            var date = new Date();
+            date.setFullYear(year, monthIndex, 1);
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getMonthStart)(date);
+        }, dateType: "month", end: end, hover: hover, renderTile: function (_a) {
+            var date = _a.date, otherTileProps = __rest(_a, ["date"]);
+            return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_Month_js__WEBPACK_IMPORTED_MODULE_3__["default"], __assign({}, otherProps, otherTileProps, { activeStartDate: activeStartDate, date: date }), date.getTime()));
+        }, start: start, value: value, valueType: valueType }));
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/shared/const.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/shared/const.js ***!
+  \**************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CALENDAR_TYPES: () => (/* binding */ CALENDAR_TYPES),
+/* harmony export */   CALENDAR_TYPE_LOCALES: () => (/* binding */ CALENDAR_TYPE_LOCALES),
+/* harmony export */   WEEKDAYS: () => (/* binding */ WEEKDAYS)
+/* harmony export */ });
+var _a;
+var CALENDAR_TYPES = {
+    GREGORY: 'gregory',
+    HEBREW: 'hebrew',
+    ISLAMIC: 'islamic',
+    ISO_8601: 'iso8601',
+};
+var CALENDAR_TYPE_LOCALES = (_a = {},
+    _a[CALENDAR_TYPES.GREGORY] = [
+        'en-CA',
+        'en-US',
+        'es-AR',
+        'es-BO',
+        'es-CL',
+        'es-CO',
+        'es-CR',
+        'es-DO',
+        'es-EC',
+        'es-GT',
+        'es-HN',
+        'es-MX',
+        'es-NI',
+        'es-PA',
+        'es-PE',
+        'es-PR',
+        'es-SV',
+        'es-VE',
+        'pt-BR',
+    ],
+    _a[CALENDAR_TYPES.HEBREW] = ['he', 'he-IL'],
+    _a[CALENDAR_TYPES.ISLAMIC] = [
+        // ar-LB, ar-MA intentionally missing
+        'ar',
+        'ar-AE',
+        'ar-BH',
+        'ar-DZ',
+        'ar-EG',
+        'ar-IQ',
+        'ar-JO',
+        'ar-KW',
+        'ar-LY',
+        'ar-OM',
+        'ar-QA',
+        'ar-SA',
+        'ar-SD',
+        'ar-SY',
+        'ar-YE',
+        'dv',
+        'dv-MV',
+        'ps',
+        'ps-AR',
+    ],
+    _a);
+var WEEKDAYS = [0, 1, 2, 3, 4, 5, 6];
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/shared/dateFormatter.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/shared/dateFormatter.js ***!
+  \**********************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   formatDate: () => (/* binding */ formatDate),
+/* harmony export */   formatDay: () => (/* binding */ formatDay),
+/* harmony export */   formatLongDate: () => (/* binding */ formatLongDate),
+/* harmony export */   formatMonth: () => (/* binding */ formatMonth),
+/* harmony export */   formatMonthYear: () => (/* binding */ formatMonthYear),
+/* harmony export */   formatShortWeekday: () => (/* binding */ formatShortWeekday),
+/* harmony export */   formatWeekday: () => (/* binding */ formatWeekday),
+/* harmony export */   formatYear: () => (/* binding */ formatYear)
+/* harmony export */ });
+/* harmony import */ var get_user_locale__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! get-user-locale */ "./node_modules/get-user-locale/dist/esm/index.js");
+
+var formatterCache = new Map();
+function getFormatter(options) {
+    return function formatter(locale, date) {
+        var localeWithDefault = locale || (0,get_user_locale__WEBPACK_IMPORTED_MODULE_0__["default"])();
+        if (!formatterCache.has(localeWithDefault)) {
+            formatterCache.set(localeWithDefault, new Map());
+        }
+        var formatterCacheLocale = formatterCache.get(localeWithDefault);
+        if (!formatterCacheLocale.has(options)) {
+            formatterCacheLocale.set(options, new Intl.DateTimeFormat(localeWithDefault || undefined, options).format);
+        }
+        return formatterCacheLocale.get(options)(date);
+    };
+}
+/**
+ * Changes the hour in a Date to ensure right date formatting even if DST is messed up.
+ * Workaround for bug in WebKit and Firefox with historical dates.
+ * For more details, see:
+ * https://bugs.chromium.org/p/chromium/issues/detail?id=750465
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=1385643
+ *
+ * @param {Date} date Date.
+ * @returns {Date} Date with hour set to 12.
+ */
+function toSafeHour(date) {
+    var safeDate = new Date(date);
+    return new Date(safeDate.setHours(12));
+}
+function getSafeFormatter(options) {
+    return function (locale, date) { return getFormatter(options)(locale, toSafeHour(date)); };
+}
+var formatDateOptions = {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+};
+var formatDayOptions = { day: 'numeric' };
+var formatLongDateOptions = {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+};
+var formatMonthOptions = { month: 'long' };
+var formatMonthYearOptions = {
+    month: 'long',
+    year: 'numeric',
+};
+var formatShortWeekdayOptions = { weekday: 'short' };
+var formatWeekdayOptions = { weekday: 'long' };
+var formatYearOptions = { year: 'numeric' };
+var formatDate = getSafeFormatter(formatDateOptions);
+var formatDay = getSafeFormatter(formatDayOptions);
+var formatLongDate = getSafeFormatter(formatLongDateOptions);
+var formatMonth = getSafeFormatter(formatMonthOptions);
+var formatMonthYear = getSafeFormatter(formatMonthYearOptions);
+var formatShortWeekday = getSafeFormatter(formatShortWeekdayOptions);
+var formatWeekday = getSafeFormatter(formatWeekdayOptions);
+var formatYear = getSafeFormatter(formatYearOptions);
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/shared/dates.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/shared/dates.js ***!
+  \**************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getBegin: () => (/* binding */ getBegin),
+/* harmony export */   getBeginNext: () => (/* binding */ getBeginNext),
+/* harmony export */   getBeginNext2: () => (/* binding */ getBeginNext2),
+/* harmony export */   getBeginOfCenturyYear: () => (/* binding */ getBeginOfCenturyYear),
+/* harmony export */   getBeginOfDecadeYear: () => (/* binding */ getBeginOfDecadeYear),
+/* harmony export */   getBeginOfWeek: () => (/* binding */ getBeginOfWeek),
+/* harmony export */   getBeginPrevious: () => (/* binding */ getBeginPrevious),
+/* harmony export */   getBeginPrevious2: () => (/* binding */ getBeginPrevious2),
+/* harmony export */   getCenturyLabel: () => (/* binding */ getCenturyLabel),
+/* harmony export */   getDayOfWeek: () => (/* binding */ getDayOfWeek),
+/* harmony export */   getDecadeLabel: () => (/* binding */ getDecadeLabel),
+/* harmony export */   getEnd: () => (/* binding */ getEnd),
+/* harmony export */   getEndPrevious: () => (/* binding */ getEndPrevious),
+/* harmony export */   getEndPrevious2: () => (/* binding */ getEndPrevious2),
+/* harmony export */   getRange: () => (/* binding */ getRange),
+/* harmony export */   getValueRange: () => (/* binding */ getValueRange),
+/* harmony export */   getWeekNumber: () => (/* binding */ getWeekNumber),
+/* harmony export */   isCurrentDayOfWeek: () => (/* binding */ isCurrentDayOfWeek),
+/* harmony export */   isWeekend: () => (/* binding */ isWeekend)
+/* harmony export */ });
+/* harmony import */ var _wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wojtekmaj/date-utils */ "./node_modules/@wojtekmaj/date-utils/dist/esm/index.js");
+/* harmony import */ var _const_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./const.js */ "./node_modules/react-calendar/dist/esm/shared/const.js");
+/* harmony import */ var _dateFormatter_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./dateFormatter.js */ "./node_modules/react-calendar/dist/esm/shared/dateFormatter.js");
+
+
+
+var SUNDAY = _const_js__WEBPACK_IMPORTED_MODULE_0__.WEEKDAYS[0];
+var FRIDAY = _const_js__WEBPACK_IMPORTED_MODULE_0__.WEEKDAYS[5];
+var SATURDAY = _const_js__WEBPACK_IMPORTED_MODULE_0__.WEEKDAYS[6];
+/* Simple getters - getting a property of a given point in time */
+/**
+ * Gets day of the week of a given date.
+ * @param {Date} date Date.
+ * @param {CalendarType} [calendarType="iso8601"] Calendar type.
+ * @returns {number} Day of the week.
+ */
+function getDayOfWeek(date, calendarType) {
+    if (calendarType === void 0) { calendarType = _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.ISO_8601; }
+    var weekday = date.getDay();
+    switch (calendarType) {
+        case _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.ISO_8601:
+            // Shifts days of the week so that Monday is 0, Sunday is 6
+            return (weekday + 6) % 7;
+        case _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.ISLAMIC:
+            return (weekday + 1) % 7;
+        case _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.HEBREW:
+        case _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.GREGORY:
+            return weekday;
+        default:
+            throw new Error('Unsupported calendar type.');
+    }
+}
+/**
+ * Century
+ */
+/**
+ * Gets the year of the beginning of a century of a given date.
+ * @param {Date} date Date.
+ * @returns {number} Year of the beginning of a century.
+ */
+function getBeginOfCenturyYear(date) {
+    var beginOfCentury = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getCenturyStart)(date);
+    return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getYear)(beginOfCentury);
+}
+/**
+ * Decade
+ */
+/**
+ * Gets the year of the beginning of a decade of a given date.
+ * @param {Date} date Date.
+ * @returns {number} Year of the beginning of a decade.
+ */
+function getBeginOfDecadeYear(date) {
+    var beginOfDecade = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getDecadeStart)(date);
+    return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getYear)(beginOfDecade);
+}
+/**
+ * Week
+ */
+/**
+ * Returns the beginning of a given week.
+ *
+ * @param {Date} date Date.
+ * @param {CalendarType} [calendarType="iso8601"] Calendar type.
+ * @returns {Date} Beginning of a given week.
+ */
+function getBeginOfWeek(date, calendarType) {
+    if (calendarType === void 0) { calendarType = _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.ISO_8601; }
+    var year = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getYear)(date);
+    var monthIndex = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getMonth)(date);
+    var day = date.getDate() - getDayOfWeek(date, calendarType);
+    return new Date(year, monthIndex, day);
+}
+/**
+ * Gets week number according to ISO 8601 or US standard.
+ * In ISO 8601, Arabic and Hebrew week 1 is the one with January 4.
+ * In US calendar week 1 is the one with January 1.
+ *
+ * @param {Date} date Date.
+ * @param {CalendarType} [calendarType="iso8601"] Calendar type.
+ * @returns {number} Week number.
+ */
+function getWeekNumber(date, calendarType) {
+    if (calendarType === void 0) { calendarType = _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.ISO_8601; }
+    var calendarTypeForWeekNumber = calendarType === _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.GREGORY ? _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.GREGORY : _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.ISO_8601;
+    var beginOfWeek = getBeginOfWeek(date, calendarType);
+    var year = (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getYear)(date) + 1;
+    var dayInWeekOne;
+    var beginOfFirstWeek;
+    // Look for the first week one that does not come after a given date
+    do {
+        dayInWeekOne = new Date(year, 0, calendarTypeForWeekNumber === _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.ISO_8601 ? 4 : 1);
+        beginOfFirstWeek = getBeginOfWeek(dayInWeekOne, calendarType);
+        year -= 1;
+    } while (date < beginOfFirstWeek);
+    return Math.round((beginOfWeek.getTime() - beginOfFirstWeek.getTime()) / (8.64e7 * 7)) + 1;
+}
+/**
+ * Others
+ */
+/**
+ * Returns the beginning of a given range.
+ *
+ * @param {RangeType} rangeType Range type (e.g. 'day')
+ * @param {Date} date Date.
+ * @returns {Date} Beginning of a given range.
+ */
+function getBegin(rangeType, date) {
+    switch (rangeType) {
+        case 'century':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getCenturyStart)(date);
+        case 'decade':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getDecadeStart)(date);
+        case 'year':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getYearStart)(date);
+        case 'month':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getMonthStart)(date);
+        case 'day':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getDayStart)(date);
+        default:
+            throw new Error("Invalid rangeType: ".concat(rangeType));
+    }
+}
+/**
+ * Returns the beginning of a previous given range.
+ *
+ * @param {RangeType} rangeType Range type (e.g. 'day')
+ * @param {Date} date Date.
+ * @returns {Date} Beginning of a previous given range.
+ */
+function getBeginPrevious(rangeType, date) {
+    switch (rangeType) {
+        case 'century':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousCenturyStart)(date);
+        case 'decade':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousDecadeStart)(date);
+        case 'year':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousYearStart)(date);
+        case 'month':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousMonthStart)(date);
+        default:
+            throw new Error("Invalid rangeType: ".concat(rangeType));
+    }
+}
+/**
+ * Returns the beginning of a next given range.
+ *
+ * @param {RangeType} rangeType Range type (e.g. 'day')
+ * @param {Date} date Date.
+ * @returns {Date} Beginning of a next given range.
+ */
+function getBeginNext(rangeType, date) {
+    switch (rangeType) {
+        case 'century':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getNextCenturyStart)(date);
+        case 'decade':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getNextDecadeStart)(date);
+        case 'year':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getNextYearStart)(date);
+        case 'month':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getNextMonthStart)(date);
+        default:
+            throw new Error("Invalid rangeType: ".concat(rangeType));
+    }
+}
+function getBeginPrevious2(rangeType, date) {
+    switch (rangeType) {
+        case 'decade':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousDecadeStart)(date, -100);
+        case 'year':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousYearStart)(date, -10);
+        case 'month':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousMonthStart)(date, -12);
+        default:
+            throw new Error("Invalid rangeType: ".concat(rangeType));
+    }
+}
+function getBeginNext2(rangeType, date) {
+    switch (rangeType) {
+        case 'decade':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getNextDecadeStart)(date, 100);
+        case 'year':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getNextYearStart)(date, 10);
+        case 'month':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getNextMonthStart)(date, 12);
+        default:
+            throw new Error("Invalid rangeType: ".concat(rangeType));
+    }
+}
+/**
+ * Returns the end of a given range.
+ *
+ * @param {RangeType} rangeType Range type (e.g. 'day')
+ * @param {Date} date Date.
+ * @returns {Date} End of a given range.
+ */
+function getEnd(rangeType, date) {
+    switch (rangeType) {
+        case 'century':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getCenturyEnd)(date);
+        case 'decade':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getDecadeEnd)(date);
+        case 'year':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getYearEnd)(date);
+        case 'month':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getMonthEnd)(date);
+        case 'day':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getDayEnd)(date);
+        default:
+            throw new Error("Invalid rangeType: ".concat(rangeType));
+    }
+}
+/**
+ * Returns the end of a previous given range.
+ *
+ * @param {RangeType} rangeType Range type (e.g. 'day')
+ * @param {Date} date Date.
+ * @returns {Date} End of a previous given range.
+ */
+function getEndPrevious(rangeType, date) {
+    switch (rangeType) {
+        case 'century':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousCenturyEnd)(date);
+        case 'decade':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousDecadeEnd)(date);
+        case 'year':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousYearEnd)(date);
+        case 'month':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousMonthEnd)(date);
+        default:
+            throw new Error("Invalid rangeType: ".concat(rangeType));
+    }
+}
+function getEndPrevious2(rangeType, date) {
+    switch (rangeType) {
+        case 'decade':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousDecadeEnd)(date, -100);
+        case 'year':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousYearEnd)(date, -10);
+        case 'month':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getPreviousMonthEnd)(date, -12);
+        default:
+            throw new Error("Invalid rangeType: ".concat(rangeType));
+    }
+}
+/**
+ * Returns an array with the beginning and the end of a given range.
+ *
+ * @param {RangeType} rangeType Range type (e.g. 'day')
+ * @param {Date} date Date.
+ * @returns {Date[]} Beginning and end of a given range.
+ */
+function getRange(rangeType, date) {
+    switch (rangeType) {
+        case 'century':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getCenturyRange)(date);
+        case 'decade':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getDecadeRange)(date);
+        case 'year':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getYearRange)(date);
+        case 'month':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getMonthRange)(date);
+        case 'day':
+            return (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getDayRange)(date);
+        default:
+            throw new Error("Invalid rangeType: ".concat(rangeType));
+    }
+}
+/**
+ * Creates a range out of two values, ensuring they are in order and covering entire period ranges.
+ *
+ * @param {RangeType} rangeType Range type (e.g. 'day')
+ * @param {Date} date1 First date.
+ * @param {Date} date2 Second date.
+ * @returns {Date[]} Beginning and end of a given range.
+ */
+function getValueRange(rangeType, date1, date2) {
+    var rawNextValue = [date1, date2].sort(function (a, b) { return a.getTime() - b.getTime(); });
+    return [getBegin(rangeType, rawNextValue[0]), getEnd(rangeType, rawNextValue[1])];
+}
+function toYearLabel(locale, formatYear, dates) {
+    if (formatYear === void 0) { formatYear = _dateFormatter_js__WEBPACK_IMPORTED_MODULE_2__.formatYear; }
+    return dates.map(function (date) { return formatYear(locale, date); }).join(' – ');
+}
+/**
+ * @callback FormatYear
+ * @param {string} locale Locale.
+ * @param {Date} date Date.
+ * @returns {string} Formatted year.
+ */
+/**
+ * Returns a string labelling a century of a given date.
+ * For example, for 2017 it will return 2001-2100.
+ *
+ * @param {string} locale Locale.
+ * @param {FormatYear} formatYear Function to format a year.
+ * @param {Date|string|number} date Date or a year as a string or as a number.
+ * @returns {string} String labelling a century of a given date.
+ */
+function getCenturyLabel(locale, formatYear, date) {
+    return toYearLabel(locale, formatYear, (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getCenturyRange)(date));
+}
+/**
+ * Returns a string labelling a decade of a given date.
+ * For example, for 2017 it will return 2011-2020.
+ *
+ * @param {string} locale Locale.
+ * @param {FormatYear} formatYear Function to format a year.
+ * @param {Date|string|number} date Date or a year as a string or as a number.
+ * @returns {string} String labelling a decade of a given date.
+ */
+function getDecadeLabel(locale, formatYear, date) {
+    return toYearLabel(locale, formatYear, (0,_wojtekmaj_date_utils__WEBPACK_IMPORTED_MODULE_1__.getDecadeRange)(date));
+}
+/**
+ * Returns a boolean determining whether a given date is the current day of the week.
+ *
+ * @param {Date} date Date.
+ * @returns {boolean} Whether a given date is the current day of the week.
+ */
+function isCurrentDayOfWeek(date) {
+    return date.getDay() === new Date().getDay();
+}
+/**
+ * Returns a boolean determining whether a given date is a weekend day.
+ *
+ * @param {Date} date Date.
+ * @param {CalendarType} [calendarType="iso8601"] Calendar type.
+ * @returns {boolean} Whether a given date is a weekend day.
+ */
+function isWeekend(date, calendarType) {
+    if (calendarType === void 0) { calendarType = _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.ISO_8601; }
+    var weekday = date.getDay();
+    switch (calendarType) {
+        case _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.ISLAMIC:
+        case _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.HEBREW:
+            return weekday === FRIDAY || weekday === SATURDAY;
+        case _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.ISO_8601:
+        case _const_js__WEBPACK_IMPORTED_MODULE_0__.CALENDAR_TYPES.GREGORY:
+            return weekday === SATURDAY || weekday === SUNDAY;
+        default:
+            throw new Error('Unsupported calendar type.');
+    }
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/react-calendar/dist/esm/shared/utils.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/react-calendar/dist/esm/shared/utils.js ***!
+  \**************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   between: () => (/* binding */ between),
+/* harmony export */   doRangesOverlap: () => (/* binding */ doRangesOverlap),
+/* harmony export */   getTileClasses: () => (/* binding */ getTileClasses),
+/* harmony export */   isRangeWithinRange: () => (/* binding */ isRangeWithinRange),
+/* harmony export */   isValueWithinRange: () => (/* binding */ isValueWithinRange)
+/* harmony export */ });
+/* harmony import */ var _dates_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./dates.js */ "./node_modules/react-calendar/dist/esm/shared/dates.js");
+
+/**
+ * Returns a value no smaller than min and no larger than max.
+ *
+ * @param {Date} value Value to return.
+ * @param {Date} min Minimum return value.
+ * @param {Date} max Maximum return value.
+ * @returns {Date} Value between min and max.
+ */
+function between(value, min, max) {
+    if (min && min > value) {
+        return min;
+    }
+    if (max && max < value) {
+        return max;
+    }
+    return value;
+}
+function isValueWithinRange(value, range) {
+    return range[0] <= value && range[1] >= value;
+}
+function isRangeWithinRange(greaterRange, smallerRange) {
+    return greaterRange[0] <= smallerRange[0] && greaterRange[1] >= smallerRange[1];
+}
+function doRangesOverlap(range1, range2) {
+    return isValueWithinRange(range1[0], range2) || isValueWithinRange(range1[1], range2);
+}
+function getRangeClassNames(valueRange, dateRange, baseClassName) {
+    var isRange = doRangesOverlap(dateRange, valueRange);
+    var classes = [];
+    if (isRange) {
+        classes.push(baseClassName);
+        var isRangeStart = isValueWithinRange(valueRange[0], dateRange);
+        var isRangeEnd = isValueWithinRange(valueRange[1], dateRange);
+        if (isRangeStart) {
+            classes.push("".concat(baseClassName, "Start"));
+        }
+        if (isRangeEnd) {
+            classes.push("".concat(baseClassName, "End"));
+        }
+        if (isRangeStart && isRangeEnd) {
+            classes.push("".concat(baseClassName, "BothEnds"));
+        }
+    }
+    return classes;
+}
+function isCompleteValue(value) {
+    if (Array.isArray(value)) {
+        return value[0] !== null && value[1] !== null;
+    }
+    return value !== null;
+}
+function getTileClasses(args) {
+    if (!args) {
+        throw new Error('args is required');
+    }
+    var value = args.value, date = args.date, hover = args.hover;
+    var className = 'react-calendar__tile';
+    var classes = [className];
+    if (!date) {
+        return classes;
+    }
+    var now = new Date();
+    var dateRange = (function () {
+        if (Array.isArray(date)) {
+            return date;
+        }
+        var dateType = args.dateType;
+        if (!dateType) {
+            throw new Error('dateType is required when date is not an array of two dates');
+        }
+        return (0,_dates_js__WEBPACK_IMPORTED_MODULE_0__.getRange)(dateType, date);
+    })();
+    if (isValueWithinRange(now, dateRange)) {
+        classes.push("".concat(className, "--now"));
+    }
+    if (!value || !isCompleteValue(value)) {
+        return classes;
+    }
+    var valueRange = (function () {
+        if (Array.isArray(value)) {
+            return value;
+        }
+        var valueType = args.valueType;
+        if (!valueType) {
+            throw new Error('valueType is required when value is not an array of two dates');
+        }
+        return (0,_dates_js__WEBPACK_IMPORTED_MODULE_0__.getRange)(valueType, value);
+    })();
+    if (isRangeWithinRange(valueRange, dateRange)) {
+        classes.push("".concat(className, "--active"));
+    }
+    else if (doRangesOverlap(valueRange, dateRange)) {
+        classes.push("".concat(className, "--hasActive"));
+    }
+    var valueRangeClassNames = getRangeClassNames(valueRange, dateRange, "".concat(className, "--range"));
+    classes.push.apply(classes, valueRangeClassNames);
+    var valueArray = Array.isArray(value) ? value : [value];
+    if (hover && valueArray.length === 1) {
+        var hoverRange = hover > valueRange[0] ? [valueRange[0], hover] : [hover, valueRange[0]];
+        var hoverRangeClassNames = getRangeClassNames(hoverRange, dateRange, "".concat(className, "--hover"));
+        classes.push.apply(classes, hoverRangeClassNames);
+    }
+    return classes;
+}
+
 
 /***/ }),
 
@@ -1382,7 +6209,7 @@ function SlWrench (props) {
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
@@ -1433,18 +6260,24 @@ function SlWrench (props) {
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-/*!*********************!*\
-  !*** ./src/view.js ***!
-  \*********************/
+/*!*****************************!*\
+  !*** ./src/scripts/view.js ***!
+  \*****************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom */ "react-dom");
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _components_ContactForm__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/ContactForm */ "./src/components/ContactForm.js");
+/* harmony import */ var _components_ContactForm__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/ContactForm */ "./src/components/ContactForm.js");
 
 
 
+
+
+/**
+ * Uses ReactDOM to replace dummy element from render.php into the
+ * ContactForm component.
+ */
 
 const divsUnloaded = document.querySelectorAll(".ps-form-unloaded");
 divsUnloaded.forEach(div => {

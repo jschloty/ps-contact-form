@@ -1,3 +1,5 @@
+// @use './Calendar.css';
+
 /**
  * The following styles get applied both on the front of your site
  * and in the editor.
@@ -27,4 +29,127 @@
 
 	background-color: #fff;
 	border: 2px solid #5B5B5B;
+
+  font-family: sans-serif;
+}
+
+.react-calendar {
+  width: 600px;
+  max-width: 100%;
+  background: white;
+  border: 1px solid #a0a096;
+  line-height: 1.125em;
+}
+
+.react-calendar__navigation {
+  button { 
+    aspect-ratio: 1 / 1;
+    border: none;
+    border-radius: 50% !important;
+    margin: 3px;
+
+    &.react-calendar__navigation__arrow:hover {
+      background-color: gray;
+    }
+  }
+
+  button.react-calendar__navigation__label {
+    background-color: transparent;
+    border: none;
+    width: 35%;
+    aspect-ratio: auto;
+    flex-grow: 0 !important;
+    
+    color: var(--nectar-extra-color-2);
+  }
+
+  height: 44px;
+  display: flex;
+  justify-content: center;
+}
+
+
+
+.react-calendar__month-view__weekdays__weekday {
+  text-align: center;
+  align-content: center;
+  aspect-ratio: 1 / 0.5;
+  background-color: #f0f0f0;
+}
+
+.react-calendar__month-view__days {
+  display: grid !important;
+  grid-template: repeat(5, 1fr) / repeat(7, 1fr);
+  gap: 20px;
+  padding: 10px;
+
+  .react-calendar__month-view__days__day--neighboringMonth {
+    color: lightgray;
+    background-color: #efefef4d
+  }
+}
+
+.react-calendar__tile {
+  aspect-ratio: 1 / 1;
+  border-radius: 50% !important;
+  border: none;
+  color: var(--nectar-extra-color-1);
+  background-color: color-mix(in srgb, var(--nectar-extra-color-1) 5%, transparent);
+  font-weight: bolder;
+  font-size: 1.2em;
+}
+
+.react-calendar__tile--active {
+  background-color: var(--nectar-extra-color-1);
+  color: white;
+}
+
+.react-calendar__tile:disabled:not(.react-calendar__tile--active) {
+  background-color: #efefef4d;
+  color: lightgray;
+}
+
+.react-calendar__tile:hover:enabled {
+  background-color: color-mix(in srgb, var(--nectar-extra-color-1) 20%, transparent);
+}
+
+.timegrid {
+  display: flex;
+	overflow-y: auto;
+  width: 100%;
+  max-width: 30%;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.timeslot {
+  .selected {
+    background: #006edc;
+    color: white;
+  }
+  flex-grow: 1;
+  width: 100%;
+  margin: 3px;
+  padding: 10px 6.6667px;
+  background-color: color-mix(in srgb, var(--nectar-extra-color-1) 5%, transparent);
+  color: var(--nectar-extra-color-1);
+  border: none;
+  text-align: center;
+  line-height: 16px;
+  font: inherit;
+  font-size: 1.2em;
+  font-weight: bolder;
+}
+
+.timeslot:disabled {
+  background-color: #f0f0f0;
+  color: #ababab;
+}
+
+.date-time-booker-container {
+  display: flex;
+  max-width: 100%;
+  background: white;
+  border: 1px solid #a0a096;
+  font-family: Arial, Helvetica, sans-serif;
 }

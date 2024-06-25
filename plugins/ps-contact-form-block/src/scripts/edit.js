@@ -21,17 +21,19 @@ import { PanelBody, ToggleControl, TextControl } from '@wordpress/components';
  *
  * @see https://www.npmjs.com/package/@wordpress/scripts#using-css
  */
-import './editor.scss';
+import '../editor.scss';
 
 /**
- * The edit function describes the structure of your block in the context of the
- * editor. This represents what the editor will render when the block is used.
+ * Describes the block's appearance in the Block Editor. Currently displays a basic
+ * unstyled HTML form placeholder. May eventually be used to make the block more dynamic.
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#edit
+ * 
+ * @param {Object} attributes Receives initial attributes from register_block_type(), which checks block.json.
+ * @param {Function} setAttributes Setter function for block's attributes object.
  *
- * @return {Element} Element to render.
+ * @return {Element} Element to render in editor.
 */
-
 export default function Edit( { attributes, setAttributes }) {
 	const { inputs, message } = attributes;
 

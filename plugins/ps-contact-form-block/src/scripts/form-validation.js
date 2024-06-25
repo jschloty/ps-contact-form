@@ -1,9 +1,11 @@
 const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-admin/admin-post.php";
 
-/** Checks the validity of all available input types
+/** Checks the validity of all accepted input types. If input is ZIP code, returns
+ * user location: RVA, VAB, FL, or invalid.
+ * 
  * @param input: HTMLInputElement || HTMLTextAreaElement
  * @param e: submit Event
- * @return object {isValid: bool, error: string || null, location: string || null}
+ * @returns object {isValid: bool, error: string || null, location: string || null}
  */
 export function checkInput(input, e) {
     if (!input.id || !input.name) {

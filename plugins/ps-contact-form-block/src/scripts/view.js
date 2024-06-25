@@ -1,6 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import ContactForm from './components/ContactForm';
+import ContactForm from '../components/ContactForm';
+
+
+/**
+ * Uses ReactDOM to replace dummy element from render.php into the
+ * ContactForm component.
+ */
 
 const divsUnloaded = document.querySelectorAll(".ps-form-unloaded");
 

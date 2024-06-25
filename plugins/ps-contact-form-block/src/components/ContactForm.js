@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
 import { SlArrowLeft } from "react-icons/sl";
 import { checkInput } from '../scripts/form-validation'
+import DateTimeBooker from './DateTimeBooker';
+
 const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-admin/admin-post.php";
 
+/**
+ * Submits a given FormData object to admin_post.php
+ * 
+ * @param {FormData} data Validated form data submitted from ContactForm.
+ */
 async function formSubmit(data) {
     let submission;
 
@@ -14,11 +21,23 @@ async function formSubmit(data) {
     } catch (e) {
         console.error(e);
     }
+
 }
 
+/**
+ * The main ContactForm component.
+ * 
+ * Props include a list of inputs with page numbers to be displayed, an optional
+ * first page message box. Lots of discrete settings in here, needs to be reworked
+ * if turned into a dynamic plugin.
+ * 
+ * @param {Object} props List of properties passed from view.js
+ * @returns Rendered contact form JSX.
+ */
 function ContactForm (props) {
-    let [page, setPage] = useState(1);
+    let [page, setPage] = useState(3); //CHANGE THIS BACK TO 1
     
+    // Inputs that match page number
     let currentInputs = props.inputs.map(input => {
         return input.page == page ? (
         <li key={input.name + "_field"}>
@@ -29,15 +48,25 @@ function ContactForm (props) {
         ) : null;
     })
 
+    /**
+     * CurrentButtons component.
+     * @returns Current buttons based on component page state.
+     */
     let CurrentButtons = () => {
         return page == 1 ? (<><button id="pg1_button" type="submit">Get a quote</button><p>Existing customer? <a>Click here</a> to contact us.</p></>) 
             : page == 2 ? (<><p>No thanks.<br /><a href="google.com"><SlArrowLeft /> Return to home</a></p><button id="pg2_button" type="submit">Sign me up!</button></>)
-            : (<p>placeholder</p>);
+            : (<p></p>);
     }
 
+    /**
+     * CurrentPage component.
+     * @returns Rendered page of the form, including inputs, error fields, and CurrentButtons.
+     */
     let CurrentPage = () => {
         return (<ul id={"page" + page} className="page" page={page}>
-            {page == 6 ? (<p>Unfortunately, you reside outside of our active service area.</p>) : currentInputs}
+            {page == 6 ? (<p>Unfortunately, you reside outside of our service area.</p>) 
+            : page == 3 ? <DateTimeBooker />
+            : currentInputs}
             {(page == 1 && props.message) ? 
             <li key="contact_message_field">
                 <label htmlFor="message">Message</label>
@@ -48,7 +77,16 @@ function ContactForm (props) {
         </ul>)
     }
     
-   async function checkValidity(e) {
+    /**
+     * Submit handler function for ContactForm. Checks validity of each input using checkInput
+     * and either renders first validity error or passes the FormData to formSubmit.
+     * 
+     * @param {Event} e The HTML <form> submit event.
+     * 
+     * @note Special case: if contact ZIP code is not in service area, form is submitted and
+     *       contact is sent to page 6.
+     */    
+    async function checkValidity(e) {
         e.preventDefault();
         const data = new FormData(e.currentTarget);
 
@@ -72,6 +110,7 @@ function ContactForm (props) {
             if (!validity.isValid) {
                 error.textContent = validity.error;
                 error.className = "error active";
+                input.focus();
                 return;
             }
 
@@ -79,7 +118,8 @@ function ContactForm (props) {
                 data.append('location', validity.location);
                 if (validity.location === "invalid") {
                     setPage(6);
-                    break;
+                    formSubmit(data);
+                    return;
                 }
             }
 
