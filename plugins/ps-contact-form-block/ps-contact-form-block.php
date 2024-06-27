@@ -30,6 +30,13 @@
 
 add_action( 'init', 'create_block_ps_contact_form_block_init' );
 
+/**
+ * Handles the inital OAuth 2.0 process for authorizing the app through LeadSmart.
+ * 
+ * @see https://highlevel.stoplight.io/docs/integrations/a04191c0fabf9-authorization
+ * @return void Displays a page communicating successful connection or an error. If successful,
+ * 							redirects back to the settings page after 5s.
+ */
 function ps_handle_ghl_auth() {
 	
 	if ( !$_GET['code'] ) {
@@ -90,8 +97,9 @@ function ps_handle_ghl_auth() {
 		echo '<p>An error has occurred. ' . $response->error_description . '</p>';
 		return;
 	}	else {
-		// header( 'refresh:5; url=' . admin_url('/admin.php?page=ps_contact_form_options') );
+		header( 'refresh:5; url=' . admin_url('/admin.php?page=ps_contact_form_options') );
 		echo '<p>Connection successful. Redirecting...</p>';
+		return;
 	}
 
 }
@@ -99,6 +107,12 @@ function ps_handle_ghl_auth() {
 add_action('admin_post_nopriv_api_auth', 'ps_handle_ghl_auth');
 add_action('admin_post_api_auth', 'ps_handle_ghl_auth');
 
+/**
+ * Refreshes an access token for a given user type and, if user_type='Location', a location id.
+ * 
+ * @param string $user_type Should either be 'Company' or 'Location'
+ * @param string $location_id Only needs to be provided if type is Location.
+ */
 function ps_refresh_access_token( $user_type, $location_id = "" ) {
 	$str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
 	$api_config = json_decode($str);
@@ -111,7 +125,7 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
 		foreach($api_config->location as $known_location) {
 			if ( $location_id === $known_location->_id && isset( $known_location->refresh_token )) {
 				$refresh_token = $known_location->refresh_token;
-			} else if ( !isset($known_location->refresh_token) ) {
+			} else if ( !isset($known_location->refresh_token) && isset($api_config->access_token) ) {
 				ps_ghl_get_location_tokens( $known_location->name );
 				ps_refresh_access_token( $user_type, $known_location->_id );
 				return;
@@ -161,7 +175,18 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
 	file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
 }
 
-function ps_ghl_api_call( $curl_opts, $user_type, $tries = 0 ) {
+
+/**
+ * Wrapper function for all GHL API calls. Checks if provided access_token is valid, and if not,
+ * attempts to refresh the token.
+ * 
+ * @param array $curl_opts Should contain a valid cURL options array. Contains majority of the API query.
+ * @param string $user_type Must be either 'Location' or 'Company'. Used for refresh tokens.
+ * @param string $location_id Optional - must be provided if $user_type === 'Location'
+ * @param int $tries Used internally by the function for recursion. Do not supply unless you know what you're doing.
+ * @return object | void Returns the response is API call is successful, otherwise outputs an error and returns void.
+ */
+function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $tries = 0 ) {
 
 	$curl = curl_init();
 
@@ -195,9 +220,9 @@ function ps_ghl_api_call( $curl_opts, $user_type, $tries = 0 ) {
 				echo 'Error: Too many failed API attempts.';
 				break;
 			}
-			ps_refresh_access_token( $user_type );
+			ps_refresh_access_token( $user_type, $location_id );
 			$tries++;
-			ps_ghl_api_call( $curl_opts, $user_type, $tries );
+			ps_ghl_api_call( $curl_opts, $user_type, $location_id, $tries );
 			break;
 		case 422:
 			echo 'Error: ' . $response->message;
@@ -207,10 +232,21 @@ function ps_ghl_api_call( $curl_opts, $user_type, $tries = 0 ) {
 	}
 }
 
+/**
+ * Gets all locations from the connected GHL agency, and stores the array in a prop in api-config.json.
+ * 
+ * @return object Returns the new api-config object to prevent needing to access the .json file after function is called.
+ * 								Returns GHL's error response on error.
+ */
 function ps_ghl_get_locations() {
 	$str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
 	$api_config = json_decode($str);
 	$appId = "6679dffae548834c93b053ca";
+
+	if ( !isset($api_config->access_token) ) {
+		echo 'Error: unauthorized API call. Please authorize LeadSmart first.';
+		return;
+	}
 
 	$opts = [
 		CURLOPT_URL => "https://services.leadconnectorhq.com/oauth/installedLocations?companyId=$api_config->companyId&appId=$appId",
@@ -244,9 +280,9 @@ function ps_ghl_get_locations() {
 /**
  * Retrieves location access tokens for a given input array of locations.
  * 
- * @param locations Array of location names. Must exactly match location name in LeadSmart.
- * @return new_config Returns a new object representing the current state of api-config.json.
- * 										Returns void on error.
+ * @param array @locations Array of location names. Must exactly match location name in LeadSmart.
+ * @return object | void Returns a new object representing the current state of api-config.json.
+ * 											 Returns void on error.
  */
 function ps_ghl_get_location_tokens( $locations ) {
 	$str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
@@ -319,9 +355,9 @@ function ps_ghl_get_location_tokens( $locations ) {
 /**
  * Create a contact in LeadSmart.
  * 
- * @param contact_info Object with keys 'name', 'email', 'phone', 'customFields'->'message'
- * @param location String with value "RVA", "VAB", or "FL"
- * @return response->contact->id The created contact's id number.
+ * @param object $contact_info Object with keys 'name', 'email', 'phone', 'customFields'->'message'
+ * @param string $location String with value "RVA", "VAB", or "FL"
+ * @return string The created contact's id attribute.
  */
 function ps_ghl_create_contact( $contact_info, $location ) {
 	$str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
@@ -390,7 +426,7 @@ function ps_ghl_create_contact( $contact_info, $location ) {
 		]
 	];
 
-	$response = ps_ghl_api_call( $opts, 'Location' );
+	$response = ps_ghl_api_call( $opts, 'Location', $target_location->_id );
 
 	if ( !isset($response->contact) ) {
 		var_dump($response);
@@ -410,6 +446,12 @@ function ps_ghl_create_contact( $contact_info, $location ) {
 
 // }
 
+/**
+ * Main handler function for form submission. Attempts to create a contact in GHL, then inserts
+ * form data (w/ GHL contact id) into the database. Returns a simple response array.
+ * 
+ * @return array ['success' => bool, 'message' => string]
+ */
 function ps_handle_form_submit() {
 
 	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -474,8 +516,19 @@ function ps_handle_form_submit() {
 add_action( 'admin_post_nopriv_contact_form', 'ps_handle_form_submit' );
 add_action( 'admin_post_contact_form', 'ps_handle_form_submit' );
 
+/**
+ * Displays the form submissions admin page. Displays a WP_List_Table with select contact info
+ * and bulk actions. Currently only supports 'delete'.
+ * 
+ * @todo add support for more bulk actions, potentially display a popover listing more contact details.
+ */
 function ps_display_contact_form_submissions_page() {
 
+	/**
+	 * An extension of WP_List_Table with required prop overrides.
+	 * 
+	 * @see https://developer.wordpress.org/reference/classes/wp_list_table/
+	 */
 	class Contact_Form_Table extends WP_List_Table {
 
 		public $table_name;
@@ -560,6 +613,9 @@ function ps_display_contact_form_submissions_page() {
 	echo '</form>';
 }
 
+/**
+ * Registers the form submissions page when the admin menu is loaded.
+ */
 function ps_register_contact_form_submissions_page() {
 	add_menu_page(
 		'Contact Form Submissions',
@@ -573,6 +629,12 @@ function ps_register_contact_form_submissions_page() {
 
 add_action( 'admin_menu', 'ps_register_contact_form_submissions_page' );
 
+/**
+ * Displays the options page for the plugin. Currently only contains a button that is used for
+ * GHL API authorization.
+ * 
+ * @todo add more settings!
+ */
 function ps_display_options_page() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
@@ -593,6 +655,9 @@ function ps_display_options_page() {
 	<?php
 }
 
+/**
+ * Registers the plugin options menu as a submenu of the contact form menu.
+ */
 function ps_register_options_page() {
 	add_submenu_page(
 		'contact_form_submissions',
@@ -606,8 +671,14 @@ function ps_register_options_page() {
 
 add_action( 'admin_menu', 'ps_register_options_page' );
 
+/**
+ * Handler for ZIP request. Contact form will request a list of ZIP codes correlated with service areas.
+ * Response is a JSON string representing an object with service area props. Each prop is an array of ZIP codes.
+ * 
+ * @todo Might want to move ZIP validation to the backend. ZIP list is several kB long.
+ */
 function ps_handle_zip_request() {
-	class response {
+	class Response {
 		public $rva = [];
 		public $vab = [];
 		public $fl = [];
@@ -637,7 +708,7 @@ function ps_handle_zip_request() {
 			$vab = array_column($zips, 'vab');
 			$fl = array_column($zips, 'fl');
 		
-			$response = new response($rva, $vab, $fl);
+			$response = new Response($rva, $vab, $fl);
 			header('Content-Type: application/json');
 			echo json_encode($response);
 			exit;
@@ -648,8 +719,3 @@ function ps_handle_zip_request() {
 
 add_action( 'admin_post_nopriv_zip_request', 'ps_handle_zip_request' );
 add_action( 'admin_post_zip_request', 'ps_handle_zip_request' );
-
-
-function ps_handle_appointment_request() {
-
-}

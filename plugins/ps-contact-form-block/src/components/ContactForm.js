@@ -6,25 +6,6 @@ import DateTimeBooker from './DateTimeBooker';
 const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-admin/admin-post.php";
 
 /**
- * Submits a given FormData object to admin_post.php
- * 
- * @param {FormData} data Validated form data submitted from ContactForm.
- */
-async function formSubmit(data) {
-    let submission;
-
-    try {
-        submission = await fetch(ADMIN_URL, { method: "POST", body: data});
-        if (!submission.ok) {
-            throw new Error(`HTTP error: ${submission.status}`);
-        }
-    } catch (e) {
-        console.error(e);
-    }
-
-}
-
-/**
  * The main ContactForm component.
  * 
  * Props include a list of inputs with page numbers to be displayed, an optional
@@ -131,6 +112,28 @@ function ContactForm (props) {
         setPage(page+1);
         console.log(page);
         return;
+    }
+
+    /**
+     * Submits a given FormData object to admin_post.php.
+     * 
+     * @todo Move advance page function here, and only advance page if wpdb returns success.
+     *       Display error if not. Email admin if API call fails.
+     * @todo Preemptively fetch appointment information as soon as first page submits.
+     * @param {FormData} data Validated form data submitted from ContactForm.
+     */
+    async function formSubmit(data) {
+        let submission;
+
+        try {
+            submission = await fetch(ADMIN_URL, { method: "POST", body: data});
+            if (!submission.ok) {
+                throw new Error(`HTTP error: ${submission.status}`);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+
     }
 
     return (
