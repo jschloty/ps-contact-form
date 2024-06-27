@@ -55,7 +55,7 @@ async function formSubmit(data) {
  * @returns Rendered contact form JSX.
  */
 function ContactForm(props) {
-  let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(3); //CHANGE THIS BACK TO 1
+  let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1); //CHANGE THIS BACK TO 1
 
   // Inputs that match page number
   let currentInputs = props.inputs.map(input => {
