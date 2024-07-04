@@ -2,34 +2,107 @@
     "baseUrl": "https://marketplace.leadconnectorhq.com",
     "clientId": "6679dffae548834c93b053ca-lxup3ovw",
     "clientSecret": "a4abc9e8-d49e-4e16-80ee-a743f58a3278",
-    "redirectUrl": "http://localhost:10003/wp-admin/admin-post.php?action=api_auth",
-    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJDb21wYW55IiwiYXV0aENsYXNzSWQiOiJPaG05Zjh5elJXRlBHVGpodWJTVSIsInNvdXJjZSI6IklOVEVHUkFUSU9OIiwic291cmNlSWQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdnciLCJjaGFubmVsIjoiT0FVVEgiLCJwcmltYXJ5QXV0aENsYXNzSWQiOiJPaG05Zjh5elJXRlBHVGpodWJTVSIsIm9hdXRoTWV0YSI6eyJzY29wZXMiOlsiY2FsZW5kYXJzLnJlYWRvbmx5IiwiY2FsZW5kYXJzL2V2ZW50cy53cml0ZSIsImNvbnRhY3RzLndyaXRlIiwib2F1dGgud3JpdGUiLCJvYXV0aC5yZWFkb25seSJdLCJjbGllbnQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EiLCJjbGllbnRLZXkiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdnciLCJhZ2VuY3lQbGFuIjoiYWdlbmN5X21vbnRobHlfMjk3In0sImlhdCI6MTcxOTQ0NjM0OS4yNjksImV4cCI6MTcxOTUzMjc0OS4yNjl9.gk0gvl_xCQWrn77BTrApYOUNT4PEV8qseyZxEDNpQ6GmKSUCNxpr5O9Kg6YFQXd2rfoYbqztbJ_ZkF0w2_XBMYpEwYhwtSKAj88II275_i89JVbKOXavIrFIIjuM-WTM3XKYQOasofh8hYle6k2jJ1SgopoRi8Mhs30UklMZgThajoBz8uheBVMo_GOEILKVQ7uAzR2D21zd15118SARXT1CcuTzLoZt5gwbzb9MKraOjeDQyArnL5FN-TAtSYhNZyayciIypr2mtoMrs5XP1H_lk8ztsr5zbRygIOjys1rqLgpXZw_tr8oJZNG2xFgao2hblQDvFChY6KsLGuqRHG0EVCfofAGdMJAfLMQ_6RT4163cmJ3qBOJUhF4fjINmD6_x_7zFLW4NfjGJiOazNHyj0HrrItiiEbxCN7W0UyEVf8FVNbco9nXO9twF0SSOCITeoOYjon8IKjU49IdmWra46DmC-dolyV7v9TYpS7X85Zzsb94KrC1yqaR6IbErcs4YkFsl6pIK-VZnXQwN3J2ju1ztrlzavwuchWK-Nwhe9SDdYAMI0U-E3yAZ_E6nepTyuEFK3u9XpBt_ZnGbqPnXMe5UyXWxNzQKKDeXIfhkVWabSWB6W8_nsjpeAQV2R72pkhE_PDeGWLL-Y0ECEYtv_PER4WjEDoS60d7mHws",
+    "redirectUrl": "http://localhost:10005/wp-admin/admin-post.php?action=api_auth",
     "token_type": "Bearer",
     "expires_in": 86399,
-    "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJDb21wYW55IiwiYXV0aENsYXNzSWQiOiJPaG05Zjh5elJXRlBHVGpodWJTVSIsInNvdXJjZSI6IklOVEVHUkFUSU9OIiwic291cmNlSWQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdnciLCJjaGFubmVsIjoiT0FVVEgiLCJwcmltYXJ5QXV0aENsYXNzSWQiOiJPaG05Zjh5elJXRlBHVGpodWJTVSIsIm9hdXRoTWV0YSI6eyJzY29wZXMiOlsiY2FsZW5kYXJzLnJlYWRvbmx5IiwiY2FsZW5kYXJzL2V2ZW50cy53cml0ZSIsImNvbnRhY3RzLndyaXRlIiwib2F1dGgud3JpdGUiLCJvYXV0aC5yZWFkb25seSJdLCJjbGllbnQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EiLCJjbGllbnRLZXkiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdncifSwiaWF0IjoxNzE5NDQ2MzQ5LjI3NiwiZXhwIjoxNzUwOTgyMzQ5LjI3NiwidW5pcXVlSWQiOiJmYzk4MGEwMi1lNzFiLTRhYzAtYWFhYS02MTFmYzZkOTc4NjIifQ.AnIbYW-7nvMn4Gpl93e7o_MRSMBM2l4GO-fU1jXEdqzTM2STsIRXMpMdyRtM-92QtadV1CkPfg95rR17VER9e2vJweGEkIx-gH4_j3m0LGwzt4V0zItvWKry209Q899spYpyBc6GCMD8PSDfpI8Ovc8ywLc8b5DfGETR7XqrFwWWcTOOs1mf-KDJr9E3nlGYqu27dV_Gftm60_VkS9DxaSvBjemCYzgLZyRf9QRZCxrMuAjs3HzjBp4yyPzmo7DHIAOX_pyvrqmXri-kqHLGZ6MhWadNyLGpVnIO-OVBwD26S6KfGxxtJT_BYR7h-m6rYDXJFfKWXWmiBFPInn46JzLiqoj2uYRi6BIeUjv5JGVJGjuV5y4UfcyU6c7-SLJnMkyO_0ZHPTY2CemJHpY4uzZ7nJy_34wy0pcKGvKXEPaQbszaJQOMr29C4T2lI0-rTQAcBL3xR71p7mFKHXwtzQonG2Phg9Xk-7NDb95VOih11b0YoQdo9ZLWiypFeUeJNrYwIvISE7IpPWxphXgqlLD7YWBFcmFlhoDDWOw7Yy8qi2HSN58Ly77XvTwx53Cf_A26x8LMu_rwCU9Fw-Tzdss523zwSMxzRAEzoNQdc-2z5GURQFkBlCgDfmG9DSaoIanUJHyb1LlrMcYDRD1xbuFMH8MkMVhTV_f8tf25fWw",
-    "scope": "calendars.readonly calendars/events.write contacts.write",
+    "scope": "calendars.readonly calendars/events.write contacts.write oauth.write oauth.readonly",
     "userType": "Company",
     "companyId": "Ohm9f8yzRWFPGTjhubSU",
     "userId": "cnhDS91s24ivlkZtvoy7",
+    "installToFutureLocations": true,
     "locations": [
+        {
+            "_id": "zudnQMgArw2gVaoLhvg8",
+            "address": "",
+            "name": "COS - VA Beach",
+            "isInstalled": true,
+            "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJMb2NhdGlvbiIsImF1dGhDbGFzc0lkIjoienVkblFNZ0FydzJnVmFvTGh2ZzgiLCJzb3VyY2UiOiJJTlRFR1JBVElPTiIsInNvdXJjZUlkIjoiNjY3OWRmZmFlNTQ4ODM0YzkzYjA1M2NhLWx4dXAzb3Z3IiwiY2hhbm5lbCI6Ik9BVVRIIiwicHJpbWFyeUF1dGhDbGFzc0lkIjoienVkblFNZ0FydzJnVmFvTGh2ZzgiLCJvYXV0aE1ldGEiOnsic2NvcGVzIjpbImNhbGVuZGFycy5yZWFkb25seSIsImNhbGVuZGFycy9ldmVudHMud3JpdGUiLCJjb250YWN0cy53cml0ZSJdLCJjbGllbnQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EiLCJjbGllbnRLZXkiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdncifSwiaWF0IjoxNzE5OTQwOTcyLjA5OCwiZXhwIjoxNzIwMDI3MzcyLjA5OH0.o4w0znaTNWA_JHCFXDMWegpoTS7z8JDAFiM1l66-0RTDgOpSFdOt__ygPtxCLlteh22TLaV3BtVThSZkn8umIeRjkyIvqQP-XDyIj0nabSC5N6Iz5__zmPJXDV-9Uz-s6Fj-jb5q9rgHrghX7A-fROtWefAZQB7O1mcW1v0Sx4ap5QZ0gHc06YF4W21yHBnP0WDuAsJgXhvtS2tkbscVIn_2Ti3zUbPCQ8OsdTnFJnr0AOn-YdYaoCDU1LIopSbAepcbjqCHSztTiPT-vgPssCcHO8tOL5y1zs2pDs50QdrdBPCihbG_Nlr-CDbTOYEi1h1oo11zjNakc8EKtQjuwMKYgbGCe072Y3hyX_rC7NCSHxCNKU0Hlm9Di6ByCp91BEOG57Z1To_gBdj8Fjt_Z6pOhUNmc8sEgjzn9EpJKMl-zfPoPrZt_ittxb7h1XOrLm3szdOpUp00nguVD_ZAVRcv8a5EpV3bULRyn0EhYjKvKPX802BHGOuuzP_ErbWRs5eqxEWuHDivXW70Haqasr2o8dwfnfT1uom5IB3-xgUTKWPnUql1UumCZylZ3gvROMPhM4Q_olSSNlKgYw9JGGLw4E5_3MHr9GuIBOMrpL0Nv-grQwpIJ5UwhMzu8hWEgECvEKTd-RkhuvucyeUWCwihX48tbiyUHjK8_5c4NsQ",
+            "token_type": "Bearer",
+            "expires_in": 86400,
+            "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJMb2NhdGlvbiIsImF1dGhDbGFzc0lkIjoienVkblFNZ0FydzJnVmFvTGh2ZzgiLCJzb3VyY2UiOiJJTlRFR1JBVElPTiIsInNvdXJjZUlkIjoiNjY3OWRmZmFlNTQ4ODM0YzkzYjA1M2NhLWx4dXAzb3Z3IiwiY2hhbm5lbCI6Ik9BVVRIIiwicHJpbWFyeUF1dGhDbGFzc0lkIjoienVkblFNZ0FydzJnVmFvTGh2ZzgiLCJvYXV0aE1ldGEiOnsic2NvcGVzIjpbImNhbGVuZGFycy5yZWFkb25seSIsImNhbGVuZGFycy9ldmVudHMud3JpdGUiLCJjb250YWN0cy53cml0ZSJdLCJjbGllbnQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EiLCJjbGllbnRLZXkiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdncifSwiaWF0IjoxNzE5OTQwOTcyLjEwNSwiZXhwIjoxNzUxNDc2OTcyLjEwNSwidW5pcXVlSWQiOiIxMThmNDk5NC1iOWUxLTQ1MDktOTRkNi1kMTg2MjU4YWQ4NjgifQ.ckM__W7Vl9CRQ0Zz5JkOhFXNVsYUFzcl2BVPV6DmahXgee4iZRHk4KImdI45lXW4kIVQOaBZegiePAkQvuBF08YZiakqXOnyDeWxv_zW5LxaEMxUb1T86wGKMLXqYgCQg1Bj7o6oj62OAWEKPsOS5vFinqIk_gQCaSAco6oe5hW5UCxE4s3ThiYmPEIVGpen0LBFDZKhbzehNY2BEzYgc_ffVL8Ozf3rubrTGDQfNFB4Ql_ou00nXcT1S_ZVdFbs682x1PYzMG_z1v5vM2dGc0JSliaqijSaIk7w8n4a4xxr59eQTGKoGtocEWJrETzv7al-cUMFkYzW8dHEVCsdT0JMmo-OihbZwkhjNZWuDt38dCeINO2eoZfoRUKzv06htaRsWdoH0zv-U-zoXdBIOs6cGsHdItTOQJigbXtP6UCda0QMVeVEZ6j7AOojRbGV5TVulEMT9Zr0dOOjv0nZ966pLE9J6rZz6NtNTgmXnua_NIL_0UGaQ_bN78eXikSy6_dAGIUdQZAjtbR9mya2unTODyIm2fEvo4hkDFOFmnvPkm1Pn8wp7G6kV2Ej_hbWMK_XZSPIPx3uh6CaJVtI7kMMo1IynREyabZ3X6Qn67Wcunwmm7B-iN3N2Zn1BwQI-t22JnkP9mtzVpwRFgCM9PT7MDD8eLk3S32evqBgXKI",
+            "scope": "calendars.readonly calendars/events.write contacts.write",
+            "userType": "Location",
+            "companyId": "Ohm9f8yzRWFPGTjhubSU",
+            "locationId": "zudnQMgArw2gVaoLhvg8",
+            "userId": "cnhDS91s24ivlkZtvoy7",
+            "traceId": "f5e59167-3fba-43aa-ac48-85e57d0a0f8d"
+        },
         {
             "_id": "2wiA3de3qyq01bO1uRJh",
             "address": "",
             "name": "COS RVA",
             "isInstalled": true,
-            "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJMb2NhdGlvbiIsImF1dGhDbGFzc0lkIjoiMndpQTNkZTNxeXEwMWJPMXVSSmgiLCJzb3VyY2UiOiJJTlRFR1JBVElPTiIsInNvdXJjZUlkIjoiNjY3OWRmZmFlNTQ4ODM0YzkzYjA1M2NhLWx4dXAzb3Z3IiwiY2hhbm5lbCI6Ik9BVVRIIiwicHJpbWFyeUF1dGhDbGFzc0lkIjoiMndpQTNkZTNxeXEwMWJPMXVSSmgiLCJvYXV0aE1ldGEiOnsic2NvcGVzIjpbImNhbGVuZGFycy5yZWFkb25seSIsImNhbGVuZGFycy9ldmVudHMud3JpdGUiLCJjb250YWN0cy53cml0ZSJdLCJjbGllbnQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EiLCJjbGllbnRLZXkiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdncifSwiaWF0IjoxNzE5NDQ5MjAxLjExOCwiZXhwIjoxNzE5NTM1NjAxLjExOH0.mBSPS9vRwm4kZP5YXuVM-2wrsw3HXYxpik1P5QIFM4DHXG1m_-_BjFOJGGP573RQOZEvpWBKSJVLPWthp7NO9B8Oibcb1OtIiBX3zGRkUSP3ZSbA2g_Ye4gVJd3Db5Are9fQCOnNeuyRqoi49SBUwhQBaQTDQ29CPJz-ZY2t6WURZVTBcAuqacTIfoyiT-Zg9r9q0_x3rDmcE0nvZ1UtUAlTUwZZK2eabIEpZLvVj7vHeui-SMJ1FbABC0XwBWDp-29HKgZ_GClOB3gSHvBLs4XWw9b6CWJB2BqTdePc_4jg_PqqnL8Zz15VozXHkhSjU6u_ZXer_RYq0qseRZ02Mo-plqY0MlK3CsbfYnZgEMv1z2EdSe2aV3U4TqKi2fm1T0NaeNFQkaLs-BdCp63iQunG-TsKpL_lFqAObyBQJOrlM1955Ty8To4G6oNoaHSlHHr--sDS1sMzzN08nqDlOWEb6kY_zPCydB3VwxKBwONkeVDTuRB9nNyVRBfqOZ1jEiN--QF8x0iQJvEwv7q5-Rzl9jDziTalQMNaXD54PgL5QMQwWhxJ88lQx-DlRhmI1u58WxXq9XtL6943z5UUPfnvp_wzzQzH1GvVsHo8by-ZmxBhq0Z4esooDV4L7k4vbo2mhfi7-0xT_aprzOEJA-aN1iAM7QW2YYBhQhHZ8uU",
+            "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJMb2NhdGlvbiIsImF1dGhDbGFzc0lkIjoiMndpQTNkZTNxeXEwMWJPMXVSSmgiLCJzb3VyY2UiOiJJTlRFR1JBVElPTiIsInNvdXJjZUlkIjoiNjY3OWRmZmFlNTQ4ODM0YzkzYjA1M2NhLWx4dXAzb3Z3IiwiY2hhbm5lbCI6Ik9BVVRIIiwicHJpbWFyeUF1dGhDbGFzc0lkIjoiMndpQTNkZTNxeXEwMWJPMXVSSmgiLCJvYXV0aE1ldGEiOnsic2NvcGVzIjpbImNhbGVuZGFycy5yZWFkb25seSIsImNhbGVuZGFycy9ldmVudHMud3JpdGUiLCJjb250YWN0cy53cml0ZSJdLCJjbGllbnQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EiLCJjbGllbnRLZXkiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdncifSwiaWF0IjoxNzE5OTM4Njg4LjU3MiwiZXhwIjoxNzIwMDI1MDg4LjU3Mn0.X4-TR3VKIpxJit9o-udvniQe6v5uVG3yhqwPnGN_on1zAy_LXObp911n4vmnEMwSzvC28rDoqT0FTj31eYwm2npcaL9m1w12FnC9EQoPPDkiXuCdXefh4ZMe47nAJ0WnMo_nmDa0uEX_hKwbzsqYd12EG4cuRwH0zlAEd8cRTl2YsQ569IJs8N4tpOcoNBjx9detNVVWIPoDfONMnlyNPIF_3tlPUyugdImAHxV2Of_A4Kqqw82yNHpGKysGsPwfT4TdeWT9fEgDklrPE6N2M3DW1bbFIAsMV2OwWrc_5cBDDZ1HQM_IX4-gJPhlIqrhjMbvqWHXMpsx4I8lCmtfejlSt77l_IyLMWontdZscFAxPK5LZ25FOk70pPvACOl1yY6fqx9YrxvqVzF81p_2ieFh2DGc_qMIED34Yzzn7N5_iyHwMxNExdJJYhSWYjPmxJhnYGWS3hyXJkfVTrqx8UBhlpb54jCL4-J7nukC3MsP3ezJ6Zb1JDvR-6jOWEEtGr32x5C1ZHdrouMi65R4MzbTmvJv5ewb1Fu6VYZJrJwhnUWnHRE4lnzZ2WYevCRRXsddiI0xawWL3OnMzIt-PnXyW2pOI_LWbIVIF5QPpxoKRU4QvaVZNia4CLNd7xGoVmYqY4ipC567Z_cylWXmSrhhTOLSJOl-118M1zE6syk",
             "token_type": "Bearer",
-            "expires_in": 86400,
-            "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJMb2NhdGlvbiIsImF1dGhDbGFzc0lkIjoiMndpQTNkZTNxeXEwMWJPMXVSSmgiLCJzb3VyY2UiOiJJTlRFR1JBVElPTiIsInNvdXJjZUlkIjoiNjY3OWRmZmFlNTQ4ODM0YzkzYjA1M2NhLWx4dXAzb3Z3IiwiY2hhbm5lbCI6Ik9BVVRIIiwicHJpbWFyeUF1dGhDbGFzc0lkIjoiMndpQTNkZTNxeXEwMWJPMXVSSmgiLCJvYXV0aE1ldGEiOnsic2NvcGVzIjpbImNhbGVuZGFycy5yZWFkb25seSIsImNhbGVuZGFycy9ldmVudHMud3JpdGUiLCJjb250YWN0cy53cml0ZSJdLCJjbGllbnQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EiLCJjbGllbnRLZXkiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdncifSwiaWF0IjoxNzE5NDQ5MjAxLjEyNCwiZXhwIjoxNzUwOTg1MjAxLjEyNCwidW5pcXVlSWQiOiJjYzdhNTdjMC03YTBiLTQ0YzgtYmY1ZS1iN2M3OGQ2MDBiMGUifQ.MFYaw5Uw8He8r2cxYdAt0mFYLDUQqQpYavJgNR1ZddqL2tgL_UYuHFDJCq_hBZadNRtYSqSXez7dnwnI0qHTg5HFhGMdp953kf5HCvx1lxOFzbnOBNoN4zQZEsTj4lEuSMNMXz7Bqfnj5PQ6ItqypE83wWaMuj2TrUWMoad8FVXhn0MHcsRaR8t2IjnIdJF1zWN2cTtClXO1Pc6yjowSjAH1sADNmCqpZMu22X2y3E4dDQrsiILsNZKcLQK_yYWnpoeeFEYiqeaGK-5h09O3hZiKNJ5i43Hut8yU2htNnQrg9XGXQT88AeCSD2VirFnzwj-P4dmUbsshECjeaMNu5aVNkkqDgz4sMrD2P62jxdGsjJ8th5fQeQBlV0bwFru0LoxvWyaGwlrzSwdOMDQp0yA6edCI05xcT9seBEkRefxptxzbnswg7lFA8w_OUHDnaNTHpQbjdNHkRZ0f7bJrpyreQtChJUw7O1bByg1jlpiiQjow1kRi4kh4GCCRVugVAuKrJzYzolUkKGR80l-MWs6WuSSlJ818JEgiYKttfERYUjxBPKLmJpaSgjpFInpFcT8PsAFB9Amgw1oPEQlWVqX_s1wTFXhf2KVIdCFZqzJBICP6QisfpIis1L3vDbSSQW3rhGozJpYaBtGihytNsI4ZcrRsd7JLLArKzg237iI",
+            "expires_in": 86399,
+            "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJMb2NhdGlvbiIsImF1dGhDbGFzc0lkIjoiMndpQTNkZTNxeXEwMWJPMXVSSmgiLCJzb3VyY2UiOiJJTlRFR1JBVElPTiIsInNvdXJjZUlkIjoiNjY3OWRmZmFlNTQ4ODM0YzkzYjA1M2NhLWx4dXAzb3Z3IiwiY2hhbm5lbCI6Ik9BVVRIIiwicHJpbWFyeUF1dGhDbGFzc0lkIjoiMndpQTNkZTNxeXEwMWJPMXVSSmgiLCJvYXV0aE1ldGEiOnsic2NvcGVzIjpbImNhbGVuZGFycy5yZWFkb25seSIsImNhbGVuZGFycy9ldmVudHMud3JpdGUiLCJjb250YWN0cy53cml0ZSJdLCJjbGllbnQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EiLCJjbGllbnRLZXkiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdncifSwiaWF0IjoxNzE5OTM4Njg4LjU3OSwiZXhwIjoxNzUxNDc0Njg4LjU3OSwidW5pcXVlSWQiOiJmMGY2N2RjZC1kMDQ3LTRlYTYtOTZmYy02MjY5YzAxNDYzNWYifQ.S6xsB316xKeF8ZaTbfHGXxC1fj4LrSVhMX7HTdhwMWbwWy5OK3SZoh0m2Y6Sl1lrCF8ivpqDQ7FIeaxOxfpOENfNrBIJgKo-17SiZ_dNo6kGCv8lqZHPyXdjD2am5L5zUc-RHQ8j6AVAb8wNpPlSu01WyxN4aJCRYOBwiSWiCn5MJN_hTSnun5vsnWfqtasr2c9cTOcd8h7cGq5c1k3h-U5Jf__oAzPl-PVqq7sr0qtl9qwK0FO1BoeaH62dPxHVXOd9kCnHjxqv-YMWebU_CJOqb74K0TyakF2-ApYR99hLVFQr8wfspA7260Nh-_EYOirUxooXc0bzxaQZBqzkXOJ-Ay6XphUZuMp4ptj7-gLkvZvN5uT5rBQ4DJxGcp9SVK584BoFXK1n5wENNRxN1FVf4oLu1gZwSq35necFHkUN7mKtstd-TwH8jySEldMUU5FwMeH5P5tx3dXBWZaqvQjT69QEiIbbF2w39ebCkMPo2SPuQubG5XVvHJd2UyCMa8fYuFwLvHEHN6QSeACIaOCHC067qABqYpMZEVKnAowO6f6FLLgy2zfiMpBb9rrFyfWtvPxRT-0C8dpdWT6MAR1DUQPJADlCDyAY7A_rS7KfojrTJJmtZ_RqOkBzX3tmv_jLyFOqOh_QavV_8Up_D723jY931SeznnETIUHcfaM",
             "scope": "calendars.readonly calendars/events.write contacts.write",
             "userType": "Location",
             "companyId": "Ohm9f8yzRWFPGTjhubSU",
             "locationId": "2wiA3de3qyq01bO1uRJh",
             "userId": "cnhDS91s24ivlkZtvoy7",
-            "traceId": "c9b44f03-3027-4ca5-8f8a-bf51efccf6b8"
+            "traceId": "73327ec0-00ec-4361-a10d-0e837b7105b4"
+        },
+        {
+            "_id": "wxTxsMYYdWVC3grRIo6T",
+            "address": "6136 Havenview Drive",
+            "name": "Demo ",
+            "isInstalled": true
+        },
+        {
+            "_id": "QflU3zBBaQyvvseUmShy",
+            "address": "",
+            "name": "Down to Earth Lighting-Florida",
+            "isInstalled": true
+        },
+        {
+            "_id": "Ud5QJWEuRRAVGeAFmpki",
+            "address": "PO BOX 877",
+            "name": "LeadSmart",
+            "isInstalled": true
+        },
+        {
+            "_id": "jtQvYSyzCHkXqUSZJrNV",
+            "address": "6136 Havenview Drive ",
+            "name": "Link Masters",
+            "isInstalled": true
+        },
+        {
+            "_id": "6jj3kw0fBtLvc7nkk8fb",
+            "address": "6136 Haveview Drive ",
+            "name": "Online K9 School",
+            "isInstalled": true
+        },
+        {
+            "_id": "DOF73AiKjSuiKbrMVdjJ",
+            "address": "",
+            "name": "Pet Stop of Florida",
+            "isInstalled": true,
+            "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJMb2NhdGlvbiIsImF1dGhDbGFzc0lkIjoiRE9GNzNBaUtqU3VpS2JyTVZkakoiLCJzb3VyY2UiOiJJTlRFR1JBVElPTiIsInNvdXJjZUlkIjoiNjY3OWRmZmFlNTQ4ODM0YzkzYjA1M2NhLWx4dXAzb3Z3IiwiY2hhbm5lbCI6Ik9BVVRIIiwicHJpbWFyeUF1dGhDbGFzc0lkIjoiRE9GNzNBaUtqU3VpS2JyTVZkakoiLCJvYXV0aE1ldGEiOnsic2NvcGVzIjpbImNhbGVuZGFycy5yZWFkb25seSIsImNhbGVuZGFycy9ldmVudHMud3JpdGUiLCJjb250YWN0cy53cml0ZSJdLCJjbGllbnQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EiLCJjbGllbnRLZXkiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdncifSwiaWF0IjoxNzE5OTQxMjc2LjYwMiwiZXhwIjoxNzIwMDI3Njc2LjYwMn0.LkcfoT8cSwF19ain_wazBQ4nEbYLcUPHwfRHFBAQng35jvaxDpYz3EoiVC-k62Zoc6tBzuxTsbQlkm0oyOxfNYevBRGiXuhLScufL8kyiucyXVWDyd-MiEbpsgbgoRE8CQ90qvP6a6X4nm_1GNl0eS9zfRHLvJ_903U4DV1LpbtZuZTh4qd78nDxJuoXTHFfgTtML_hOGmlgLnh49nygie8cy8u7gSQy8XmEPyLCSFKD1lLNgdiYNALNSZuAHGBLWPSiQ4r59hVc7FpCe5f2d1UlJFSAHEmWysOhIeQWOMxBgBotlr2ah0tq29cwgmbE4VXI5LnZXLOFciciYz3i8W4almWyTaev-nKgbe3WESB3WE_YvV4so5B19p_V7ajvXQL2gYLbs8tu5ExmCPEe4Wtr3V7sJ35lzI-VcnilDR5hwP_Zk4kbLPNnDGJWcAnqCVry-YmOuYXlEHHl4DnXozPRutzmVsz79paqk4dqTmr18_OckLcvlEdMetZQ581G3LEXjf8mkzgoUux17h4yvLbUhuE7h7Am8yD0-1qLi_NnR1b-6MDFQamWXNp2TFaw8afNDYmM2a-qeeIFOU4bKJgwS6oqmB89eXMWPK7Kkv-T0suYbc1AekwuL0JUpU2FMANb3-_I8NLMIsxRV9GcRcjoGQheZaZxFCk-UDbCCjs",
+            "token_type": "Bearer",
+            "expires_in": 86400,
+            "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJMb2NhdGlvbiIsImF1dGhDbGFzc0lkIjoiRE9GNzNBaUtqU3VpS2JyTVZkakoiLCJzb3VyY2UiOiJJTlRFR1JBVElPTiIsInNvdXJjZUlkIjoiNjY3OWRmZmFlNTQ4ODM0YzkzYjA1M2NhLWx4dXAzb3Z3IiwiY2hhbm5lbCI6Ik9BVVRIIiwicHJpbWFyeUF1dGhDbGFzc0lkIjoiRE9GNzNBaUtqU3VpS2JyTVZkakoiLCJvYXV0aE1ldGEiOnsic2NvcGVzIjpbImNhbGVuZGFycy5yZWFkb25seSIsImNhbGVuZGFycy9ldmVudHMud3JpdGUiLCJjb250YWN0cy53cml0ZSJdLCJjbGllbnQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EiLCJjbGllbnRLZXkiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdncifSwiaWF0IjoxNzE5OTQxMjc2LjYxLCJleHAiOjE3NTE0NzcyNzYuNjEsInVuaXF1ZUlkIjoiNzZkNjY0NmYtOGJkNS00NGZjLThmZDktZTQ0MTk0NTJlMDY4In0.abuQcxOAmHEOXlAw-7X8qvOm8iADY2cQUjCWej6l_TvIi2BLLJdyIwQDlWu9RenfEMQOKYzkoM_lU_n-h3PJi6uthPJssVGXiraB4l3il8P8aqDGHBxn8Ww9ljm2x1a0pY49tUIrGuxGI6j_zwXBqwXYUTUgEElGb2AoqMeZQOApoYuTStIsCKuZ1nCyKmkcMj_VBx1zUJF1qdVCZfCUFPhkdudgM2USLjHbh76hfsvQbsS4AWSW0BukVQfyaIiFXTPPHEl5mqgGhzJzRMzQHY3rN_jF4lA07oKqVQPpWDcpyfV51FNAYo7lBlWmZ3dhInVEvJxhL34nCcheJYwLKAQG-5EU6r7cxtWaNr8XZbsm_LQACVR7_mjC71IN7zUy6HPWpt87DAiX0jn5ae8gmoPhXzsBjHoAbXa4dSZAr0MFvSVFy8QvIYmqjDkURYv-vx5dS8U75LsnHgf6s7ouqRjeIp7J-t7DnCfp-GS8kgyKPkqyoh2__77gvzO1Hddw0rW4lWxyauShbtD1bPcNHDHd-HYPE4FCDosNZUDrQqKjpv4SUu_FQNhPPS9q1LhR0pd6E-tpfxvJklD8OaNnPTpj2hM26aL4ETNePCZin3BboNVo6t0cz8SYVQ19u6CNUBQeyeq3ijZSUn1KzgBGz7ExDIC2HPdpNHAb3yi7iUc",
+            "scope": "calendars.readonly calendars/events.write contacts.write",
+            "userType": "Location",
+            "companyId": "Ohm9f8yzRWFPGTjhubSU",
+            "locationId": "DOF73AiKjSuiKbrMVdjJ",
+            "userId": "cnhDS91s24ivlkZtvoy7",
+            "traceId": "6f76fdd9-50dd-48f9-8475-85899bc7ce65"
+        },
+        {
+            "_id": "Yj0VJkXQ6l8xh7aUSRSO",
+            "address": "17333 HUMKE RD",
+            "name": "RB Electric",
+            "isInstalled": true
+        },
+        {
+            "_id": "GFNLypaO8IfmMOqrB20t",
+            "address": "1234 Test Phone Snapshot ",
+            "name": "Test Phone Snapshot",
+            "isInstalled": true
         }
     ],
     "count": 10,
-    "installToFutureLocations": true,
-    "traceId": "3c96e940-4ad2-47fa-bb11-65d760eb9be6"
+    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJDb21wYW55IiwiYXV0aENsYXNzSWQiOiJPaG05Zjh5elJXRlBHVGpodWJTVSIsInNvdXJjZSI6IklOVEVHUkFUSU9OIiwic291cmNlSWQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdnciLCJjaGFubmVsIjoiT0FVVEgiLCJwcmltYXJ5QXV0aENsYXNzSWQiOiJPaG05Zjh5elJXRlBHVGpodWJTVSIsIm9hdXRoTWV0YSI6eyJzY29wZXMiOlsiY2FsZW5kYXJzLnJlYWRvbmx5IiwiY2FsZW5kYXJzL2V2ZW50cy53cml0ZSIsImNvbnRhY3RzLndyaXRlIiwib2F1dGgud3JpdGUiLCJvYXV0aC5yZWFkb25seSJdLCJjbGllbnQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EiLCJjbGllbnRLZXkiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdnciLCJhZ2VuY3lQbGFuIjoiYWdlbmN5X21vbnRobHlfMjk3In0sImlhdCI6MTcxOTg2NjQ5My43NTIsImV4cCI6MTcxOTk1Mjg5My43NTJ9.UYKPgVc4MXUQt2yFoJXdaS8_fm-dvwcqghynI5_dXp0DbymJa5NRaFYYnSONlOnp9iLtukaaluiLFxz1q5OoEl9-Pm-sq5uvtbhUklgr_P_rHCj-ftpzo4iWzWI-BgJ8Swcf60P0d4zrnyhlh_pu2yAYnB5s8wf9g-w3POCyoOI6QzzZIFkGtvA5b9W_oz3qoGT_7MUk-To1TznSakBnnlCU71CknMFWRjyAmJaxVI8AvcK3TEuJGWZxG3eirQgvRoyXf_i44nMc5xmBGPNLpzLJbTjo_eJTLxF1UuV-8Yx87OTXE0b7N8EekIyE0l0oGEv0dWFy4-pGNduMTc1hoNTQCuk_8xEcf3_1t86eaNg2RAg_W4oS-sqIjJ1y65LWHCQeZVzfWxlRc_wZBLiSQ9qGj9cg7wNXyjpNbgdUlbl6A9crQORarzPLGcjxDw1TICc0zcGpeyYFZC9Y-a7jmS6L1x5ZnNPnD0P3gj78dpHxaqp8yNGeNcty8FQL_6molaZXusUwKY9nExaOwkXao1PaP-y83tUKEc576qS0Z2C1byamZLpC79y4_Q5NYR1LKSkfOqwOu5pi2L0JmYKKfEdv8tDMzFnemaYW3gunviIqdHhQSkKbl3npbdmlJhoar7FNCESPyBuvEBsFIBBSHL8pNpowATHQ4y2q1z83GBM",
+    "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJDb21wYW55IiwiYXV0aENsYXNzSWQiOiJPaG05Zjh5elJXRlBHVGpodWJTVSIsInNvdXJjZSI6IklOVEVHUkFUSU9OIiwic291cmNlSWQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdnciLCJjaGFubmVsIjoiT0FVVEgiLCJwcmltYXJ5QXV0aENsYXNzSWQiOiJPaG05Zjh5elJXRlBHVGpodWJTVSIsIm9hdXRoTWV0YSI6eyJzY29wZXMiOlsiY2FsZW5kYXJzLnJlYWRvbmx5IiwiY2FsZW5kYXJzL2V2ZW50cy53cml0ZSIsImNvbnRhY3RzLndyaXRlIiwib2F1dGgud3JpdGUiLCJvYXV0aC5yZWFkb25seSJdLCJjbGllbnQiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EiLCJjbGllbnRLZXkiOiI2Njc5ZGZmYWU1NDg4MzRjOTNiMDUzY2EtbHh1cDNvdncifSwiaWF0IjoxNzE5ODY2NDkzLjc1OCwiZXhwIjoxNzUxNDAyNDkzLjc1OCwidW5pcXVlSWQiOiIyNjljNWUxOS03YWQ3LTQwZDktOTk0NS1lZTQxYmM0NTU5ZmUifQ.Ssjo3uRnD1Yq0PJLmRhH6WaHtHbO8p2mCdBHqASCYSx2Vm_lwbBcQsLVaxY7DxKEB08YvoCMO7df0C2tl79QWdJEexrqgJG56NdYuAszpH478hhaAs2rtrLEgLL-cXUEIo-8CDB_RnZhCUwyBr7hKxMaw8wm10TyZ57Q6MgJkPVkr8JiQQkPXKjKFwP_HN9AEci9XTmNNkXpI_1bKvUJ4JTmNf_kKpVVAbOc6QA7YGTbJIpG2EccpC4NyuWt70RYeYnhVFF_p5u_d7A1lrs3y2vmtjdwZQIFKCJVNccIessFo43_hXkEsOX1XKk4AGktriISVc-DSVhuxXz87yTwta1bREZ2zlJOjp8LZXTt0VbjDPQH8wX3SqcdOtVOhZGdhaYjtLzXqidKgQ3eMU6Kv5oxEPQ6-_KY6F4BJgWh4TiPb7HgFiT5IcBu9Oswzr541T4CdFjlj6RWDek4dznULHupFlf3tVubjaGGNlNBTwSn9Pj9_6chkG0LW1Ddq2H5G7aXYrhHcdf4GZFtWTd6Ige3xmy9AiFpj-EItAZEGS3DvhZuCwykEC3hi8tEsCPZgSRzAG1T2NAQRHvGlDheJFjC1Vw_6-XE6Lzz4BdpGtsNoj85oCYYRGO4xQO2-VTBk5GEh6dyLWp8vjW0QKDJLcobBV-H3n76fhcyTJkWotw"
 }

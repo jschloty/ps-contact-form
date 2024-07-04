@@ -75,7 +75,6 @@ function ps_handle_ghl_auth() {
 		var_dump($err);
 	}
 
-	var_dump($response_json);
 	$response = json_decode($response_json);
 	$fresh_config = (object) [
 		'baseUrl' => $api_config->baseUrl,
@@ -119,20 +118,27 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
 
 	$curl = curl_init();
 
+	if ( !isset($api_config->refresh_token) ) {
+		echo 'Error: Unauthenticated API access.';
+		return;
+	}
+
 	if ( $user_type === "Company" ) {
 		$refresh_token = $api_config->refresh_token;
-	} else {
-		foreach($api_config->location as $known_location) {
+	} else if ( $user_type === "Location" ) {
+		// Check if any locations exist or that the count matches
+		if ( !isset($api_config->locations) || count($api_config->locations) !== $api_config->count ) {
+			ps_ghl_get_locations();
+		}
+		// Match $location_id param with a location in api-config.json
+		foreach($api_config->locations as $known_location) {
 			if ( $location_id === $known_location->_id && isset( $known_location->refresh_token )) {
 				$refresh_token = $known_location->refresh_token;
-			} else if ( !isset($known_location->refresh_token) && isset($api_config->access_token) ) {
-				ps_ghl_get_location_tokens( $known_location->name );
-				ps_refresh_access_token( $user_type, $known_location->_id );
-				return;
-			} else {
-				echo 'Error: invalid location ID';
 			}
-
+			else if ( $location_id === $known_location->_id && !isset($known_location->refresh_token) ) {
+				ps_ghl_get_location_tokens( $known_location->name );
+				return;
+			}
 		}
 	}
 
@@ -154,7 +160,7 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
 
 	$response_str = curl_exec($curl);
 	$err = curl_error($curl);
-	
+
 	curl_close($curl);
 
 	if ($err) {
@@ -165,14 +171,27 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
 
 	if ( isset($response->statusCode) ) {
 		echo '<p>An error has occurred. ' . $response->message . '</p>';
+		return;
 	}
 
-	unset($api_config->access_token);
-	unset($api_config->refresh_token);
+	if ( $user_type === 'Company' ) {
 
-	$merged = (object) array_merge( (array) $api_config, (array) $response );
-	$new_config = json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-	file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
+		$merged = (object) array_merge( (array) $api_config, (array) $response );
+		$new_config = json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+		file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
+	}
+
+	else if ( $user_type === 'Location' ) {
+		
+		foreach($api_config->locations as &$known_location) {
+			if ( $known_location->_id === $response->locationId ) {
+				$known_location = (object) array_merge( (array) $known_location, (array) $response );
+			}
+		}
+
+		$new_config = json_encode($api_config, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+		file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
+	}
 }
 
 
@@ -187,6 +206,35 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
  * @return object | void Returns the response is API call is successful, otherwise outputs an error and returns void.
  */
 function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $tries = 0 ) {
+	$str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
+	$api_config = json_decode($str);
+
+	if ($user_type != 'Company' && $user_type != 'Location') {
+		echo 'Error: User type must be Company or Location.';
+		return;
+	}
+
+	if ($user_type === 'Location') {
+		$location_token = '';
+		foreach($api_config->locations as $known_location) {
+			if ($known_location->_id === $location_id && isset($known_location->access_token)) {
+				$location_token = $known_location->access_token;
+			}
+		}
+	}
+
+	$curl_opts[CURLOPT_HTTPHEADER] = [
+		'Accept: application/json',
+		'Authorization: Bearer ' . ($user_type === 'Company' ? $api_config->access_token : $location_token),
+		'Version: 2021-07-28'
+	];
+
+	//setting Content-Type header
+	if ( $curl_opts[CURLOPT_URL] === "https://services.leadconnectorhq.com/oauth/locationToken" ) {
+		array_push($curl_opts[CURLOPT_HTTPHEADER], 'Content-Type: application/x-www-form-urlencoded');
+	} else if ( $curl_opts[CURLOPT_CUSTOMREQUEST] === 'POST' || $curl_opts[CURLOPT_CUSTOMREQUEST] === 'PUT' ) {
+		array_push($curl_opts[CURLOPT_HTTPHEADER], 'Content-Type: application/json');
+	}
 
 	$curl = curl_init();
 
@@ -212,20 +260,18 @@ function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $tries = 0 
 		case 200:
 			return $response;
 		case 400:
-			echo 'Error: ' . $response->message;
-			break;
+			echo '400 Error: ' . $response->message;
+			return $response;
 		case 401:
-			return ['success' => false, 'message' => $response->message];
 			if ( $tries > 2 ) {
 				echo 'Error: Too many failed API attempts.';
 				break;
 			}
 			ps_refresh_access_token( $user_type, $location_id );
 			$tries++;
-			ps_ghl_api_call( $curl_opts, $user_type, $location_id, $tries );
-			break;
+			return ps_ghl_api_call( $curl_opts, $user_type, $location_id, $tries );
 		case 422:
-			echo 'Error: ' . $response->message;
+			echo '422 Error: ' . $response->message;
 			break;
 		default:
 			return $response;
@@ -255,12 +301,7 @@ function ps_ghl_get_locations() {
 		CURLOPT_MAXREDIRS => 10,
 		CURLOPT_TIMEOUT => 30,
 		CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-		CURLOPT_CUSTOMREQUEST => "GET",
-		CURLOPT_HTTPHEADER => [
-			"Accept: application/json",
-			"Authorization: Bearer $api_config->access_token",
-			"Version: 2021-07-28"
-		]
+		CURLOPT_CUSTOMREQUEST => "GET"
 	];
 
 	$response = ps_ghl_api_call( $opts, 'Company' );
@@ -280,16 +321,20 @@ function ps_ghl_get_locations() {
 /**
  * Retrieves location access tokens for a given input array of locations.
  * 
- * @param array @locations Array of location names. Must exactly match location name in LeadSmart.
+ * @param string | array $locations Location ID or array of location IDs.
  * @return object | void Returns a new object representing the current state of api-config.json.
  * 											 Returns void on error.
  */
 function ps_ghl_get_location_tokens( $locations ) {
 	$str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
 	$api_config = json_decode($str);
-	
+
 	if ( !$api_config->locations ) {
 		$api_config = ps_ghl_get_locations();
+	}
+
+	if ( !is_array($locations) ) {
+		$locations = [ $locations ];
 	}
 
 	$ids = [];
@@ -315,13 +360,6 @@ function ps_ghl_get_location_tokens( $locations ) {
 		CURLOPT_TIMEOUT => 30,
 		CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		CURLOPT_CUSTOMREQUEST => "POST",
-		CURLOPT_POSTFIELDS => "",
-		CURLOPT_HTTPHEADER => [
-			"Accept: application/json",
-			"Authorization: Bearer $api_config->access_token",
-			"Content-Type: application/x-www-form-urlencoded",
-			"Version: 2021-07-28"
-		]
 	];
 
 	$responses = array_map(function ($location_id) use ($api_config, $opts) {	
@@ -329,24 +367,24 @@ function ps_ghl_get_location_tokens( $locations ) {
 		return ps_ghl_api_call($opts, 'Company');
 	}, $ids);
 
-	if (!$responses) {
+	if (!isset($responses)) {
 		echo 'Error: API call(s) failed.';
 		return;
 	}
 
-	$updated_locations = [];
-
-	foreach( $api_config->locations as $location ) {
+	foreach( $api_config->locations as &$location ) {
 		foreach( $responses as $response ) {
+			
+
 			if ( $response->locationId === $location->_id ) {
-				$updated_location = (object) array_merge((array) $location,(array) $response);
-				array_push($updated_locations, $updated_location);
+				
+				$new_location = (object) array_merge((array) $location,(array) $response);
+
+				$location = $new_location;
 			}
 		}
 	}
-
-	$new_locations = array_merge($api_config->locations, $updated_locations);
-	$api_config->locations = $new_locations;
+	
 	$new_config = json_encode($api_config, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 	file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
 	return $new_config;
@@ -394,8 +432,6 @@ function ps_ghl_create_contact( $contact_info, $location ) {
 		$target_location = $getLocation();
 	}
 
-	var_dump($contact_info);
-
 	$contact_schema = [
 		'name' => $contact_info['name'],
 		'email' => $contact_info['email'],
@@ -417,19 +453,12 @@ function ps_ghl_create_contact( $contact_info, $location ) {
 		CURLOPT_TIMEOUT => 30,
 		CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		CURLOPT_CUSTOMREQUEST => "POST",
-		CURLOPT_POSTFIELDS => json_encode($contact_schema),
-		CURLOPT_HTTPHEADER => [
-			"Accept: application/json",
-			"Authorization: Bearer $target_location->access_token",
-	    "Content-Type: application/json",
-			"Version: 2021-07-28"
-		]
+		CURLOPT_POSTFIELDS => json_encode($contact_schema)
 	];
 
 	$response = ps_ghl_api_call( $opts, 'Location', $target_location->_id );
 
 	if ( !isset($response->contact) ) {
-		var_dump($response);
 		return [
 			'success' => false,
 			'message' => 'Error: Contact could not be created.'
@@ -469,15 +498,18 @@ function ps_handle_form_submit() {
 		$message = sanitize_text_field($_POST['message']);
 		$location = sanitize_text_field($_POST['location']);
 		$session_id = $_COOKIE['session_id'];
-		$contact_id = ps_ghl_create_contact([
+
+		$api_result = ps_ghl_create_contact([
 			'name' => $name,
 			'email' => $email,
 			'phone' => $phone,
 			'message' => $message
 		], $location);
 
-		if ($contact_id['success'] == false) {
-			$response = $contact_id;
+		if ($api_result['success'] == false) {
+			$response = $api_result;
+			//SEND ADMIN AN EMAIL
+
 		} else {
 			global $wpdb;
 
@@ -489,7 +521,7 @@ function ps_handle_form_submit() {
 				'message' => $message,
 				'location' => $location,
 				'session_id' => $session_id,
-				'contact_id' => $contact_id,
+				'contact_id' => $api_result['contact_id'],
 				'submission_time' => current_time('mysql')
 			);
 			$insert_result = $wpdb->insert($table_name, $data);
@@ -509,7 +541,7 @@ function ps_handle_form_submit() {
 
 		header('Content-Type: application/json');
 		echo json_encode($response);
-		return;
+		exit;
 	}
 }
 
@@ -559,7 +591,7 @@ function ps_display_contact_form_submissions_page() {
 				$delete_ids = esc_sql( $_POST['post'] );
 				foreach ($delete_ids as $did) {
 					global $wpdb;
-					$wpdb->query($wpdb->prepare( "DELETE FROM $this->table_name WHERE id=%d", $did ));
+					$wpdb->delete($this->table_name, ['id' => $did], '%d');
 				}
 			}
 		}

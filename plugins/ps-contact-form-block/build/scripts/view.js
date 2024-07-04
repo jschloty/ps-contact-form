@@ -2,6 +2,55 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./src/components/Button.js":
+/*!**********************************!*\
+  !*** ./src/components/Button.js ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Button)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _Spinner__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Spinner */ "./src/components/Spinner.js");
+/* harmony import */ var clsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! clsx */ "./node_modules/clsx/dist/clsx.mjs");
+
+
+
+
+
+/**
+ * Custom button element. Supports loading.
+ * @param {Object} props Component props
+ * @param {string=} props.id The HTML id of the button
+ * @param {string} [props.type="button"] The HTML button type
+ * @param {string} props.children The content of the button element.
+ * @param {function=} props.onClick Callback function to handle button click.
+ * @param {bool=} props.loading Whether the button should be displayed as loading or not
+ * @param {string | Array | Object=} props.className button element classes
+ * @returns Rendered button
+ */
+function Button({
+  id = "",
+  loading = false,
+  onClick = () => {},
+  type = "button",
+  children,
+  className = ""
+}) {
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    id: id,
+    className: (0,clsx__WEBPACK_IMPORTED_MODULE_2__.clsx)(className, loading && "loading"),
+    onClick: onClick,
+    type: type,
+    disabled: loading
+  }, loading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Spinner__WEBPACK_IMPORTED_MODULE_1__["default"], null) : children);
+}
+
+/***/ }),
+
 /***/ "./src/components/ContactForm.js":
 /*!***************************************!*\
   !*** ./src/components/ContactForm.js ***!
@@ -14,9 +63,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_icons_sl__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-icons/sl */ "./node_modules/react-icons/sl/index.mjs");
+/* harmony import */ var react_icons_sl__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! react-icons/sl */ "./node_modules/react-icons/sl/index.mjs");
 /* harmony import */ var _scripts_form_validation__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../scripts/form-validation */ "./src/scripts/form-validation.js");
 /* harmony import */ var _DateTimeBooker__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./DateTimeBooker */ "./src/components/DateTimeBooker.js");
+/* harmony import */ var react_toastify__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-toastify */ "./node_modules/react-toastify/dist/react-toastify.esm.mjs");
+/* harmony import */ var _Button__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./Button */ "./src/components/Button.js");
+
+
 
 
 
@@ -25,23 +78,67 @@ __webpack_require__.r(__webpack_exports__);
 const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-admin/admin-post.php";
 
 /**
- * Submits a given FormData object to admin_post.php
- * 
- * @param {FormData} data Validated form data submitted from ContactForm.
+ * CurrentButtons component.
+ * @param {int} page The current page number.
+ * @param {bool} loading Specifies whether the buttons should be rendered as loading or not.
+ * @returns Current buttons based on component page state.
  */
-async function formSubmit(data) {
-  let submission;
-  try {
-    submission = await fetch(ADMIN_URL, {
-      method: "POST",
-      body: data
-    });
-    if (!submission.ok) {
-      throw new Error(`HTTP error: ${submission.status}`);
-    }
-  } catch (e) {
-    console.error(e);
-  }
+function CurrentButtons({
+  page,
+  loading
+}) {
+  return page == 1 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Button__WEBPACK_IMPORTED_MODULE_4__["default"], {
+    id: "pg1_button",
+    type: "submit",
+    loading: loading
+  }, "Get a quote"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Existing customer? ", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", null, "Click here"), " to contact us.")) : page == 2 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "No thanks.", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("br", null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
+    href: "google.com"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_sl__WEBPACK_IMPORTED_MODULE_5__.SlArrowLeft, null), " Return to home")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Button__WEBPACK_IMPORTED_MODULE_4__["default"], {
+    id: "pg2_button",
+    type: "submit",
+    loading: loading
+  }, "Sign me up!")) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null);
+}
+
+/**
+ * CurrentPage component.
+ * 
+ * @param {int} page The page number to be rendered
+ * @param {bool} message Determines whether a message field is displayed on page 1.
+ * @param {JSX.Element} inputs A list of inputs to be rendered by the current page
+ * @param {bool} getLoading Specifies whether a GET request is currently loading. Used with calendarProps.
+ * @param {bool} postLoading Specifies whether a POST request is currently loading.
+ * @param {Object | null} calendarProps (Optional) The props passed to DateTimeBooker
+ * @returns Rendered page of the form, including inputs, error fields, and CurrentButtons.
+ */
+function CurrentPage({
+  page,
+  message,
+  inputs,
+  getLoading,
+  postLoading
+}) {
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", {
+    id: "page" + page,
+    className: "page",
+    page: page
+  }, page == 6 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Unfortunately, you reside outside of our service area.") : page == 3 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_DateTimeBooker__WEBPACK_IMPORTED_MODULE_2__["default"]
+  // calendarInfo={calendarInfo}
+  , null) : inputs, page == 1 && message ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
+    key: "contact_message_field"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
+    htmlFor: "message"
+  }, "Message"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("textarea", {
+    id: "message",
+    name: "message",
+    "max-length": "250",
+    placeholder: "Enter message..."
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+    className: "error"
+  })) : null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentButtons, {
+    page: page,
+    loading: postLoading
+  }));
 }
 
 /**
@@ -51,11 +148,14 @@ async function formSubmit(data) {
  * first page message box. Lots of discrete settings in here, needs to be reworked
  * if turned into a dynamic plugin.
  * 
+ * @todo Add mobile layout using isMobile
  * @param {Object} props List of properties passed from view.js
  * @returns Rendered contact form JSX.
  */
 function ContactForm(props) {
   let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1); //CHANGE THIS BACK TO 1
+  let [postLoading, setPostLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  let [getLoading, setGetLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
 
   // Inputs that match page number
   let currentInputs = props.inputs.map(input => {
@@ -74,52 +174,13 @@ function ContactForm(props) {
   });
 
   /**
-   * CurrentButtons component.
-   * @returns Current buttons based on component page state.
-   */
-  let CurrentButtons = () => {
-    return page == 1 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
-      id: "pg1_button",
-      type: "submit"
-    }, "Get a quote"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Existing customer? ", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", null, "Click here"), " to contact us.")) : page == 2 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "No thanks.", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("br", null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
-      href: "google.com"
-    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_sl__WEBPACK_IMPORTED_MODULE_3__.SlArrowLeft, null), " Return to home")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
-      id: "pg2_button",
-      type: "submit"
-    }, "Sign me up!")) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null);
-  };
-
-  /**
-   * CurrentPage component.
-   * @returns Rendered page of the form, including inputs, error fields, and CurrentButtons.
-   */
-  let CurrentPage = () => {
-    return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", {
-      id: "page" + page,
-      className: "page",
-      page: page
-    }, page == 6 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Unfortunately, you reside outside of our service area.") : page == 3 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_DateTimeBooker__WEBPACK_IMPORTED_MODULE_2__["default"], null) : currentInputs, page == 1 && props.message ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
-      key: "contact_message_field"
-    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
-      htmlFor: "message"
-    }, "Message"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("textarea", {
-      id: "message",
-      name: "message",
-      "max-length": "250",
-      placeholder: "Enter message..."
-    }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
-      className: "error"
-    })) : null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentButtons, null));
-  };
-
-  /**
    * Submit handler function for ContactForm. Checks validity of each input using checkInput
    * and either renders first validity error or passes the FormData to formSubmit.
    * 
    * @param {Event} e The HTML <form> submit event.
    * 
    * @note Special case: if contact ZIP code is not in service area, form is submitted and
-   *       contact is sent to page 6.
+   *     contact is sent to page 6.
    */
   async function checkValidity(e) {
     e.preventDefault();
@@ -165,20 +226,77 @@ function ContactForm(props) {
       error.textContent = "";
       error.className = "error";
     }
-    formSubmit(data);
-    setPage(page + 1);
-    console.log(page);
-    return;
+
+    // response handling section
+    try {
+      setPostLoading(true);
+      const result = await formSubmit(data);
+      console.log(result);
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      setPostLoading(false);
+      setPage(page + 1);
+      console.log(page);
+
+      // if (page == 2) {
+      //   const calendarInfo = useRef(await getCalendarInfo());
+      // }
+    } catch (e) {
+      if (e.message === 'Error saving the form data.') {
+        react_toastify__WEBPACK_IMPORTED_MODULE_3__.toast.dismiss();
+        react_toastify__WEBPACK_IMPORTED_MODULE_3__.toast.error('Oops! Form could not be submitted.');
+        setPostLoading(false);
+      }
+    }
+  }
+
+  /**
+   * Submits a given FormData object to admin_post.php.
+   * 
+   * @todo Move advance page function here, and only advance page if wpdb returns success.
+   *     Display error if not. Email admin if API call fails.
+   * @todo Preemptively fetch appointment information as soon as first page submits.
+   * @param {FormData} data Validated form data submitted from ContactForm.
+   */
+  async function formSubmit(data) {
+    try {
+      let submission = await fetch(ADMIN_URL, {
+        method: "POST",
+        body: data
+      });
+      if (!submission.ok) {
+        throw new Error(`HTTP error: ${submission.status}`);
+      }
+      return await submission.json();
+    } catch (e) {
+      throw new Error(e);
+    }
   }
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
     noValidate: true,
     id: "ps-contact-form",
     onSubmit: checkValidity
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentPage, null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentPage, {
+    page: page,
+    message: props.message,
+    inputs: currentInputs,
+    getLoading: getLoading,
+    postLoading: postLoading
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     id: "hidden",
     type: "hidden",
     name: "action",
     value: "contact_form"
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_toastify__WEBPACK_IMPORTED_MODULE_3__.ToastContainer, {
+    position: "bottom-center",
+    autoClose: 5000,
+    hideProgressBar: true,
+    newestOnTop: true,
+    closeOnClick: true,
+    pauseOnFocusLoss: false,
+    role: "alert",
+    limit: 1
   }));
 }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ContactForm);
@@ -197,40 +315,40 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_calendar__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-calendar */ "./node_modules/react-calendar/dist/esm/Calendar.js");
+/* harmony import */ var react_calendar__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-calendar */ "./node_modules/react-calendar/dist/esm/Calendar.js");
 /* harmony import */ var clsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! clsx */ "./node_modules/clsx/dist/clsx.mjs");
+/* harmony import */ var react_icons_sl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-icons/sl */ "./node_modules/react-icons/sl/index.mjs");
 
 
 
 
+
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+let isMobile = window.innerWidth <= 768;
+window.addEventListener("resize", () => {
+  if (window.innerWidth <= 768) {
+    isMobile = true;
+  } else {
+    isMobile = false;
+  }
+});
 const defaultStartTime = value => {
+  if (!value) {
+    return;
+  }
   const startTime = new Date(value.getTime());
   startTime.setHours(8, 0, 0, 0);
   return startTime;
 };
 const defaultEndTime = value => {
+  if (!value) {
+    return;
+  }
   const endTime = new Date(value.getTime());
   endTime.setHours(17, 0, 0, 0);
   return endTime;
 };
-
-/**
- * Handler function for TimeSlot button click. 
- * @param {Event} e 
- * @param {Function} onChange 
- * @returns Calls the setter function of value in DateTimeBooker with the
- *          newly selected time.
- */
-function handleClick(e, onChange) {
-  let prev;
-  if (prev) {
-    prev.classList.remove("selected");
-  }
-  prev = e;
-  let newTime = e.target.value;
-  e.target.classList.add("selected");
-  return onChange(new Date(newTime));
-}
 
 /**
  * The TimeSlot component. Represents an individual time slot button.
@@ -243,34 +361,49 @@ function handleClick(e, onChange) {
 function TimeSlot({
   children,
   onChange,
-  disabled
+  disabled,
+  myKey,
+  activeKey,
+  onSwap
 }) {
+  const value = children;
+
   /**
    * Simple time formatting function   * 
    * @param {Date} value 
    * @returns formatted time string to display
    */
-
-  const value = children;
   const formatTime = value => {
     const suffix = value.getHours() >= 12 ? "PM" : "AM";
     return (value.getHours() > 12 ? value.getHours() - 12 : value.getHours()) + ":" + value.getMinutes().toString().padEnd(2, "0") + " " + suffix;
   };
-  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: 'timeslot',
-    onClick: e => {
-      handleClick(e, onChange);
+    style: {
+      display: 'flex'
+    }
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    className: (0,clsx__WEBPACK_IMPORTED_MODULE_1__.clsx)('timeslot__value', myKey == activeKey ? 'timeslot__value--active' : ''),
+    onClick: () => {
+      onSwap(myKey);
     },
     disabled: disabled,
     value: value,
     type: "button"
-  }, formatTime(value));
+  }, formatTime(value)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    className: (0,clsx__WEBPACK_IMPORTED_MODULE_1__.clsx)('timeslot__select', myKey == activeKey ? '' : 'timeslot__select--hidden'),
+    type: "button",
+    onClick: () => {
+      onChange(value);
+    }
+  }, "Select"));
 }
 
 /**
  * TimeGrid component. Displays a grid of buttons with available time slots on them.
  * 
  * @param {Date} value The current value of DateTimeBooker
+ * @param {Date} prev The previous value of DateTimeBooker. Used to check calendar changes.
  * @param {Function} onChange Pass a function to call when selected time is changed.
  * @param {Array[Date]} timeDisabled An array of Dates describing disabled time slots.
  * @param {[Date, Date]} timeRange Array containing start time and end time
@@ -278,26 +411,42 @@ function TimeSlot({
  */
 function TimeGrid({
   value,
+  changedDay,
   onChange,
-  timeDisabled = [],
   timeRange = [defaultStartTime(value), defaultEndTime(value)],
-  interval = 60
+  interval = 60,
+  slotDisabled
 }) {
+  const [activeKey, setActiveKey] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(-1);
+  if (value == null) {
+    return;
+  }
   if (interval < 15) {
     throw new Error("Interval cannot be less than 15 minutes.");
   }
+  if (changedDay.current) {
+    setActiveKey(-1);
+    changedDay.current = false;
+  }
+  const getFormattedDate = value => {
+    return `${MONTHS[value.getMonth()]} ${value.getDate()}, ${value.getFullYear()}`;
+  };
   let coeff = 1000 * 60 * interval;
   const current = new Date(Math.round(value.getTime() / coeff) * coeff);
   const now = new Date();
   const nowRounded = new Date(Math.round(now.getTime() / coeff) * coeff);
   const [startTime, endTime] = timeRange;
-  let times = [];
+  let times = []; // in ms
+
   for (let time = startTime.getTime(); time <= endTime.getTime(); time += coeff) {
     times.push(time);
   }
   const timeSlots = times.map(time => {
     let disabled = false;
-    if (current == nowRounded || timeDisabled.includes(current)) {
+    if (current == nowRounded || slotDisabled({
+      date: new Date(current),
+      view: 'time'
+    })) {
       disabled = true;
     }
     return {
@@ -305,47 +454,129 @@ function TimeGrid({
       disabled: disabled
     };
   });
+  const handleSwap = key => {
+    setActiveKey(key);
+  };
+  const props = {
+    activeKey: activeKey,
+    onChange: onChange,
+    onSwap: handleSwap
+  };
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "timegrid"
-  }, timeSlots.map((slot, i) => {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "mobile-header"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h1", null, WEEKDAYS[value.getDay()]), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, getFormattedDate(value)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    className: "timegrid__previous",
+    type: "button",
+    onClick: () => {
+      onChange(value, -1);
+    }
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_sl__WEBPACK_IMPORTED_MODULE_2__.SlArrowLeft, null))), timeSlots.map((slot, i) => {
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TimeSlot, {
       key: "timeslot" + i,
-      disabled: slot.disabled,
-      onChange: onChange
+      myKey: i,
+      disabled: slotDisabled({
+        date: new Date(slot.time),
+        view: 'time'
+      }),
+      ...props
     }, slot.time);
   }));
 }
 function DateTimeBooker() {
-  const [value, onChange] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(new Date());
-  console.log(value.toLocaleString());
+  const now = new Date();
+  const initial = now.getHours() > 17 ? new Date(new Date(now.getTime() + 1000 * 60 * 60 * 24).setHours(0, 0, 0, 0)) : new Date(new Date(now).setHours(0, 0, 0, 0));
+  const [value, setValue] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(initial);
+  const [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1);
+  const changedDay = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
 
   // get array of disabled dates []
-
   const disabled = [new Date(2024, 5, 15)];
   const isDisabled = args => {
     const {
-      date
+      date: date,
+      view: context
     } = args;
     let isDisabled = false;
     disabled.forEach(disabledDate => {
-      if (disabledDate.getTime() == date.getTime() || date.getTime() < Date.now()) {
-        isDisabled = true;
+      if (context === 'time') {
+        isDisabled = disabledDate.getTime() == date.getTime() || date.getTime() < Date.now();
+      }
+      if (context === 'month') {
+        const truncDate = new Date(new Date(date).setHours(0, 0, 0, 0));
+        isDisabled = disabledDate.getTime() == truncDate.getTime() || truncDate.getTime() < initial.getTime() || truncDate.getTime() == new Date(value).setHours(0, 0, 0, 0);
       }
     });
     return isDisabled;
   };
-  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  const onChange = newVal => {
+    if (value != null) {
+      changedDay.current = value.getDate() != newVal.getDate();
+    }
+    setValue(newVal);
+  };
+  const onChangeMobile = (value, newPage) => {
+    onChange(value);
+    setPage(page + newPage);
+  };
+  return !isMobile ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "date-time-booker-container"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_calendar__WEBPACK_IMPORTED_MODULE_2__["default"], {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_calendar__WEBPACK_IMPORTED_MODULE_3__["default"], {
     onChange: onChange,
+    onActiveStartDateChange: ({
+      action
+    }) => {
+      changedDay.current = action === "prev" || action === "next";
+      setValue(null);
+    },
     minDetail: "month",
     value: value,
     tileDisabled: isDisabled
-  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TimeGrid, {
+  }), setValue != null ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TimeGrid, {
     onChange: onChange,
     value: value,
-    interval: 30
+    changedDay: changedDay,
+    interval: 30,
+    slotDisabled: isDisabled
+  }) : null) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "date-time-booker-container"
+  }, page == 1 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_calendar__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    onChange: value => {
+      onChangeMobile(value, 1);
+    },
+    minDetail: "month",
+    value: value,
+    tileDisabled: isDisabled
+  }) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TimeGrid, {
+    onChange: onChangeMobile,
+    value: value,
+    interval: 30,
+    mobile: true,
+    slotDisabled: isDisabled
   }));
+}
+
+/***/ }),
+
+/***/ "./src/components/Spinner.js":
+/*!***********************************!*\
+  !*** ./src/components/Spinner.js ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Spinner)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+
+
+function Spinner() {
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "spinner"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null));
 }
 
 /***/ }),
@@ -6185,6 +6416,35 @@ function SlWallet (props) {
 function SlWrench (props) {
   return (0,_lib_index_mjs__WEBPACK_IMPORTED_MODULE_0__.GenIcon)({"tag":"svg","attr":{"viewBox":"0 0 1024 1024"},"child":[{"tag":"path","attr":{"d":"M1006.37 215.936c-10.784-4.976-23.582-3.088-32.558 4.848L812.5 365.68 666.868 216.272 811.06 49.744c7.84-9.056 9.745-21.536 4.865-32.512S800.26-.463 788.405-.463h-8.69c-89.12 0-242.976 7.664-311.663 77.343l-13.857 13.76c-73.28 74.768-86.288 197.376-47.68 290.576L37.236 758.112c-49.791 50.48-49.791 132.32 0 182.816l45.073 45.697c24.895 25.232 57.535 37.856 90.175 37.856 32.624 0 65.263-12.624 90.143-37.856l374.72-377.728c35.44 19.152 84 31.664 124.784 31.664 65.376 0 127.344-26.369 174.527-74.256l13.664-13.84c74.609-75.648 73.456-237.297 73.792-308.417.033-12.096-6.927-23.088-17.743-28.112zM905.666 509.008l-11.873 13.871c-35.744 36.273-82.496 53.648-131.664 53.648-24.32 0-57.088-4.576-79.216-13.792-20-8.303-38.576-20.288-55.2-35.423L217.537 940.928c-12.032 12.223-28.032 18.943-45.057 18.943s-33.04-6.72-45.088-18.943l-45.055-45.68c-24.865-25.216-24.865-66.224-.017-91.44l400.784-408.863c-13.44-19.569-22.593-40.897-28.049-62.977h-.015c-15.424-62.384-6.432-148.607 42.016-198.048L510.848 120c41.552-42.16 149.456-54.624 209.2-58.304l-117.36 135.536c-10.496 12.128-9.967 30.4 1.216 41.872L789.44 429.44c11.248 11.584 29.44 12.256 41.553 1.52L961.6 313.328c-3.888 63.36-16.192 155.376-55.935 195.68z"},"child":[]}]})(props);
 };
+
+
+/***/ }),
+
+/***/ "./node_modules/react-toastify/dist/react-toastify.esm.mjs":
+/*!*****************************************************************!*\
+  !*** ./node_modules/react-toastify/dist/react-toastify.esm.mjs ***!
+  \*****************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Bounce: () => (/* binding */ H),
+/* harmony export */   Flip: () => (/* binding */ Y),
+/* harmony export */   Icons: () => (/* binding */ z),
+/* harmony export */   Slide: () => (/* binding */ F),
+/* harmony export */   ToastContainer: () => (/* binding */ Q),
+/* harmony export */   Zoom: () => (/* binding */ X),
+/* harmony export */   collapseToast: () => (/* binding */ f),
+/* harmony export */   cssTransition: () => (/* binding */ g),
+/* harmony export */   toast: () => (/* binding */ B),
+/* harmony export */   useToast: () => (/* binding */ N),
+/* harmony export */   useToastContainer: () => (/* binding */ L)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var clsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! clsx */ "./node_modules/clsx/dist/clsx.mjs");
+'use client';
+const c=e=>"number"==typeof e&&!isNaN(e),d=e=>"string"==typeof e,u=e=>"function"==typeof e,p=e=>d(e)||u(e)?e:null,m=e=>(0,react__WEBPACK_IMPORTED_MODULE_0__.isValidElement)(e)||d(e)||u(e)||c(e);function f(e,t,n){void 0===n&&(n=300);const{scrollHeight:o,style:s}=e;requestAnimationFrame(()=>{s.minHeight="initial",s.height=o+"px",s.transition=`all ${n}ms`,requestAnimationFrame(()=>{s.height="0",s.padding="0",s.margin="0",setTimeout(t,n)})})}function g(t){let{enter:a,exit:r,appendPosition:i=!1,collapse:l=!0,collapseDuration:c=300}=t;return function(t){let{children:d,position:u,preventExitTransition:p,done:m,nodeRef:g,isIn:y,playToast:v}=t;const h=i?`${a}--${u}`:a,T=i?`${r}--${u}`:r,E=(0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(0);return (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(()=>{const e=g.current,t=h.split(" "),n=o=>{o.target===g.current&&(v(),e.removeEventListener("animationend",n),e.removeEventListener("animationcancel",n),0===E.current&&"animationcancel"!==o.type&&e.classList.remove(...t))};e.classList.add(...t),e.addEventListener("animationend",n),e.addEventListener("animationcancel",n)},[]),(0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(()=>{const e=g.current,t=()=>{e.removeEventListener("animationend",t),l?f(e,m,c):m()};y||(p?t():(E.current=1,e.className+=` ${T}`,e.addEventListener("animationend",t)))},[y]),react__WEBPACK_IMPORTED_MODULE_0__.createElement(react__WEBPACK_IMPORTED_MODULE_0__.Fragment,null,d)}}function y(e,t){return null!=e?{content:e.content,containerId:e.props.containerId,id:e.props.toastId,theme:e.props.theme,type:e.props.type,data:e.props.data||{},isLoading:e.props.isLoading,icon:e.props.icon,status:t}:{}}const v=new Map;let h=[];const T=new Set,E=e=>T.forEach(t=>t(e)),b=()=>v.size>0;function I(e,t){var n;if(t)return!(null==(n=v.get(t))||!n.isToastActive(e));let o=!1;return v.forEach(t=>{t.isToastActive(e)&&(o=!0)}),o}function _(e,t){m(e)&&(b()||h.push({content:e,options:t}),v.forEach(n=>{n.buildToast(e,t)}))}function C(e,t){v.forEach(n=>{null!=t&&null!=t&&t.containerId?(null==t?void 0:t.containerId)===n.id&&n.toggle(e,null==t?void 0:t.id):n.toggle(e,null==t?void 0:t.id)})}function L(e){const{subscribe:o,getSnapshot:s,setProps:i}=(0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(function(e){const n=e.containerId||1;return{subscribe(o){const s=function(e,n,o){let s=1,r=0,i=[],l=[],f=[],g=n;const v=new Map,h=new Set,T=()=>{f=Array.from(v.values()),h.forEach(e=>e())},E=e=>{l=null==e?[]:l.filter(t=>t!==e),T()},b=e=>{const{toastId:n,onOpen:s,updateId:a,children:r}=e.props,i=null==a;e.staleId&&v.delete(e.staleId),v.set(n,e),l=[...l,e.props.toastId].filter(t=>t!==e.staleId),T(),o(y(e,i?"added":"updated")),i&&u(s)&&s((0,react__WEBPACK_IMPORTED_MODULE_0__.isValidElement)(r)&&r.props)};return{id:e,props:g,observe:e=>(h.add(e),()=>h.delete(e)),toggle:(e,t)=>{v.forEach(n=>{null!=t&&t!==n.props.toastId||u(n.toggle)&&n.toggle(e)})},removeToast:E,toasts:v,clearQueue:()=>{r-=i.length,i=[]},buildToast:(n,l)=>{if((t=>{let{containerId:n,toastId:o,updateId:s}=t;const a=n?n!==e:1!==e,r=v.has(o)&&null==s;return a||r})(l))return;const{toastId:f,updateId:h,data:I,staleId:_,delay:C}=l,L=()=>{E(f)},N=null==h;N&&r++;const $={...g,style:g.toastStyle,key:s++,...Object.fromEntries(Object.entries(l).filter(e=>{let[t,n]=e;return null!=n})),toastId:f,updateId:h,data:I,closeToast:L,isIn:!1,className:p(l.className||g.toastClassName),bodyClassName:p(l.bodyClassName||g.bodyClassName),progressClassName:p(l.progressClassName||g.progressClassName),autoClose:!l.isLoading&&(w=l.autoClose,k=g.autoClose,!1===w||c(w)&&w>0?w:k),deleteToast(){const e=v.get(f),{onClose:n,children:s}=e.props;u(n)&&n((0,react__WEBPACK_IMPORTED_MODULE_0__.isValidElement)(s)&&s.props),o(y(e,"removed")),v.delete(f),r--,r<0&&(r=0),i.length>0?b(i.shift()):T()}};var w,k;$.closeButton=g.closeButton,!1===l.closeButton||m(l.closeButton)?$.closeButton=l.closeButton:!0===l.closeButton&&($.closeButton=!m(g.closeButton)||g.closeButton);let P=n;(0,react__WEBPACK_IMPORTED_MODULE_0__.isValidElement)(n)&&!d(n.type)?P=(0,react__WEBPACK_IMPORTED_MODULE_0__.cloneElement)(n,{closeToast:L,toastProps:$,data:I}):u(n)&&(P=n({closeToast:L,toastProps:$,data:I}));const M={content:P,props:$,staleId:_};g.limit&&g.limit>0&&r>g.limit&&N?i.push(M):c(C)?setTimeout(()=>{b(M)},C):b(M)},setProps(e){g=e},setToggle:(e,t)=>{v.get(e).toggle=t},isToastActive:e=>l.some(t=>t===e),getSnapshot:()=>g.newestOnTop?f.reverse():f}}(n,e,E);v.set(n,s);const r=s.observe(o);return h.forEach(e=>_(e.content,e.options)),h=[],()=>{r(),v.delete(n)}},setProps(e){var t;null==(t=v.get(n))||t.setProps(e)},getSnapshot(){var e;return null==(e=v.get(n))?void 0:e.getSnapshot()}}}(e)).current;i(e);const l=(0,react__WEBPACK_IMPORTED_MODULE_0__.useSyncExternalStore)(o,s,s);return{getToastToRender:function(e){if(!l)return[];const t=new Map;return l.forEach(e=>{const{position:n}=e.props;t.has(n)||t.set(n,[]),t.get(n).push(e)}),Array.from(t,t=>e(t[0],t[1]))},isToastActive:I,count:null==l?void 0:l.length}}function N(e){const[t,o]=(0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(!1),[a,r]=(0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(!1),l=(0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null),c=(0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)({start:0,delta:0,removalDistance:0,canCloseOnClick:!0,canDrag:!1,didMove:!1}).current,{autoClose:d,pauseOnHover:u,closeToast:p,onClick:m,closeOnClick:f}=e;var g,y;function h(){o(!0)}function T(){o(!1)}function E(n){const o=l.current;c.canDrag&&o&&(c.didMove=!0,t&&T(),c.delta="x"===e.draggableDirection?n.clientX-c.start:n.clientY-c.start,c.start!==n.clientX&&(c.canCloseOnClick=!1),o.style.transform=`translate3d(${"x"===e.draggableDirection?`${c.delta}px, var(--y)`:`0, calc(${c.delta}px + var(--y))`},0)`,o.style.opacity=""+(1-Math.abs(c.delta/c.removalDistance)))}function b(){document.removeEventListener("pointermove",E),document.removeEventListener("pointerup",b);const t=l.current;if(c.canDrag&&c.didMove&&t){if(c.canDrag=!1,Math.abs(c.delta)>c.removalDistance)return r(!0),e.closeToast(),void e.collapseAll();t.style.transition="transform 0.2s, opacity 0.2s",t.style.removeProperty("transform"),t.style.removeProperty("opacity")}}null==(y=v.get((g={id:e.toastId,containerId:e.containerId,fn:o}).containerId||1))||y.setToggle(g.id,g.fn),(0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(()=>{if(e.pauseOnFocusLoss)return document.hasFocus()||T(),window.addEventListener("focus",h),window.addEventListener("blur",T),()=>{window.removeEventListener("focus",h),window.removeEventListener("blur",T)}},[e.pauseOnFocusLoss]);const I={onPointerDown:function(t){if(!0===e.draggable||e.draggable===t.pointerType){c.didMove=!1,document.addEventListener("pointermove",E),document.addEventListener("pointerup",b);const n=l.current;c.canCloseOnClick=!0,c.canDrag=!0,n.style.transition="none","x"===e.draggableDirection?(c.start=t.clientX,c.removalDistance=n.offsetWidth*(e.draggablePercent/100)):(c.start=t.clientY,c.removalDistance=n.offsetHeight*(80===e.draggablePercent?1.5*e.draggablePercent:e.draggablePercent)/100)}},onPointerUp:function(t){const{top:n,bottom:o,left:s,right:a}=l.current.getBoundingClientRect();"touchend"!==t.nativeEvent.type&&e.pauseOnHover&&t.clientX>=s&&t.clientX<=a&&t.clientY>=n&&t.clientY<=o?T():h()}};return d&&u&&(I.onMouseEnter=T,e.stacked||(I.onMouseLeave=h)),f&&(I.onClick=e=>{m&&m(e),c.canCloseOnClick&&p()}),{playToast:h,pauseToast:T,isRunning:t,preventExitTransition:a,toastRef:l,eventHandlers:I}}function $(t){let{delay:n,isRunning:o,closeToast:s,type:a="default",hide:r,className:i,style:c,controlledProgress:d,progress:p,rtl:m,isIn:f,theme:g}=t;const y=r||d&&0===p,v={...c,animationDuration:`${n}ms`,animationPlayState:o?"running":"paused"};d&&(v.transform=`scaleX(${p})`);const h=(0,clsx__WEBPACK_IMPORTED_MODULE_1__["default"])("Toastify__progress-bar",d?"Toastify__progress-bar--controlled":"Toastify__progress-bar--animated",`Toastify__progress-bar-theme--${g}`,`Toastify__progress-bar--${a}`,{"Toastify__progress-bar--rtl":m}),T=u(i)?i({rtl:m,type:a,defaultClassName:h}):(0,clsx__WEBPACK_IMPORTED_MODULE_1__["default"])(h,i),E={[d&&p>=1?"onTransitionEnd":"onAnimationEnd"]:d&&p<1?null:()=>{f&&s()}};return react__WEBPACK_IMPORTED_MODULE_0__.createElement("div",{className:"Toastify__progress-bar--wrp","data-hidden":y},react__WEBPACK_IMPORTED_MODULE_0__.createElement("div",{className:`Toastify__progress-bar--bg Toastify__progress-bar-theme--${g} Toastify__progress-bar--${a}`}),react__WEBPACK_IMPORTED_MODULE_0__.createElement("div",{role:"progressbar","aria-hidden":y?"true":"false","aria-label":"notification timer",className:T,style:v,...E}))}let w=1;const k=()=>""+w++;function P(e){return e&&(d(e.toastId)||c(e.toastId))?e.toastId:k()}function M(e,t){return _(e,t),t.toastId}function x(e,t){return{...t,type:t&&t.type||e,toastId:P(t)}}function A(e){return(t,n)=>M(t,x(e,n))}function B(e,t){return M(e,x("default",t))}B.loading=(e,t)=>M(e,x("default",{isLoading:!0,autoClose:!1,closeOnClick:!1,closeButton:!1,draggable:!1,...t})),B.promise=function(e,t,n){let o,{pending:s,error:a,success:r}=t;s&&(o=d(s)?B.loading(s,n):B.loading(s.render,{...n,...s}));const i={isLoading:null,autoClose:null,closeOnClick:null,closeButton:null,draggable:null},l=(e,t,s)=>{if(null==t)return void B.dismiss(o);const a={type:e,...i,...n,data:s},r=d(t)?{render:t}:t;return o?B.update(o,{...a,...r}):B(r.render,{...a,...r}),s},c=u(e)?e():e;return c.then(e=>l("success",r,e)).catch(e=>l("error",a,e)),c},B.success=A("success"),B.info=A("info"),B.error=A("error"),B.warning=A("warning"),B.warn=B.warning,B.dark=(e,t)=>M(e,x("default",{theme:"dark",...t})),B.dismiss=function(e){!function(e){var t;if(b()){if(null==e||d(t=e)||c(t))v.forEach(t=>{t.removeToast(e)});else if(e&&("containerId"in e||"id"in e)){const t=v.get(e.containerId);t?t.removeToast(e.id):v.forEach(t=>{t.removeToast(e.id)})}}else h=h.filter(t=>null!=e&&t.options.toastId!==e)}(e)},B.clearWaitingQueue=function(e){void 0===e&&(e={}),v.forEach(t=>{!t.props.limit||e.containerId&&t.id!==e.containerId||t.clearQueue()})},B.isActive=I,B.update=function(e,t){void 0===t&&(t={});const n=((e,t)=>{var n;let{containerId:o}=t;return null==(n=v.get(o||1))?void 0:n.toasts.get(e)})(e,t);if(n){const{props:o,content:s}=n,a={delay:100,...o,...t,toastId:t.toastId||e,updateId:k()};a.toastId!==e&&(a.staleId=e);const r=a.render||s;delete a.render,M(r,a)}},B.done=e=>{B.update(e,{progress:1})},B.onChange=function(e){return T.add(e),()=>{T.delete(e)}},B.play=e=>C(!0,e),B.pause=e=>C(!1,e);const O="undefined"!=typeof window?react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect:react__WEBPACK_IMPORTED_MODULE_0__.useEffect,D=t=>{let{theme:n,type:o,isLoading:s,...a}=t;return react__WEBPACK_IMPORTED_MODULE_0__.createElement("svg",{viewBox:"0 0 24 24",width:"100%",height:"100%",fill:"colored"===n?"currentColor":`var(--toastify-icon-color-${o})`,...a})},z={info:function(t){return react__WEBPACK_IMPORTED_MODULE_0__.createElement(D,{...t},react__WEBPACK_IMPORTED_MODULE_0__.createElement("path",{d:"M12 0a12 12 0 1012 12A12.013 12.013 0 0012 0zm.25 5a1.5 1.5 0 11-1.5 1.5 1.5 1.5 0 011.5-1.5zm2.25 13.5h-4a1 1 0 010-2h.75a.25.25 0 00.25-.25v-4.5a.25.25 0 00-.25-.25h-.75a1 1 0 010-2h1a2 2 0 012 2v4.75a.25.25 0 00.25.25h.75a1 1 0 110 2z"}))},warning:function(t){return react__WEBPACK_IMPORTED_MODULE_0__.createElement(D,{...t},react__WEBPACK_IMPORTED_MODULE_0__.createElement("path",{d:"M23.32 17.191L15.438 2.184C14.728.833 13.416 0 11.996 0c-1.42 0-2.733.833-3.443 2.184L.533 17.448a4.744 4.744 0 000 4.368C1.243 23.167 2.555 24 3.975 24h16.05C22.22 24 24 22.044 24 19.632c0-.904-.251-1.746-.68-2.44zm-9.622 1.46c0 1.033-.724 1.823-1.698 1.823s-1.698-.79-1.698-1.822v-.043c0-1.028.724-1.822 1.698-1.822s1.698.79 1.698 1.822v.043zm.039-12.285l-.84 8.06c-.057.581-.408.943-.897.943-.49 0-.84-.367-.896-.942l-.84-8.065c-.057-.624.25-1.095.779-1.095h1.91c.528.005.84.476.784 1.1z"}))},success:function(t){return react__WEBPACK_IMPORTED_MODULE_0__.createElement(D,{...t},react__WEBPACK_IMPORTED_MODULE_0__.createElement("path",{d:"M12 0a12 12 0 1012 12A12.014 12.014 0 0012 0zm6.927 8.2l-6.845 9.289a1.011 1.011 0 01-1.43.188l-4.888-3.908a1 1 0 111.25-1.562l4.076 3.261 6.227-8.451a1 1 0 111.61 1.183z"}))},error:function(t){return react__WEBPACK_IMPORTED_MODULE_0__.createElement(D,{...t},react__WEBPACK_IMPORTED_MODULE_0__.createElement("path",{d:"M11.983 0a12.206 12.206 0 00-8.51 3.653A11.8 11.8 0 000 12.207 11.779 11.779 0 0011.8 24h.214A12.111 12.111 0 0024 11.791 11.766 11.766 0 0011.983 0zM10.5 16.542a1.476 1.476 0 011.449-1.53h.027a1.527 1.527 0 011.523 1.47 1.475 1.475 0 01-1.449 1.53h-.027a1.529 1.529 0 01-1.523-1.47zM11 12.5v-6a1 1 0 012 0v6a1 1 0 11-2 0z"}))},spinner:function(){return react__WEBPACK_IMPORTED_MODULE_0__.createElement("div",{className:"Toastify__spinner"})}},R=n=>{const{isRunning:o,preventExitTransition:s,toastRef:r,eventHandlers:i,playToast:c}=N(n),{closeButton:d,children:p,autoClose:m,onClick:f,type:g,hideProgressBar:y,closeToast:v,transition:h,position:T,className:E,style:b,bodyClassName:I,bodyStyle:_,progressClassName:C,progressStyle:L,updateId:w,role:k,progress:P,rtl:M,toastId:x,deleteToast:A,isIn:B,isLoading:O,closeOnClick:D,theme:R}=n,S=(0,clsx__WEBPACK_IMPORTED_MODULE_1__["default"])("Toastify__toast",`Toastify__toast-theme--${R}`,`Toastify__toast--${g}`,{"Toastify__toast--rtl":M},{"Toastify__toast--close-on-click":D}),H=u(E)?E({rtl:M,position:T,type:g,defaultClassName:S}):(0,clsx__WEBPACK_IMPORTED_MODULE_1__["default"])(S,E),F=function(e){let{theme:n,type:o,isLoading:s,icon:r}=e,i=null;const l={theme:n,type:o};return!1===r||(u(r)?i=r({...l,isLoading:s}):(0,react__WEBPACK_IMPORTED_MODULE_0__.isValidElement)(r)?i=(0,react__WEBPACK_IMPORTED_MODULE_0__.cloneElement)(r,l):s?i=z.spinner():(e=>e in z)(o)&&(i=z[o](l))),i}(n),X=!!P||!m,Y={closeToast:v,type:g,theme:R};let q=null;return!1===d||(q=u(d)?d(Y):(0,react__WEBPACK_IMPORTED_MODULE_0__.isValidElement)(d)?(0,react__WEBPACK_IMPORTED_MODULE_0__.cloneElement)(d,Y):function(t){let{closeToast:n,theme:o,ariaLabel:s="close"}=t;return react__WEBPACK_IMPORTED_MODULE_0__.createElement("button",{className:`Toastify__close-button Toastify__close-button--${o}`,type:"button",onClick:e=>{e.stopPropagation(),n(e)},"aria-label":s},react__WEBPACK_IMPORTED_MODULE_0__.createElement("svg",{"aria-hidden":"true",viewBox:"0 0 14 16"},react__WEBPACK_IMPORTED_MODULE_0__.createElement("path",{fillRule:"evenodd",d:"M7.71 8.23l3.75 3.75-1.48 1.48-3.75-3.75-3.75 3.75L1 11.98l3.75-3.75L1 4.48 2.48 3l3.75 3.75L9.98 3l1.48 1.48-3.75 3.75z"})))}(Y)),react__WEBPACK_IMPORTED_MODULE_0__.createElement(h,{isIn:B,done:A,position:T,preventExitTransition:s,nodeRef:r,playToast:c},react__WEBPACK_IMPORTED_MODULE_0__.createElement("div",{id:x,onClick:f,"data-in":B,className:H,...i,style:b,ref:r},react__WEBPACK_IMPORTED_MODULE_0__.createElement("div",{...B&&{role:k},className:u(I)?I({type:g}):(0,clsx__WEBPACK_IMPORTED_MODULE_1__["default"])("Toastify__toast-body",I),style:_},null!=F&&react__WEBPACK_IMPORTED_MODULE_0__.createElement("div",{className:(0,clsx__WEBPACK_IMPORTED_MODULE_1__["default"])("Toastify__toast-icon",{"Toastify--animate-icon Toastify__zoom-enter":!O})},F),react__WEBPACK_IMPORTED_MODULE_0__.createElement("div",null,p)),q,react__WEBPACK_IMPORTED_MODULE_0__.createElement($,{...w&&!X?{key:`pb-${w}`}:{},rtl:M,theme:R,delay:m,isRunning:o,isIn:B,closeToast:v,hide:y,type:g,style:L,className:C,controlledProgress:X,progress:P||0})))},S=function(e,t){return void 0===t&&(t=!1),{enter:`Toastify--animate Toastify__${e}-enter`,exit:`Toastify--animate Toastify__${e}-exit`,appendPosition:t}},H=g(S("bounce",!0)),F=g(S("slide",!0)),X=g(S("zoom")),Y=g(S("flip")),q={position:"top-right",transition:H,autoClose:5e3,closeButton:!0,pauseOnHover:!0,pauseOnFocusLoss:!0,draggable:"touch",draggablePercent:80,draggableDirection:"x",role:"alert",theme:"light"};function Q(t){let o={...q,...t};const s=t.stacked,[a,r]=(0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(!0),c=(0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null),{getToastToRender:d,isToastActive:m,count:f}=L(o),{className:g,style:y,rtl:v,containerId:h}=o;function T(e){const t=(0,clsx__WEBPACK_IMPORTED_MODULE_1__["default"])("Toastify__toast-container",`Toastify__toast-container--${e}`,{"Toastify__toast-container--rtl":v});return u(g)?g({position:e,rtl:v,defaultClassName:t}):(0,clsx__WEBPACK_IMPORTED_MODULE_1__["default"])(t,p(g))}function E(){s&&(r(!0),B.play())}return O(()=>{if(s){var e;const t=c.current.querySelectorAll('[data-in="true"]'),n=12,s=null==(e=o.position)?void 0:e.includes("top");let r=0,i=0;Array.from(t).reverse().forEach((e,t)=>{const o=e;o.classList.add("Toastify__toast--stacked"),t>0&&(o.dataset.collapsed=`${a}`),o.dataset.pos||(o.dataset.pos=s?"top":"bot");const l=r*(a?.2:1)+(a?0:n*t);o.style.setProperty("--y",`${s?l:-1*l}px`),o.style.setProperty("--g",`${n}`),o.style.setProperty("--s",""+(1-(a?i:0))),r+=o.offsetHeight,i+=.025})}},[a,f,s]),react__WEBPACK_IMPORTED_MODULE_0__.createElement("div",{ref:c,className:"Toastify",id:h,onMouseEnter:()=>{s&&(r(!1),B.pause())},onMouseLeave:E},d((t,n)=>{const o=n.length?{...y}:{...y,pointerEvents:"none"};return react__WEBPACK_IMPORTED_MODULE_0__.createElement("div",{className:T(t),style:o,key:`container-${t}`},n.map(t=>{let{content:n,props:o}=t;return react__WEBPACK_IMPORTED_MODULE_0__.createElement(R,{...o,stacked:s,collapseAll:E,isIn:m(o.toastId,o.containerId),style:o.style,key:`toast-${o.key}`},n)}))}))}
+//# sourceMappingURL=react-toastify.esm.mjs.map
 
 
 /***/ })
