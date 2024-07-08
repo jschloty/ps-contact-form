@@ -17,6 +17,70 @@
 	exit; // Exit if accessed directly.
 }
 
+define( 'PS_CONTACT_FORM_DIR', plugin_dir_path(__FILE__) );
+require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+/**
+ * Class used to represent configuration properties of GHL API. Meant to replace the deprecated
+ * api-config.json file. Interacts with wpdb for persistence.
+ */
+class GHL_Config {
+	private object $config;
+	private string $table_name;
+
+	function __construct() {
+		global $wpdb;
+		$this->table_name = $wpdb->prefix . 'ps_api_info';
+
+		maybe_create_table( $this->table_name, 'CREATE TABLE ' . $this->table_name . ' (
+			id MEDIUMINT NOT NULL AUTO_INCREMENT,
+			name TINYTEXT,
+			props JSON,
+			PRIMARY KEY (id)
+		);' );
+
+		if ( !$wpdb->get_results("SELECT * FROM $this->table_name WHERE name LIKE '%config%' LIMIT 1") ) {
+			$this->config = (object) [
+				"baseUrl" => "https://marketplace.leadconnectorhq.com",
+				"clientId" => "6679dffae548834c93b053ca-lxup3ovw",
+				"clientSecret" => "a4abc9e8-d49e-4e16-80ee-a743f58a3278",
+				"redirectUrl" => "http://localhost:10005/wp-admin/admin-post.php?action=api_auth",
+				"token_type" => "Bearer",
+				"expires_in" => 86399,
+				"scope" => "calendars.readonly calendars/events.write contacts.write oauth.write oauth.readonly"
+			];
+
+			$wpdb->insert($this->table_name, [
+				'name' => 'config',
+				'props' => json_encode($this->config)
+			]);
+		} else {
+			$results = $wpdb->get_results("SELECT props FROM $this->table_name WHERE name LIKE '%config%'");
+			$this->config = json_decode($results[0]->props);
+		}
+	}
+
+	public function getConfig() {
+		global $wpdb;
+		$results = $wpdb->get_results("SELECT props FROM $this->table_name WHERE name LIKE '%config%'");
+		$this->config = json_decode($results[0]->props);
+		return $this->config;
+	}
+
+	public function setConfig( object $new_config ) {
+		global $wpdb;
+		$this->config = $new_config;
+		$wpdb->replace($this->table_name, [
+			'id' => 1,
+			'name' => 'config',
+			'props' => json_encode($this->config)
+		]);
+	}
+
+}
+
+$ghl_config = new GHL_Config();
+
 /**
  * Registers the block using the metadata loaded from the `block.json` file.
  * Behind the scenes, it registers also all assets so they can be enqueued
@@ -42,9 +106,12 @@ function ps_handle_ghl_auth() {
 	if ( !$_GET['code'] ) {
 		return;
 	}
+	
+	// $str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
+	// $api_config = json_decode($str);
+	global $ghl_config;
 
-	$str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
-	$api_config = json_decode($str);
+	$api_config = $ghl_config->getConfig();
 
 	$ghl_authcode = $_GET['code'];
 
@@ -89,15 +156,17 @@ function ps_handle_ghl_auth() {
 	}
 
 	$merged = (object) array_merge( (array) $api_config, (array) $response );
-	$new_config = json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-	file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
+	$ghl_config->setConfig($merged);
+
+	// $new_config = json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+	// file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
 
 	if ( isset( $response->error ) ) {
 		echo '<p>An error has occurred. ' . $response->error_description . '</p>';
 		return;
 	}	else {
-		header( 'refresh:5; url=' . admin_url('/admin.php?page=ps_contact_form_options') );
-		echo '<p>Connection successful. Redirecting...</p>';
+		// header( 'refresh:5; url=' . admin_url('/admin.php?page=ps_contact_form_options') );
+		echo 'Connection.. successful?';
 		return;
 	}
 
@@ -113,8 +182,10 @@ add_action('admin_post_api_auth', 'ps_handle_ghl_auth');
  * @param string $location_id Only needs to be provided if type is Location.
  */
 function ps_refresh_access_token( $user_type, $location_id = "" ) {
-	$str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
-	$api_config = json_decode($str);
+	// $str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
+	// $api_config = json_decode($str);
+	global $ghl_config;
+	$api_config = $ghl_config->getConfig();
 
 	$curl = curl_init();
 
@@ -177,8 +248,9 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
 	if ( $user_type === 'Company' ) {
 
 		$merged = (object) array_merge( (array) $api_config, (array) $response );
-		$new_config = json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-		file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
+		$ghl_config->setConfig($merged);
+		// $new_config = json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+		// file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
 	}
 
 	else if ( $user_type === 'Location' ) {
@@ -189,8 +261,9 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
 			}
 		}
 
-		$new_config = json_encode($api_config, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-		file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
+		$ghl_config->setConfig($api_config);
+		// $new_config = json_encode($api_config, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+		// file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
 	}
 }
 
@@ -201,13 +274,16 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
  * 
  * @param array $curl_opts Should contain a valid cURL options array. Contains majority of the API query.
  * @param string $user_type Must be either 'Location' or 'Company'. Used for refresh tokens.
- * @param string $location_id Optional - must be provided if $user_type === 'Location'
+ * @param string | null $location_id Optional - must be provided if $user_type === 'Location'
+ * @param string | null $version Optional - version to be included in the HTTP header.
  * @param int $tries Used internally by the function for recursion. Do not supply unless you know what you're doing.
- * @return object | void Returns the response is API call is successful, otherwise outputs an error and returns void.
+ * @return object | void Returns the response object if API call is successful, otherwise outputs an error and returns void.
  */
-function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $tries = 0 ) {
-	$str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
-	$api_config = json_decode($str);
+function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $version = '2021-07-28', $tries = 0 ) {
+	// $str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
+	// $api_config = json_decode($str);
+	global $ghl_config;
+	$api_config = $ghl_config->getConfig();
 
 	if ($user_type != 'Company' && $user_type != 'Location') {
 		echo 'Error: User type must be Company or Location.';
@@ -223,10 +299,13 @@ function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $tries = 0 
 		}
 	}
 
+	// echo "locationId: $location_id\n";
+	// echo "location->access_token: $location_token\n";
+
 	$curl_opts[CURLOPT_HTTPHEADER] = [
 		'Accept: application/json',
 		'Authorization: Bearer ' . ($user_type === 'Company' ? $api_config->access_token : $location_token),
-		'Version: 2021-07-28'
+		"Version: $version"
 	];
 
 	//setting Content-Type header
@@ -285,8 +364,10 @@ function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $tries = 0 
  * 								Returns GHL's error response on error.
  */
 function ps_ghl_get_locations() {
-	$str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
-	$api_config = json_decode($str);
+	global $ghl_config;
+	$api_config = $ghl_config->getConfig();
+	// $str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
+	// $api_config = json_decode($str);
 	$appId = "6679dffae548834c93b053ca";
 
 	if ( !isset($api_config->access_token) ) {
@@ -312,9 +393,10 @@ function ps_ghl_get_locations() {
 
 	if ( isset($response->locations) ) {
 		$merged = (object) array_merge((array) $api_config, (array) $response);
-		$new_config = json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-		file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
-		return $new_config;
+		$ghl_config->setConfig($merged);
+		// $new_config = json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+		// file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
+		return $merged;
 	}
 }
 
@@ -326,8 +408,10 @@ function ps_ghl_get_locations() {
  * 											 Returns void on error.
  */
 function ps_ghl_get_location_tokens( $locations ) {
-	$str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
-	$api_config = json_decode($str);
+	global $ghl_config;
+	$api_config = $ghl_config->getConfig();
+	// $str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
+	// $api_config = json_decode($str);
 
 	if ( !$api_config->locations ) {
 		$api_config = ps_ghl_get_locations();
@@ -385,9 +469,10 @@ function ps_ghl_get_location_tokens( $locations ) {
 		}
 	}
 	
-	$new_config = json_encode($api_config, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-	file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
-	return $new_config;
+	$ghl_config->setConfig($api_config);
+	// $new_config = json_encode($api_config, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+	// file_put_contents( ABSPATH . 'wp-content/plugins/ps-contact-form-block/api-config.json', $new_config );
+	return $api_config;
 }
 
 /**
@@ -398,8 +483,10 @@ function ps_ghl_get_location_tokens( $locations ) {
  * @return string The created contact's id attribute.
  */
 function ps_ghl_create_contact( $contact_info, $location ) {
-	$str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
-	$api_config = json_decode($str);
+	global $ghl_config;
+	$api_config = $ghl_config->getConfig();
+	// $str = file_get_contents( plugins_url( '/api-config.json', __FILE__ ) );
+	// $api_config = json_decode($str);
 	
 	if ( !isset($api_config->locations ) ) {
 		$api_config = ps_ghl_get_locations();
@@ -470,10 +557,6 @@ function ps_ghl_create_contact( $contact_info, $location ) {
 		'success' => true
 	];
 }
-
-// function ps_ghl_get_calendar_info( $calendar, $location ) {
-
-// }
 
 /**
  * Main handler function for form submission. Attempts to create a contact in GHL, then inserts
@@ -547,6 +630,118 @@ function ps_handle_form_submit() {
 
 add_action( 'admin_post_nopriv_contact_form', 'ps_handle_form_submit' );
 add_action( 'admin_post_contact_form', 'ps_handle_form_submit' );
+/**
+class UsefulCalendar {
+	//PROPS
+	// openHours - convert to better format; current:
+  //   [
+  //       { 
+  //           hours : [
+  //               {closeHour: int, openHour: int, closeMinute: int, openMinute: int}
+  //           ],
+  //           daysOfTheWeek: [int]
+  //       },
+  //       { 
+  //           hours : [
+  //               {closeHour: int, openHour: int, closeMinute: int, openMinute: int}
+  //           ],
+  //           daysOfTheWeek: [int]
+  //       },
+  //       ....... etc
+  //   ]
+	// slotBuffer
+	// slotDuration
+	// slotInterval
+	// allowBookingAfter
+	// allowBookingAfterUnit
+	// allowBookingFor
+	// allowBookingForUnit
+	// id
+	// locationId
+	
+	function __construct($calendar) {
+
+	}
+} 
+
+/**
+ * GETs the main booking calendar from a given location. Can retrieve other calendars if specified.
+ * 
+ * @param string $location The location id where the calendar is located.
+ * @param string | null $calendar The calendar ID to be retrieved. Optional.
+ */
+function ps_ghl_get_calendar_info( $location, $calendar = '' ) {
+	WP_Filesystem();
+	global $wp_filesystem;
+	$plugin_dir = $wp_filesystem->wp_plugins_dir() . 'ps-contact-form-block/';
+
+	$manual_calendar_fix = json_decode($wp_filesystem->get_contents( $plugin_dir . 'manual-calendar-fix.json' ));
+
+	$calendar_defaults = [
+		'2wiA3de3qyq01bO1uRJh' => '0r3nJT0sPzeo3uYamNl4', //RVA PS Booking
+		'zudnQMgArw2gVaoLhvg8' => 'kIedmMwzIF0issLHebDR', //VAB PS Booking
+		'DOF73AiKjSuiKbrMVdjJ' => 'bX0EAYnr7jHGpHd6kfvk' //FL PS Booking
+	];
+
+	$opts = [
+		CURLOPT_URL => "https://services.leadconnectorhq.com/calendars/?locationId=$location",
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_ENCODING => "",
+		CURLOPT_MAXREDIRS => 10,
+		CURLOPT_TIMEOUT => 30,
+		CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		CURLOPT_CUSTOMREQUEST => "GET"
+	];
+	
+	$api_response = ps_ghl_api_call($opts, 'Location', $location, '2021-04-15');
+	$calendar_list = $api_response->calendars;
+
+	// converts API-created calendar list to an associative array with calendar ID as keys
+	foreach ($calendar_list as $calendar) {
+		$calendars[$calendar->id] = $calendar;
+	}
+
+	$calendar_fixed = (object) array_merge((array) $calendars[$calendar_defaults[$location]], (array) $manual_calendar_fix);
+	return $calendar_fixed;
+}
+
+/**
+ * Handler function for calendar info request.
+ * 
+ * @param string location_name URL query parameter representing the location. Can be 'RVA', 'VAB', or 'FL'.
+ * 
+ * @return object Responds to the GET request with a Calendar object
+ */
+function ps_handle_calendar_request() {
+	if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+		$location_name = $_GET['location_name'];
+
+		switch ( $location_name ) {
+			case "RVA":
+				$location_id = "2wiA3de3qyq01bO1uRJh";
+				break;
+			case "VAB":
+				$location_id = "zudnQMgArw2gVaoLhvg8";
+				break;
+			case "FL":
+				$location_id = "DOF73AiKjSuiKbrMVdjJ";
+				break;
+		}
+
+		if (!isset($location_id)) {
+			die('Error - invalid location ID');
+		}
+
+		$calendar = ps_ghl_get_calendar_info( $location_id );
+		
+		header('Response-Type: application/json');
+		echo json_encode($calendar);
+		exit;
+	}
+}
+
+add_action( 'admin_post_nopriv_calendar_info', 'ps_handle_calendar_request' );
+add_action( 'admin_post_calendar_info', 'ps_handle_calendar_request' );
 
 /**
  * Displays the form submissions admin page. Displays a WP_List_Table with select contact info
@@ -710,7 +905,7 @@ add_action( 'admin_menu', 'ps_register_options_page' );
  * @todo Might want to move ZIP validation to the backend. ZIP list is several kB long.
  */
 function ps_handle_zip_request() {
-	class Response {
+	class ZipResponse {
 		public $rva = [];
 		public $vab = [];
 		public $fl = [];
@@ -724,7 +919,7 @@ function ps_handle_zip_request() {
 
 	$zips = array();
 
-	if (($handle = fopen(ABSPATH . 'wp-content/uploads/zip-codes.csv', 'r')) !== FALSE) {
+	if (($handle = fopen(plugins_url( '/zip-codes.csv', __FILE__ ), 'r')) !== FALSE) {
 		while (($data = fgetcsv($handle, 100, ',')) !== FALSE) {
 			$row = array(
 				'rva' => (int) $data[0],
@@ -740,7 +935,7 @@ function ps_handle_zip_request() {
 			$vab = array_column($zips, 'vab');
 			$fl = array_column($zips, 'fl');
 		
-			$response = new Response($rva, $vab, $fl);
+			$response = new ZipResponse($rva, $vab, $fl);
 			header('Content-Type: application/json');
 			echo json_encode($response);
 			exit;

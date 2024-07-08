@@ -1,0 +1,6 @@
+{
+    "allowBookingAfter": "12",
+    "allowBookingAfterUnit": "hours",
+    "allowBookingFor": "60",
+    "allowBookingForUnit": "days"
+}
