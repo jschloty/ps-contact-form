@@ -163,7 +163,7 @@ function TimeGrid( {
   )
 }
 
-export default function DateTimeBooker() {
+export default function DateTimeBooker(isDisabled) {
   const now = new Date();
   const initial = now.getHours() > 17 ? 
     new Date(new Date(now.getTime() + 1000*60*60*24).setHours(0,0,0,0)) 
@@ -172,26 +172,6 @@ export default function DateTimeBooker() {
   const [page, setPage] = useState(1);
   
   const changedDay = useRef(false);
-  
-  // get array of disabled dates []
-  const disabled = [new Date(2024, 5, 15)];
-
-  const isDisabled = ( args ) => {
-    const { date: date, view: context } = args;
-    let isDisabled = false;
-
-    disabled.forEach((disabledDate) => {
-      if (context === 'time') {
-        isDisabled = (disabledDate.getTime() == date.getTime()) || (date.getTime() < Date.now());
-      }
-      if (context === 'month') {
-        const truncDate = new Date(new Date(date).setHours(0,0,0,0));
-        isDisabled = (disabledDate.getTime() == truncDate.getTime()) || (truncDate.getTime() < initial.getTime()
-          || truncDate.getTime() == new Date(value).setHours(0,0,0,0));
-      }
-    })
-    return isDisabled;
-  }
 
   const onChange = (newVal) => {
     if (value != null) {

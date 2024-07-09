@@ -116,15 +116,35 @@ function CurrentPage({
   message,
   inputs,
   getLoading,
-  postLoading
+  postLoading,
+  calendarInfo
 }) {
+  const isDisabled = args => {
+    const {
+      date: date,
+      view: context
+    } = args;
+    let isDisabled = false;
+    let disabledDates = [];
+    let disabledTimes = [];
+    disabled.forEach(disabledDate => {
+      if (context === 'time') {
+        isDisabled = disabledDate.getTime() == date.getTime() || date.getTime() < Date.now();
+      }
+      if (context === 'month') {
+        const truncDate = new Date(new Date(date).setHours(0, 0, 0, 0));
+        isDisabled = disabledDate.getTime() == truncDate.getTime() || truncDate.getTime() < initial.getTime() || truncDate.getTime() == new Date(value).setHours(0, 0, 0, 0);
+      }
+    });
+    return isDisabled;
+  };
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", {
     id: "page" + page,
     className: "page",
     page: page
-  }, page == 6 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Unfortunately, you reside outside of our service area.") : page == 3 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_DateTimeBooker__WEBPACK_IMPORTED_MODULE_2__["default"]
-  // calendarInfo={calendarInfo}
-  , null) : inputs, page == 1 && message ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
+  }, page == 6 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Unfortunately, you reside outside of our service area.") : page == 3 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_DateTimeBooker__WEBPACK_IMPORTED_MODULE_2__["default"], {
+    isDisabled: isDisabled
+  }) : inputs, page == 1 && message ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
     key: "contact_message_field"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
     htmlFor: "message"
@@ -484,32 +504,12 @@ function TimeGrid({
     }, slot.time);
   }));
 }
-function DateTimeBooker() {
+function DateTimeBooker(isDisabled) {
   const now = new Date();
   const initial = now.getHours() > 17 ? new Date(new Date(now.getTime() + 1000 * 60 * 60 * 24).setHours(0, 0, 0, 0)) : new Date(new Date(now).setHours(0, 0, 0, 0));
   const [value, setValue] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(initial);
   const [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1);
   const changedDay = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
-
-  // get array of disabled dates []
-  const disabled = [new Date(2024, 5, 15)];
-  const isDisabled = args => {
-    const {
-      date: date,
-      view: context
-    } = args;
-    let isDisabled = false;
-    disabled.forEach(disabledDate => {
-      if (context === 'time') {
-        isDisabled = disabledDate.getTime() == date.getTime() || date.getTime() < Date.now();
-      }
-      if (context === 'month') {
-        const truncDate = new Date(new Date(date).setHours(0, 0, 0, 0));
-        isDisabled = disabledDate.getTime() == truncDate.getTime() || truncDate.getTime() < initial.getTime() || truncDate.getTime() == new Date(value).setHours(0, 0, 0, 0);
-      }
-    });
-    return isDisabled;
-  };
   const onChange = newVal => {
     if (value != null) {
       changedDay.current = value.getDate() != newVal.getDate();

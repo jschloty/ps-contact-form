@@ -630,37 +630,78 @@ function ps_handle_form_submit() {
 
 add_action( 'admin_post_nopriv_contact_form', 'ps_handle_form_submit' );
 add_action( 'admin_post_contact_form', 'ps_handle_form_submit' );
-/**
-class UsefulCalendar {
-	//PROPS
-	// openHours - convert to better format; current:
-  //   [
-  //       { 
-  //           hours : [
-  //               {closeHour: int, openHour: int, closeMinute: int, openMinute: int}
-  //           ],
-  //           daysOfTheWeek: [int]
-  //       },
-  //       { 
-  //           hours : [
-  //               {closeHour: int, openHour: int, closeMinute: int, openMinute: int}
-  //           ],
-  //           daysOfTheWeek: [int]
-  //       },
-  //       ....... etc
-  //   ]
-	// slotBuffer
-	// slotDuration
-	// slotInterval
-	// allowBookingAfter
-	// allowBookingAfterUnit
-	// allowBookingFor
-	// allowBookingForUnit
-	// id
-	// locationId
-	
-	function __construct($calendar) {
 
+/**
+ * GHL's calendar response made more useful for the contact form.
+ * 
+ * @property $openHours An array containing hours objects 
+ * @property $openHours[hours] {closeHour, openHour, closeMinute, openMinute} 
+ * @property $slotBuffer The buffer time between slots in minutes.
+ * @property $slotDuration The duration of a timeslot in minutes.
+ * @property $slotInterval The interval of timeslots in minutes.
+ * @property $allowBookingAfter A buffer between now and the first available appt. in minutes.
+ * @property $allowBookingFor How far in advance an appointment can be booked in days.
+ * @property $id The calendarId of the UsefulCalendar.
+ * @property $locationId The locationId of the UsefulCalendar.
+ * @property $locationName The name of the UsefulCalendar. 'RVA', 'VAB', or 'FL'
+ */
+class UsefulCalendar {
+	public array $openHours = [];
+	public int $slotBuffer, $slotDuration, $slotInterval, $allowBookingAfter, $allowBookingFor;
+	public string $id, $locationId, $locationName;
+	private const NAMETABLE = [
+		'2wiA3de3qyq01bO1uRJh' => 'RVA',
+		'zudnQMgArw2gVaoLhvg8' => 'VAB',
+		'DOF73AiKjSuiKbrMVdjJ' => 'FL'
+	];
+
+	/**
+	 * UsefulCalendar constructor
+	 * 
+	 * @param object $calendar The object returned from GHL Get Calendars endpoint. Must at least contain id and locationId.
+	 */
+	function __construct($calendar) {
+		foreach($calendar->openHours as $openHours) {
+			array_push($this->openHours, $openHours->hours[0]);
+		}
+		$this->slotBuffer = $calendar?->slotBuffer;
+		$this->slotDuration = $calendar?->slotDuration;
+		$this->slotInterval = $calendar?->slotInterval;
+
+		if (!isset($calendar->id) || !isset($calendar->locationId)) {
+			throw new Error("UsefulCalendar must be given a calendarId and a locationId.");
+		}
+
+		$this->id = $calendar->id;
+		$this->locationId = $calendar->locationId;
+		$this->locationName = self::NAMETABLE[$calendar->locationId];
+
+		//convert allowBooking... units, ...After is to minutes and ...For is to days
+		switch ($calendar?->allowBookingAfterUnit) {
+			case 'hours':
+				$this->allowBookingAfter = $calendar->allowBookingAfter*60;
+				break;
+			case 'days':
+				$this->allowBookingAfter = $calendar->allowBookingAfter*60*24;
+				break;
+			case 'weeks':
+				$this->allowBookingAfter = $calendar->allowBookingAfter*60*24*7;
+				break;
+			case 'months':
+				$this->allowBookingAfter = $calendar->allowBookingAfter*60*24*30;
+				break;
+		}
+		switch ($calendar?->allowBookingForUnit) {
+			case 'days':
+				$this->allowBookingFor = $calendar->allowBookingFor;
+				break;
+			case 'weeks':
+				$this->allowBookingFor = $calendar->allowBookingFor*7;
+				break;
+			case 'months':
+				$this->allowBookingFor = $calendar->allowBookingFor*30;
+				break;
+		}
 	}
 } 
 
@@ -710,7 +751,7 @@ function ps_ghl_get_calendar_info( $location, $calendar = '' ) {
  * 
  * @param string location_name URL query parameter representing the location. Can be 'RVA', 'VAB', or 'FL'.
  * 
- * @return object Responds to the GET request with a Calendar object
+ * @return UsefulCalendar Responds to the GET request with a UsefulCalendar object
  */
 function ps_handle_calendar_request() {
 	if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -733,9 +774,10 @@ function ps_handle_calendar_request() {
 		}
 
 		$calendar = ps_ghl_get_calendar_info( $location_id );
+		$useful_calendar = new UsefulCalendar($calendar);
 		
 		header('Response-Type: application/json');
-		echo json_encode($calendar);
+		echo json_encode($useful_calendar);
 		exit;
 	}
 }

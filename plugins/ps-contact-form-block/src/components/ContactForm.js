@@ -36,12 +36,29 @@ function CurrentButtons({ page, loading }) {
  * @param {Object | null} calendarProps (Optional) The props passed to DateTimeBooker
  * @returns Rendered page of the form, including inputs, error fields, and CurrentButtons.
  */
-function CurrentPage({ page, message, inputs, getLoading, postLoading }) {
+function CurrentPage({ page, message, inputs, getLoading, postLoading, calendarInfo }) {
+  const isDisabled = ( args ) => {
+    const { date: date, view: context } = args;
+    let isDisabled = false;
+    let disabledDates = [];
+    let disabledTimes = [];
+    
+    disabled.forEach((disabledDate) => {
+      if (context === 'time') {
+        isDisabled = (disabledDate.getTime() == date.getTime()) || (date.getTime() < Date.now());
+      }
+      if (context === 'month') {
+        const truncDate = new Date(new Date(date).setHours(0,0,0,0));
+        isDisabled = (disabledDate.getTime() == truncDate.getTime()) || (truncDate.getTime() < initial.getTime()
+          || truncDate.getTime() == new Date(value).setHours(0,0,0,0));
+      }
+    })
+    return isDisabled;
+  }
+
   return (<ul id={"page" + page} className="page" page={page}>
     {page == 6 ? (<p>Unfortunately, you reside outside of our service area.</p>) 
-    : page == 3 ? <DateTimeBooker 
-    // calendarInfo={calendarInfo}
-    />
+    : page == 3 ? <DateTimeBooker isDisabled={isDisabled}/>
     : inputs}
     {(page == 1 && message) ? 
     <li key="contact_message_field">
