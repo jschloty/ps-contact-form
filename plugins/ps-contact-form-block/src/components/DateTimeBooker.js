@@ -37,6 +37,14 @@ const defaultEndTime = (value) => {
 }
 
 /**
+ * BookerPlaceholder: a greyed out dummy calendar that displays while the calendar info is retrieved.
+ * 
+ */
+function BookerPlaceholder() {
+  return <p>LOADING...</p>
+}
+
+/**
  * The TimeSlot component. Represents an individual time slot button.
  * 
  * @param {Date} value The currently selected date
@@ -90,8 +98,9 @@ function TimeGrid( {
   value,
   changedDay,
   onChange,
-  timeRange = [defaultStartTime(value), defaultEndTime(value)],
-  interval = 60,
+  hours,
+  interval,
+  allowBookingAfter,
   slotDisabled
 } ) {
   const [activeKey, setActiveKey] = useState(-1);
@@ -119,7 +128,16 @@ function TimeGrid( {
   const now = new Date();
   const nowRounded = new Date(Math.round(now.getTime() / coeff) * coeff);
 
-  const [startTime, endTime] = timeRange;
+  const openTime = new Date().setHours(hours[value.getDay()].openHour,
+    hours[value.getDay()].openMinute,0,0).getTime();
+  const closeTime = new Date().setHours(hours[value.getDay()].closeHour,
+    hours[value.getDay()].closeMinute,0,0).getTime();
+  
+  const bookingAfter = Math.round((new Date().getTime() + allowBookingAfter*60*1000)
+    /(interval*60*1000))*(interval*60*1000);
+  
+  const startTime = bookingAfter > openTime && bookingAfter < closeTime ? bookingAfter : openTime;
+  const endTime = closeTime;
 
   let times = []; // in ms
 
@@ -163,7 +181,7 @@ function TimeGrid( {
   )
 }
 
-export default function DateTimeBooker(isDisabled) {
+export default function DateTimeBooker({isDisabled, timeInfo, loading}) {
   const now = new Date();
   const initial = now.getHours() > 17 ? 
     new Date(new Date(now.getTime() + 1000*60*60*24).setHours(0,0,0,0)) 
@@ -172,6 +190,12 @@ export default function DateTimeBooker(isDisabled) {
   const [page, setPage] = useState(1);
   
   const changedDay = useRef(false);
+  
+  const {
+    hours,
+    interval = 30,
+    allowBookingAfter = 0
+  } = timeInfo;
 
   const onChange = (newVal) => {
     if (value != null) {
@@ -186,24 +210,34 @@ export default function DateTimeBooker(isDisabled) {
     setPage(page+newPage);
   }
 
-  return !isMobile ? (
-    <div className="date-time-booker-container">
-      <Calendar 
-        onChange={onChange} 
-        onActiveStartDateChange={({ action }) => {
-          changedDay.current = (action === "prev" || action === "next");
-          setValue(null);
-        }}
-        minDetail="month" 
-        value={value}
-        tileDisabled={isDisabled}
-        />
-      {setValue != null ? <TimeGrid onChange={onChange} value={value} changedDay={changedDay} interval={30} slotDisabled={isDisabled} /> : null}
-    </div>
-  ) : (
-    <div className="date-time-booker-container">
-      {page == 1 ? <Calendar onChange={(value) => {onChangeMobile(value, 1)}} minDetail="month" value={value} tileDisabled={isDisabled}/> 
-      : <TimeGrid onChange={onChangeMobile} value={value} interval={30} mobile={true} slotDisabled={isDisabled} />}
-    </div>
-  );
+  return loading === "loading" ? <BookerPlaceholder /> :
+    !isMobile ? (
+      <div className="date-time-booker-container">
+        <Calendar 
+          onChange={onChange} 
+          onActiveStartDateChange={({ action }) => {
+            changedDay.current = (action === "prev" || action === "next");
+            setValue(null);
+          }}
+          minDetail="month" 
+          value={value}
+          tileDisabled={isDisabled}
+          />
+        {setValue != null ? 
+        <TimeGrid 
+          onChange={onChange}
+          value={value}
+          changedDay={changedDay}
+          hours={hours}
+          interval={interval}
+          allowBookingAfter={allowBookingAfter}
+          slotDisabled={isDisabled}
+          /> : null}
+      </div>
+    ) : (
+      <div className="date-time-booker-container">
+        {page == 1 ? <Calendar onChange={(value) => {onChangeMobile(value, 1)}} minDetail="month" value={value} tileDisabled={isDisabled}/> 
+        : <TimeGrid onChange={onChangeMobile} value={value} interval={30} mobile={true} slotDisabled={isDisabled} />}
+      </div>
+    );
 }

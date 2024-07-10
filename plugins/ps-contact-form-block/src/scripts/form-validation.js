@@ -1,4 +1,4 @@
-const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-admin/admin-post.php";
+import { ADMIN_URL } from "../components/ContactForm";
 
 /** Checks the validity of all accepted input types. If input is ZIP code, returns
  * user location: RVA, VAB, FL, or invalid.
@@ -59,6 +59,8 @@ export function checkInput(input, e) {
         validity.error = input.validity.valueMissing ? "This field is required." : input.validity.typeMismatch ? "Not a valid email address." : "";
         return validity;
     }
+}
 
-    
+export function checkAppointment(input, e) {
+
 }

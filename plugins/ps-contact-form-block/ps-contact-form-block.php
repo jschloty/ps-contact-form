@@ -18,6 +18,11 @@
 }
 
 define( 'PS_CONTACT_FORM_DIR', plugin_dir_path(__FILE__) );
+define( 'PS_NAMETABLE', [
+	'2wiA3de3qyq01bO1uRJh' => 'RVA',
+	'zudnQMgArw2gVaoLhvg8' => 'VAB',
+	'DOF73AiKjSuiKbrMVdjJ' => 'FL'
+]);
 require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 /**
@@ -166,8 +171,8 @@ function ps_handle_ghl_auth() {
 		echo '<p>An error has occurred. ' . $response->error_description . '</p>';
 		return;
 	}	else {
-		// header( 'refresh:5; url=' . admin_url('/admin.php?page=ps_contact_form_options') );
-		echo 'Connection.. successful?';
+		header( 'refresh:5; url=' . admin_url('/admin.php?page=ps_contact_form_options') );
+		echo 'Connection successful. Redirecting...';
 		return;
 	}
 
@@ -631,8 +636,21 @@ function ps_handle_form_submit() {
 
 		} else {
 			global $wpdb;
-
 			$table_name = $wpdb->prefix . 'contact_form_submissions';
+
+			maybe_create_table($table_name, 'CREATE TABLE ' . $table_name . ' (
+				name TEXT,
+				email TEXT,
+				phone TEXT,
+				message TEXT,
+				location TEXT,
+				session_id TEXT,
+				contact_id TEXT,
+				submission_time DATETIME,
+				id INT(10) NOT NULL UNSIGNED AUTO_INCREMENT,
+				PRIMARY KEY id
+			)' );
+
 			$data = array(
 				'name' => $name,
 				'email' => $email,
@@ -666,12 +684,6 @@ function ps_handle_form_submit() {
 
 add_action( 'admin_post_nopriv_contact_form', 'ps_handle_form_submit' );
 add_action( 'admin_post_contact_form', 'ps_handle_form_submit' );
-
-define( 'PS_NAMETABLE', [
-	'2wiA3de3qyq01bO1uRJh' => 'RVA',
-	'zudnQMgArw2gVaoLhvg8' => 'VAB',
-	'DOF73AiKjSuiKbrMVdjJ' => 'FL'
-]);
 
 /**
  * GHL's calendar response made more useful for the contact form.
@@ -714,7 +726,7 @@ class UsefulCalendar {
 
 		$this->id = $calendar->id;
 		$this->locationId = $calendar->locationId;
-		$this->locationName = $GLOBALS['PS_NAMETABLE'][$calendar->locationId];
+		$this->locationName = PS_NAMETABLE[$calendar->locationId];
 
 		//convert allowBooking... units, ...After is to minutes and ...For is to days
 		switch ($calendar?->allowBookingAfterUnit) {
@@ -750,7 +762,7 @@ class UsefulCalendar {
 		$afterInterval = new DateInterval('PT' . $this->allowBookingAfter . 'M');
 		$forInterval = new DateInterval('P' . $this->allowBookingFor . 'D');
 		$this->startTime = intval(date_create()->add($afterInterval)->format('Uv'));
-    $this->endTime = intval(date_create()->add($forInterval)->format('Uv'));
+    	$this->endTime = intval(date_create()->add($forInterval)->format('Uv'));
 
 		// $this->blockedSlots = $calendar->blockedSlots;
 	}
@@ -804,8 +816,8 @@ function ps_ghl_get_calendar_info( $location_id, $calendar_id = '' ) {
 	
 	$event_times = array_map(function($event) {
 		return (object) [
-			'startTime' => DateTime::createFromFormat(DateTimeInterface::ATOM, $event->startTime)->format('Uv'),
-			'endTime' => DateTime::createFromFormat(DateTimeInterface::ATOM, $event->endTime)->format('Uv')
+			'startTime' => intval(DateTime::createFromFormat(DateTimeInterface::ATOM, $event->startTime)->format('Uv')),
+			'endTime' => intval(DateTime::createFromFormat(DateTimeInterface::ATOM, $event->endTime)->format('Uv'))
 		];
 	}, $api_response2->events);
 
@@ -825,29 +837,46 @@ function ps_ghl_get_calendar_info( $location_id, $calendar_id = '' ) {
  * @return UsefulCalendar Responds to the GET request with a UsefulCalendar object
  */
 function ps_handle_calendar_request() {
+	
 	if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-		$location_name = $_GET['location_name'];
-
-		switch ( $location_name ) {
-			case "RVA":
-				$location_id = "2wiA3de3qyq01bO1uRJh";
-				break;
-			case "VAB":
-				$location_id = "zudnQMgArw2gVaoLhvg8";
-				break;
-			case "FL":
-				$location_id = "DOF73AiKjSuiKbrMVdjJ";
-				break;
+		
+		if (!isset($_COOKIE['session_id'])) {
+			setcookie('session_id', wp_generate_uuid4(), array(
+				'samesite' => 'Lax',
+				'httponly' => true,
+				'secure' => true
+			));
 		}
+
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'contact_form_submissions';
+		$db_result = $wpdb->get_results( "SELECT * FROM $table_name WHERE session_id = '" . $_COOKIE['session_id'] . "'" );
+		if (count($db_result) === 0) {
+			if (!isset($_GET['location_name'])) {
+				header('Content-Type: application/json');
+				echo json_encode((object) [
+					'success' => false,
+					'message' => 'Please supply location in parameter "location_name".'
+				]);
+				exit;
+			}
+		
+			$location_name = $_GET['location_name'];
+		} else {
+			$location_name = $db_result[0]->location;
+		}
+
+		$location_id = array_flip(PS_NAMETABLE)[$location_name];
 
 		if (!isset($location_id)) {
 			die('Error - invalid location ID');
 		}
 		
 		$calendar = ps_ghl_get_calendar_info( $location_id );
-		
+		$response = (object) array_merge( (array) $calendar, [ 'success' => true ] );
+
 		header('Content-Type: application/json');
-		echo json_encode($calendar);
+		echo json_encode($response);
 		exit;
 	}
 }
@@ -897,10 +926,10 @@ function ps_handle_appointment_submit() {
 		$table_name = $wpdb->prefix . "contact_form_submissions";
 
 		if ( !isset($_COOKIE['session_id']) ) {
-			if ( !isset($_POST['name']) ) {
+			if ( !isset($_POST['email']) ) {
 				$response = (object) [
 					"success" => false,
-					"message" => "Existing session not detected. Contact name must be supplied."
+					"message" => "Existing session not detected. Contact email must be supplied."
 				];
 			} else {
 				$result = $wpdb->get_results("SELECT * FROM $table_name WHERE email = '".$_POST['email']."'");
@@ -911,7 +940,7 @@ function ps_handle_appointment_submit() {
 			$contact = $result[0];
 		}
 
-		$location_id = array_flip($GLOBALS['PS_NAMETABLE'])[$contact->location];
+		$location_id = array_flip(PS_NAMETABLE)[$contact->location];
 
 		$response = ps_ghl_update_contact($contact, $location_id);
 		
