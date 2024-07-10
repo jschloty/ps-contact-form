@@ -108,7 +108,7 @@ function CurrentButtons({
  * @param {JSX.Element} inputs A list of inputs to be rendered by the current page
  * @param {bool} getLoading Specifies whether a GET request is currently loading. Used with calendarProps.
  * @param {bool} postLoading Specifies whether a POST request is currently loading.
- * @param {Object | null} calendarProps (Optional) The props passed to DateTimeBooker
+ * @param {Object | null} calendarInfo (Optional) The calendar information passed to DateTimeBooker
  * @returns Rendered page of the form, including inputs, error fields, and CurrentButtons.
  */
 function CurrentPage({
@@ -117,7 +117,27 @@ function CurrentPage({
   inputs,
   getLoading,
   postLoading,
-  calendarInfo
+  calendarInfo = {
+    hours: Array.from({
+      length: 7
+    }, () => {
+      return {
+        closeHour: 17,
+        openHour: 9,
+        closeMinute: 0,
+        openMinute: 0
+      };
+    }),
+    slotBuffer: 0,
+    slotDuration: 30,
+    slotInterval: 30,
+    allowBookingAfter: 60,
+    allowBookingFor: 60,
+    id: "default",
+    locationId: "default",
+    locationName: null,
+    blockedSlots: []
+  }
 }) {
   const isDisabled = args => {
     const {
@@ -125,8 +145,7 @@ function CurrentPage({
       view: context
     } = args;
     let isDisabled = false;
-    let disabledDates = [];
-    let disabledTimes = [];
+    let disabledTimes = blockedSlots;
     disabled.forEach(disabledDate => {
       if (context === 'time') {
         isDisabled = disabledDate.getTime() == date.getTime() || date.getTime() < Date.now();

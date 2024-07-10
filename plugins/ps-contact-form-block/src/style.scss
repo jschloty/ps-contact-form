@@ -21,6 +21,10 @@
 
   ul {
 		margin: 20px 30px;
+
+    #message {
+      resize: vertical;
+    }
 	}
 	
 	.error {

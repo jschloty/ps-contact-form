@@ -767,6 +767,9 @@
 #ps-contact-form ul {
   margin: 20px 30px;
 }
+#ps-contact-form ul #message {
+  resize: vertical;
+}
 #ps-contact-form .error {
   display: hidden;
 }

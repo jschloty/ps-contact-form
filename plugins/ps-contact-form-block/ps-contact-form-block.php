@@ -47,10 +47,11 @@ class GHL_Config {
 				"redirectUrl" => "http://localhost:10005/wp-admin/admin-post.php?action=api_auth",
 				"token_type" => "Bearer",
 				"expires_in" => 86399,
-				"scope" => "calendars.readonly calendars/events.write contacts.write oauth.write oauth.readonly"
+				"scope" => "calendars.readonly calendars/events.write calendars/events.readonly calendars/groups.readonly calendars/resources.readonly contacts.write oauth.write oauth.readonly"
 			];
 
 			$wpdb->insert($this->table_name, [
+				'id' => 1,
 				'name' => 'config',
 				'props' => json_encode($this->config)
 			]);
@@ -342,6 +343,11 @@ function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $version = 
 			echo '400 Error: ' . $response->message;
 			return $response;
 		case 401:
+			if (str_contains($response->message, "scope")) {
+				echo '401 Error: ' . $response->message;
+				break;
+			}
+			
 			if ( $tries > 2 ) {
 				echo 'Error: Too many failed API attempts.';
 				break;
@@ -524,6 +530,7 @@ function ps_ghl_create_contact( $contact_info, $location ) {
 		'email' => $contact_info['email'],
 		'locationId' => $target_location->_id,
 		'phone' => $contact_info['phone'],
+		'tags' => ['wordpress', 'ps-contact-form'],
 		'customFields' => [
 			(object) [
 				'key' => 'message',
@@ -559,6 +566,35 @@ function ps_ghl_create_contact( $contact_info, $location ) {
 }
 
 /**
+ * Updates an existing contact in GHL.
+ * 
+ * @param object $contact A contact object from wpdb.
+ * @param string $location_id The locationId where the contact exists.
+ */
+function ps_ghl_update_contact( $contact, $location_id, ) {
+	$contact_schema = [
+		'address1' => $contact->address,
+		'city' => $contact->city,
+		'state' => $contact->state,
+		'postalCode' => $contact->zip
+	];
+
+	$opts = [
+		CURLOPT_URL => "https://services.leadconnectorhq.com/contacts/$contact->id",
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_ENCODING => "",
+		CURLOPT_MAXREDIRS => 10,
+		CURLOPT_TIMEOUT => 30,
+		CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		CURLOPT_CUSTOMREQUEST => "PUT",
+		CURLOPT_POSTFIELDS => json_encode($contact_schema)
+	];
+
+	$response = ps_ghl_api_call( $opts, 'Location', $location_id );
+	return $response->succeeded;
+}
+
+/**
  * Main handler function for form submission. Attempts to create a contact in GHL, then inserts
  * form data (w/ GHL contact id) into the database. Returns a simple response array.
  * 
@@ -567,7 +603,7 @@ function ps_ghl_create_contact( $contact_info, $location ) {
 function ps_handle_form_submit() {
 
 	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-		if ( !$_COOKIE['session_id'] ) {
+		if ( !isset($_COOKIE['session_id']) ) {
 			setcookie('session_id', wp_generate_uuid4(), array(
 				'samesite' => 'Lax',
 				'httponly' => true,
@@ -631,29 +667,33 @@ function ps_handle_form_submit() {
 add_action( 'admin_post_nopriv_contact_form', 'ps_handle_form_submit' );
 add_action( 'admin_post_contact_form', 'ps_handle_form_submit' );
 
+define( 'PS_NAMETABLE', [
+	'2wiA3de3qyq01bO1uRJh' => 'RVA',
+	'zudnQMgArw2gVaoLhvg8' => 'VAB',
+	'DOF73AiKjSuiKbrMVdjJ' => 'FL'
+]);
+
 /**
  * GHL's calendar response made more useful for the contact form.
  * 
- * @property $openHours An array containing hours objects 
- * @property $openHours[hours] {closeHour, openHour, closeMinute, openMinute} 
- * @property $slotBuffer The buffer time between slots in minutes.
- * @property $slotDuration The duration of a timeslot in minutes.
- * @property $slotInterval The interval of timeslots in minutes.
- * @property $allowBookingAfter A buffer between now and the first available appt. in minutes.
- * @property $allowBookingFor How far in advance an appointment can be booked in days.
- * @property $id The calendarId of the UsefulCalendar.
- * @property $locationId The locationId of the UsefulCalendar.
- * @property $locationName The name of the UsefulCalendar. 'RVA', 'VAB', or 'FL'
+ * @property array $openHours An array containing hours objects: {closeHour, openHour, closeMinute, openMinute} 
+ * @property int $slotBuffer The buffer time between slots in minutes.
+ * @property int $slotDuration The duration of a timeslot in minutes.
+ * @property int $slotInterval The interval of timeslots in minutes.
+ * @property int $allowBookingAfter A buffer between now and the first available appt. in minutes.
+ * @property int $allowBookingFor How far in advance an appointment can be booked in days.
+ * @property int $startTime The start of the calendar range in milliseconds.
+ * @property int $endTime The end of the calendar range in milliseconds.
+ * @property string $id The calendarId of the UsefulCalendar.
+ * @property string $locationId The locationId of the UsefulCalendar.
+ * @property string $locationName The name of the UsefulCalendar. 'RVA', 'VAB', or 'FL'
  */
 class UsefulCalendar {
 	public array $openHours = [];
-	public int $slotBuffer, $slotDuration, $slotInterval, $allowBookingAfter, $allowBookingFor;
+	public array $blockedSlots;
+	public int $slotBuffer, $slotDuration, $slotInterval, $startTime, $endTime;
+	private int $allowBookingAfter, $allowBookingFor;
 	public string $id, $locationId, $locationName;
-	private const NAMETABLE = [
-		'2wiA3de3qyq01bO1uRJh' => 'RVA',
-		'zudnQMgArw2gVaoLhvg8' => 'VAB',
-		'DOF73AiKjSuiKbrMVdjJ' => 'FL'
-	];
 
 	/**
 	 * UsefulCalendar constructor
@@ -674,7 +714,7 @@ class UsefulCalendar {
 
 		$this->id = $calendar->id;
 		$this->locationId = $calendar->locationId;
-		$this->locationName = self::NAMETABLE[$calendar->locationId];
+		$this->locationName = $GLOBALS['PS_NAMETABLE'][$calendar->locationId];
 
 		//convert allowBooking... units, ...After is to minutes and ...For is to days
 		switch ($calendar?->allowBookingAfterUnit) {
@@ -690,6 +730,8 @@ class UsefulCalendar {
 			case 'months':
 				$this->allowBookingAfter = $calendar->allowBookingAfter*60*24*30;
 				break;
+			default:
+				$this->allowBookingAfter = 60;
 		}
 		switch ($calendar?->allowBookingForUnit) {
 			case 'days':
@@ -701,7 +743,16 @@ class UsefulCalendar {
 			case 'months':
 				$this->allowBookingFor = $calendar->allowBookingFor*30;
 				break;
+			default:
+				$this->allowBookingFor = 60;
 		}
+
+		$afterInterval = new DateInterval('PT' . $this->allowBookingAfter . 'M');
+		$forInterval = new DateInterval('P' . $this->allowBookingFor . 'D');
+		$this->startTime = intval(date_create()->add($afterInterval)->format('Uv'));
+    $this->endTime = intval(date_create()->add($forInterval)->format('Uv'));
+
+		// $this->blockedSlots = $calendar->blockedSlots;
 	}
 } 
 
@@ -711,7 +762,7 @@ class UsefulCalendar {
  * @param string $location The location id where the calendar is located.
  * @param string | null $calendar The calendar ID to be retrieved. Optional.
  */
-function ps_ghl_get_calendar_info( $location, $calendar = '' ) {
+function ps_ghl_get_calendar_info( $location_id, $calendar_id = '' ) {
 	WP_Filesystem();
 	global $wp_filesystem;
 	$plugin_dir = $wp_filesystem->wp_plugins_dir() . 'ps-contact-form-block/';
@@ -723,9 +774,13 @@ function ps_ghl_get_calendar_info( $location, $calendar = '' ) {
 		'zudnQMgArw2gVaoLhvg8' => 'kIedmMwzIF0issLHebDR', //VAB PS Booking
 		'DOF73AiKjSuiKbrMVdjJ' => 'bX0EAYnr7jHGpHd6kfvk' //FL PS Booking
 	];
+	
+	if ($calendar_id === '') {
+		$calendar_id = $calendar_defaults[$location_id];
+	}
 
 	$opts = [
-		CURLOPT_URL => "https://services.leadconnectorhq.com/calendars/?locationId=$location",
+		CURLOPT_URL => "https://services.leadconnectorhq.com/calendars/?locationId=$location_id",
 		CURLOPT_RETURNTRANSFER => true,
 		CURLOPT_ENCODING => "",
 		CURLOPT_MAXREDIRS => 10,
@@ -733,18 +788,34 @@ function ps_ghl_get_calendar_info( $location, $calendar = '' ) {
 		CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		CURLOPT_CUSTOMREQUEST => "GET"
 	];
-	
-	$api_response = ps_ghl_api_call($opts, 'Location', $location, '2021-04-15');
+
+	$api_response = ps_ghl_api_call($opts, 'Location', $location_id, '2021-04-15');
 	$calendar_list = $api_response->calendars;
 
 	// converts API-created calendar list to an associative array with calendar ID as keys
 	foreach ($calendar_list as $calendar) {
 		$calendars[$calendar->id] = $calendar;
 	}
+	$calendar_fixed = (object) array_merge((array) $calendars[$calendar_id], (array) $manual_calendar_fix);
+	$useful_calendar = new UsefulCalendar($calendar_fixed);
 
-	$calendar_fixed = (object) array_merge((array) $calendars[$calendar_defaults[$location]], (array) $manual_calendar_fix);
-	return $calendar_fixed;
+	$opts[CURLOPT_URL] = "https://services.leadconnectorhq.com/calendars/events?locationId=$location_id&calendarId=$calendar_id&startTime=$useful_calendar->startTime&endTime=$useful_calendar->endTime";
+	$api_response2 = ps_ghl_api_call($opts, 'Location', $location_id, '2021-04-15');
+	
+	$event_times = array_map(function($event) {
+		return (object) [
+			'startTime' => DateTime::createFromFormat(DateTimeInterface::ATOM, $event->startTime)->format('Uv'),
+			'endTime' => DateTime::createFromFormat(DateTimeInterface::ATOM, $event->endTime)->format('Uv')
+		];
+	}, $api_response2->events);
+
+	$useful_array = (array) $useful_calendar;
+	$useful_array['blockedSlots'] = $event_times;
+	$useful_calendar = (object) $useful_array;
+
+	return $useful_calendar;
 }
+
 
 /**
  * Handler function for calendar info request.
@@ -772,18 +843,98 @@ function ps_handle_calendar_request() {
 		if (!isset($location_id)) {
 			die('Error - invalid location ID');
 		}
-
-		$calendar = ps_ghl_get_calendar_info( $location_id );
-		$useful_calendar = new UsefulCalendar($calendar);
 		
-		header('Response-Type: application/json');
-		echo json_encode($useful_calendar);
+		$calendar = ps_ghl_get_calendar_info( $location_id );
+		
+		header('Content-Type: application/json');
+		echo json_encode($calendar);
 		exit;
 	}
 }
 
 add_action( 'admin_post_nopriv_calendar_info', 'ps_handle_calendar_request' );
 add_action( 'admin_post_calendar_info', 'ps_handle_calendar_request' );
+
+/**
+ * Creates an appointment in GHL.
+ * 
+ * @param string $calendar_id The calendar's id.
+ * @param string $location_id The location id of the calendar.
+ * @param object $contact The contact object as returned by GHL's API.
+ * @param int $start_time The start time of the appointment in milliseconds.
+ * @param int $end_time The end time of the appointment in milliseconds.
+ * @return string $contact_id The contact's id. Useful for passing to next page of form.
+ */
+function ps_ghl_create_appointment( $calendar_id, $location_id, $contact, $start_time, $end_time ) {	
+	$opts = [
+		CURLOPT_URL => "https://services.leadconnectorhq.com/calendars/events/appointments",
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_ENCODING => "",
+		CURLOPT_MAXREDIRS => 10,
+		CURLOPT_TIMEOUT => 30,
+		CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		CURLOPT_CUSTOMREQUEST => "POST",
+		CURLOPT_POSTFIELDS => json_encode([
+			'calendarId' => $calendar_id,
+			'locationId' => $location_id,
+			'contactId' => $contact->id,
+			'startTime' => date(DateTimeInterface::ATOM, $start_time/1000),
+			'endTime' => date(DateTimeInterface::ATOM, $end_time/1000),
+			'title' => $contact->name,
+			'appointmentStatus' => 'new'
+		])
+	];
+
+	$response = ps_ghl_api_call($opts, 'Location', $location_id, '2021-04-15');
+	return $response->contactId;
+}
+
+function ps_handle_appointment_submit() {
+	global $wpdb;
+	global $ghl_config;
+
+	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+		$table_name = $wpdb->prefix . "contact_form_submissions";
+
+		if ( !isset($_COOKIE['session_id']) ) {
+			if ( !isset($_POST['name']) ) {
+				$response = (object) [
+					"success" => false,
+					"message" => "Existing session not detected. Contact name must be supplied."
+				];
+			} else {
+				$result = $wpdb->get_results("SELECT * FROM $table_name WHERE email = '".$_POST['email']."'");
+				$contact = $result[0];
+			}
+		} else {
+			$result = $wpdb->get_results("SELECT * FROM $table_name WHERE session_id ");
+			$contact = $result[0];
+		}
+
+		$location_id = array_flip($GLOBALS['PS_NAMETABLE'])[$contact->location];
+
+		$response = ps_ghl_update_contact($contact, $location_id);
+		
+		if (!$response->succeeded) {
+			$response = (object) [
+				"success" => false,
+				"message" => $response->message
+			];
+		} else {
+			$response = (object) [
+				"success" => true,
+				"message" => "Contact updated."
+			];
+		}
+
+		header("Content-Type: application/json");
+		echo json_encode($response);
+		exit;
+	}
+}
+
+add_action( 'admin_post_nopriv_appointment', 'ps_handle_appointment_submit' );
+add_action( 'admin_post_appointment', 'ps_handle_appointment_submit' );
 
 /**
  * Displays the form submissions admin page. Displays a WP_List_Table with select contact info
@@ -909,9 +1060,9 @@ function ps_display_options_page() {
 		return;
 	}
 
-	$str = file_get_contents( plugins_url('/api-config.json', __FILE__ ) );
-	$api_config = json_decode($str);
-	$scope_list = ['calendars.readonly','calendars/events.write','contacts.write'];
+	global $ghl_config;
+	$api_config = $ghl_config->getConfig();
+	$scope_list = ['calendars.readonly','calendars/events.readonly','calendars/events.write','calendars/groups.readonly','calendars/resources.readonly','contacts.write'];
 	$scope = implode("%20", $scope_list);
 	$auth_link = "$api_config->baseUrl/oauth/chooselocation?response_type=code&redirect_uri=$api_config->redirectUrl&client_id=$api_config->clientId&scope=$scope";
 
