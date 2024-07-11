@@ -809,8 +809,11 @@
   border-radius: 50% !important;
   margin: 3px;
 }
-.react-calendar__navigation button.react-calendar__navigation__arrow:hover {
+.react-calendar__navigation button.react-calendar__navigation__arrow:enabled:hover {
   background-color: gray;
+}
+.react-calendar__navigation button.react-calendar__navigation__prev2-button, .react-calendar__navigation button.react-calendar__navigation__next2-button {
+  display: none;
 }
 .react-calendar__navigation button.react-calendar__navigation__label {
   background-color: transparent;
@@ -833,6 +836,7 @@
   grid-template: repeat(5, 1fr)/repeat(7, 1fr);
   gap: 20px;
   padding: 10px;
+  transition: none;
 }
 .react-calendar__month-view__days:not(.react-calendar__tile--active) {
   font-weight: 500;
@@ -840,6 +844,7 @@
 .react-calendar__month-view__days .react-calendar__month-view__days__day--neighboringMonth {
   color: lightgray;
   background-color: rgba(239, 239, 239, 0.3019607843);
+  transition: none;
 }
 
 .react-calendar__tile {
@@ -885,6 +890,26 @@
   }
 }
 
+.timegrid.--fadeout {
+  animation: 0.2s linear fadeOut;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
 .timegrid__previous {
   border: 1px solid gray;
   border-radius: 50%;

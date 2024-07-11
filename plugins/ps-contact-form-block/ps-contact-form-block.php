@@ -535,6 +535,7 @@ function ps_ghl_create_contact( $contact_info, $location ) {
 		'email' => $contact_info['email'],
 		'locationId' => $target_location->_id,
 		'phone' => $contact_info['phone'],
+		'postalCode' => $contact_info['postalCode'],
 		'tags' => ['wordpress', 'ps-contact-form'],
 		'customFields' => [
 			(object) [
@@ -621,13 +622,15 @@ function ps_handle_form_submit() {
 		$phone = sanitize_text_field($_POST['phone']);
 		$message = sanitize_text_field($_POST['message']);
 		$location = sanitize_text_field($_POST['location']);
+		$zip = (int) $_POST['zip'];
 		$session_id = $_COOKIE['session_id'];
 
 		$api_result = ps_ghl_create_contact([
 			'name' => $name,
 			'email' => $email,
 			'phone' => $phone,
-			'message' => $message
+			'message' => $message,
+			'postalCode' => $zip
 		], $location);
 
 		if ($api_result['success'] == false) {
@@ -644,6 +647,7 @@ function ps_handle_form_submit() {
 				phone TEXT,
 				message TEXT,
 				location TEXT,
+				zip INT(15),
 				session_id TEXT,
 				contact_id TEXT,
 				submission_time DATETIME,
@@ -657,6 +661,7 @@ function ps_handle_form_submit() {
 				'phone' => $phone,
 				'message' => $message,
 				'location' => $location,
+				'zip' => $zip,
 				'session_id' => $session_id,
 				'contact_id' => $api_result['contact_id'],
 				'submission_time' => current_time('mysql')
@@ -856,7 +861,7 @@ function ps_handle_calendar_request() {
 				header('Content-Type: application/json');
 				echo json_encode((object) [
 					'success' => false,
-					'message' => 'Please supply location in parameter "location_name".'
+					'message' => "Please supply location in parameter 'location_name'."
 				]);
 				exit;
 			}
@@ -942,9 +947,22 @@ function ps_handle_appointment_submit() {
 
 		$location_id = array_flip(PS_NAMETABLE)[$contact->location];
 
-		$response = ps_ghl_update_contact($contact, $location_id);
+		$address = [
+			'address1' => $_POST['address1'],
+			'city' => $_POST['city'],
+			'state' => $_POST['state'],
+			'postalCode' => $_POST['zip']
+		];
+		$updated_contact = (object) array_merge((array) $contact, $address);
+		$contact_response = ps_ghl_update_contact($updated_contact, $location_id);
+		$appointment_response = ps_ghl_create_appointment(
+			$_POST['calendarId'],
+			$_POST['locationId'],
+			$contact,
+			$_POST['startTime'],
+			$_POST['endTime']);
 		
-		if (!$response->succeeded) {
+		if (!$contact_response->succeeded) {
 			$response = (object) [
 				"success" => false,
 				"message" => $response->message

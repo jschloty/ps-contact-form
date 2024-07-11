@@ -60,7 +60,3 @@ export function checkInput(input, e) {
         return validity;
     }
 }
-
-export function checkAppointment(input, e) {
-
-}

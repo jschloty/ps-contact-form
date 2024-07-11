@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Calendar } from 'react-calendar';
 import { clsx } from 'clsx';
 import { SlArrowLeft } from "react-icons/sl";
+import { TbReceiptYuan } from 'react-icons/tb';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -15,26 +16,6 @@ window.addEventListener("resize", () => {
         isMobile = false;
     }
 })
-
-const defaultStartTime = (value) => {
-  if (!value) {
-    return;
-  }
-  
-  const startTime = new Date(value.getTime());
-  startTime.setHours(8, 0, 0, 0);
-  return startTime;
-}
-
-const defaultEndTime = (value) => {
-  if (!value) {
-    return;
-  }
-
-  const endTime = new Date(value.getTime());
-  endTime.setHours(17, 0, 0, 0);
-  return endTime;
-}
 
 /**
  * BookerPlaceholder: a greyed out dummy calendar that displays while the calendar info is retrieved.
@@ -78,7 +59,7 @@ function TimeSlot( { children, onChange, disabled, myKey, activeKey, onSwap } ) 
       </button>
       <button 
         className={clsx('timeslot__select', myKey == activeKey ? '' : 'timeslot__select--hidden')}
-        type="button"
+        type="submit"
         onClick={() => {onChange(value)}}>Select</button>
     </div>
   )
@@ -100,7 +81,7 @@ function TimeGrid( {
   onChange,
   hours,
   interval,
-  allowBookingAfter,
+  startTime,
   slotDisabled
 } ) {
   const [activeKey, setActiveKey] = useState(-1);
@@ -128,29 +109,24 @@ function TimeGrid( {
   const now = new Date();
   const nowRounded = new Date(Math.round(now.getTime() / coeff) * coeff);
 
-  const openTime = new Date().setHours(hours[value.getDay()].openHour,
-    hours[value.getDay()].openMinute,0,0).getTime();
-  const closeTime = new Date().setHours(hours[value.getDay()].closeHour,
-    hours[value.getDay()].closeMinute,0,0).getTime();
+  const openTime = value.setHours(hours[value.getDay()].openHour,
+    hours[value.getDay()].openMinute,0,0);
+  const closeTime = value.setHours(hours[value.getDay()].closeHour,
+    hours[value.getDay()].closeMinute,0,0);
   
-  const bookingAfter = Math.round((new Date().getTime() + allowBookingAfter*60*1000)
-    /(interval*60*1000))*(interval*60*1000);
+  const bookingAfter = Math.round((startTime)/(interval*60*1000))*(interval*60*1000);
   
-  const startTime = bookingAfter > openTime && bookingAfter < closeTime ? bookingAfter : openTime;
+  const start = bookingAfter > openTime && bookingAfter < closeTime ? bookingAfter : openTime;
   const endTime = closeTime;
 
   let times = []; // in ms
 
-  for (let time = startTime.getTime(); time <= endTime.getTime(); time += coeff) {
+  for (let time = start; time <= endTime; time += coeff) {
     times.push(time);
   }
 
   const timeSlots = times.map((time) => {
-    let disabled = false;
-    if ( current == nowRounded || slotDisabled({ date: new Date(current), view: 'time' }) ) {
-      disabled = true;
-    }
-    return {time: new Date(time), disabled: disabled};
+    return new Date(time);
   });
 
   const handleSwap = (key) => {
@@ -172,8 +148,8 @@ function TimeGrid( {
       </div>
       {timeSlots.map((slot, i) => {
         return (
-          <TimeSlot key={"timeslot" + i} myKey={i} disabled={slotDisabled({date: new Date(slot.time), view: 'time'})} {...props}>
-            {slot.time}
+          <TimeSlot key={"timeslot" + i} myKey={i} disabled={slotDisabled({date: slot, view: 'time'})} {...props}>
+            {slot}
           </TimeSlot>
         );
       })}
@@ -181,20 +157,16 @@ function TimeGrid( {
   )
 }
 
-export default function DateTimeBooker({isDisabled, timeInfo, loading}) {
-  const now = new Date();
-  const initial = now.getHours() > 17 ? 
-    new Date(new Date(now.getTime() + 1000*60*60*24).setHours(0,0,0,0)) 
-  : new Date(new Date(now).setHours(0,0,0,0));
-  const [value, setValue] = useState(initial);
+export default function DateTimeBooker({isDisabled, timeInfo, loading, appt}) {
   const [page, setPage] = useState(1);
-  
+  const [value, setValue] = appt;
+
   const changedDay = useRef(false);
-  
+
   const {
     hours,
     interval = 30,
-    allowBookingAfter = 0
+    startTime = new Date()
   } = timeInfo;
 
   const onChange = (newVal) => {
@@ -210,29 +182,36 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading}) {
     setPage(page+newPage);
   }
 
+  // const noPrev = new Date(value).setDate(0) < new Date(timeInfo.startTime).setHours(0,0,0,0);
+  // const noNext = new Date(value).setMonth(value.getMonth()+1, 1) > new Date(timeInfo.endTime);
+
   return loading === "loading" ? <BookerPlaceholder /> :
     !isMobile ? (
       <div className="date-time-booker-container">
         <Calendar 
           onChange={onChange} 
           onActiveStartDateChange={({ action }) => {
-            changedDay.current = (action === "prev" || action === "next");
-            setValue(null);
+            if (action === "prev" || action === "next") {
+              changedDay.current = true;
+              setValue(null);
+            }
           }}
           minDetail="month" 
           value={value}
           tileDisabled={isDisabled}
-          />
-        {setValue != null ? 
+          minDate={new Date(new Date(timeInfo.startTime).setHours(0,0,0,0))}
+          maxDate={new Date(new Date(timeInfo.endTime).setHours(0,0,0,0))}
+        />
         <TimeGrid 
           onChange={onChange}
           value={value}
           changedDay={changedDay}
           hours={hours}
           interval={interval}
-          allowBookingAfter={allowBookingAfter}
+          startTime={startTime}
           slotDisabled={isDisabled}
-          /> : null}
+          style={value != null ? "" : {display:"none"}}
+        />
       </div>
     ) : (
       <div className="date-time-booker-container">

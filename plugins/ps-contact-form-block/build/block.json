@@ -54,6 +54,38 @@
           "type": "text",
           "page": 1,
           "required": true
+        },
+        {
+          "name": "address1",
+          "label": "Address",
+          "id": "address",
+          "type": "text",
+          "page": 4,
+          "required": true
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "id": "city",
+          "type": "text",
+          "page": 4,
+          "required": true
+        },
+        {
+          "name": "state",
+          "label": "State",
+          "id": "state",
+          "type": "text",
+          "page": 4,
+          "required": true
+        },
+        {
+          "name": "zip",
+          "label": "ZIP code",
+          "id": "zip",
+          "type": "text",
+          "page": 4,
+          "required": true
         }
       ]
     },
