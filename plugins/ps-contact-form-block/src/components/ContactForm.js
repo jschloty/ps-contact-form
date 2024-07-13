@@ -4,7 +4,7 @@ import { checkInput } from '../scripts/form-validation'
 import DateTimeBooker from './DateTimeBooker';
 import { ToastContainer, toast } from 'react-toastify';
 import Button from './Button';
-import { getCalendarInfo, appointmentSubmit } from '../scripts/calendar-utils'
+import { getCalendarInfo, appointmentSubmit } from '../scripts/calendar-utils';
 
 export const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-admin/admin-post.php";
 
@@ -14,7 +14,8 @@ export const ADMIN_URL = window.location.protocol + "//" + window.location.host 
  * @param {bool} loading Specifies whether the buttons should be rendered as loading or not.
  * @returns Current buttons based on component page state.
  */
-function CurrentButtons({ page, loading, needsZip }) {
+function CurrentButtons({ pageState, loading, needsZip }) {
+  const [page, setPage] = pageState;
   return page == 1 ? (<>
       <Button id="pg1_button" type="submit" loading={loading}>Get a quote</Button>
       <p>Existing customer? <a>Click here</a> to contact us.</p>
@@ -24,6 +25,7 @@ function CurrentButtons({ page, loading, needsZip }) {
       <Button id="pg2_button" type="submit" loading={loading}>Sign me up!</Button>
     </>)
     : page == 3 && needsZip ? <Button id="pg3_zip-button" type="submit" loading={loading}>Submit</Button>
+    : page == 4 ? <><Button id="pg4_back" type="button" onClick={(e) => {e.preventDefault(); setPage(3)}} ><SlArrowLeft /></Button><Button id="pg4_button" type="submit" loading={loading}>Submit</Button></>
     : (<p></p>);
 }
 
@@ -39,9 +41,10 @@ function CurrentButtons({ page, loading, needsZip }) {
  * @returns Rendered page of the form, including inputs, error fields, and CurrentButtons.
  */
 function CurrentPage({ 
-  page, message, inputs, getLoading, postLoading, calendarInfo, needsZip, appt
+  pageState, message, inputs, postLoading, calendarInfo, needsZip, appt
 }) {
   const [calendarNeedsZip, setNeedsZip] = needsZip;
+  const [page, setPage] = pageState;
   
   const isDisabled = ( args ) => {
     const { date: date, view: context } = args;
@@ -74,14 +77,13 @@ function CurrentPage({
     calendarInfo.blockedSlots.forEach((blockedSlot) => {
       let i = 0;
       while (i < timeslots.length) {
-        if ((timeslots[i].getTime() >= blockedSlot.startTime && timeslots[i].getTime() <= blockedSlot.closeTime)
-          || timeslots[i].getTime() < calendarInfo.startTime) {
+        if (timeslots[i].getTime() >= blockedSlot.startTime && timeslots[i].getTime() <= blockedSlot.endTime) {
           timeslots.splice(i, 1);
           continue;
         }
         i++;
       }
-    })
+    });
 
     isDisabled = timeslots.length == 0;
 
@@ -97,12 +99,13 @@ function CurrentPage({
 
   return (<ul id={"page" + page} className="page" page={page}>
     {page == 6 ? (<p>Unfortunately, you reside outside of our service area.</p>) 
-    : page == 3 && !calendarNeedsZip ? 
+    : (page == 3 && !calendarNeedsZip) || (page == 3 && calendarInfo.id !== "zip-input") ? 
       <DateTimeBooker 
         isDisabled={isDisabled} 
         timeInfo={timeInfo} 
-        loading={calendarInfo.id} 
+        loading={calendarInfo.id === "loading"} 
         appt={appt} 
+        pageState={[page, setPage]}
       />
     : inputs}
     {(page == 1 && message) ? 
@@ -111,7 +114,7 @@ function CurrentPage({
       <textarea id="message" name="message" max-length="250" placeholder="Enter message..."></textarea>
       <span className="error"></span>
     </li> : null}
-    <CurrentButtons page={page} loading={postLoading} needsZip={needsZip} />
+    <CurrentButtons pageState={[page, setPage]} loading={postLoading} needsZip={calendarNeedsZip} />
   </ul>)
 }
 
@@ -122,7 +125,7 @@ function CurrentPage({
  * first page message box. Lots of discrete settings in here, needs to be reworked
  * if turned into a dynamic plugin.
  * 
- * @todo Add mobile layout using isMobile
+ * @todo Add mobile layout using isMobile. ADD NONCE. !!ADD CONTACT INFO SECTION IF SERVER DOESNT MATCH SESSION!!
  * @param {Object} props List of properties passed from view.js
  * @returns Rendered contact form JSX.
  */
@@ -132,25 +135,30 @@ function ContactForm (props) {
     slotBuffer: 0,
     slotDuration: 30,
     slotInterval: 30,
-    allowBookingAfter: 60,
-    allowBookingFor: 60,
     id: "default",
     locationId: "default",
     locationName: null,
-    blockedSlots: []
+    blockedSlots: [],
+    startTime: new Date().setHours(0,0,0,0),
+    endTime: new Date(new Date().setMonth(new Date().getMonth() + 2)).setHours(0,0,0,0)
   });
   
   const now = new Date();
-  const initial = now.getHours() > 17 || new Date(now).setHours(0,0,0,0) < new Date(calendarInfo.current.startTime).setHours(0,0,0,0) ? 
-    new Date(new Date(now.getTime() + 1000*60*60*24).setHours(0,0,0,0)) 
-  : new Date(new Date(now).setHours(0,0,0,0));
-  
-  let [page, setPage] = useState(3); //CHANGE THIS BACK TO 1
+  let initial;
+
+  let [page, setPage] = useState(1); //CHANGE THIS BACK TO 1
+  let [getLoading, setGetLoading] = useState(false);
   let [postLoading, setPostLoading] = useState(false);
   let [calendarNeedsZip, setCalendarNeedsZip] = useState(false);
-  let [appointmentTime, setAppointmentTime] = useState(initial);
+  let [appointmentTime, setAppointment] = useState(initial);
+
+  const setAppointmentTime = (value) => {
+    console.log("setAppointmentTime called.");
+    setAppointment(value);
+  } 
 
   console.log("calendarNeedsZip: " + calendarNeedsZip);
+  console.log("current time: " + appointmentTime);
 
   let currentInputs;
 
@@ -158,7 +166,7 @@ function ContactForm (props) {
     currentInputs = [(
     <li key='zip_field'>
       <label htmlFor="zip">Please enter your zip code to continue.</label>
-      <input type="text" id="calendar_zip" name="zip" required />
+      <input type="text" id="calendar_zip" name="zip" required={true} />
       <span className="error"></span>
     </li>)];
   } else {
@@ -172,6 +180,7 @@ function ContactForm (props) {
       </li>
       ) : null;
     })
+    currentInputs.push((<input type="hidden" id="action" name="action" value={page == 1 ? "contact_form" : "appointment"}></input>))
   }
   
   
@@ -186,13 +195,21 @@ function ContactForm (props) {
    */  
   async function checkValidity(e) {
     e.preventDefault();
-    
+    console.log("ContactForm line 192 - appointmentTime: " + appointmentTime + "\n");
+
     const data = new FormData(e.currentTarget);
 
     if (page == 5) {return;}
-    if (page == 2) {setPage(page++); return;}
-    if (page == 3 && !data.get('zip')) {setPage(page++); return;}
-    if (page == 3 && data.get('zip')) {
+    if (page == 2) {
+      setPage(page+1);
+      return
+    }
+    if (page == 3 && calendarInfo.current.id !== "zip-input") {
+      setPage(page+1);
+      console.log("ContactForm line 202 - appointmentTime: " + appointmentTime + "\n");
+      return;
+    }
+    if (page == 3 && calendarInfo.current.id === "zip-input") {
       const zipInput = document.querySelector("#calendar_zip")
       let error = zipInput.nextSibling;
       let validity = await checkInput(zipInput, e);
@@ -201,6 +218,7 @@ function ContactForm (props) {
         error.textContent = validity.error;
         error.className = "error active";
         zipInput.focus();
+        return;
       } else {
         if (validity.location === "invalid") {
           setPage(6);
@@ -208,7 +226,14 @@ function ContactForm (props) {
         }
         // calendarInfo.current.locationName = validity.location;
         calendarInfo.current.id = "loading";
+        setGetLoading(true);
+        console.log("current id: " + calendarInfo.current.id);
         calendarInfo.current = await getCalendarInfo(calendarNeedsZip, validity.location);
+        initial = now.getHours() > 17 || new Date(now).setHours(0,0,0,0) < new Date(calendarInfo.current.startTime).setHours(0,0,0,0) ? 
+          new Date(new Date(now.getTime() + 1000*60*60*24).setHours(0,0,0,0)) 
+        : new Date(new Date(now).setHours(0,0,0,0));
+        setAppointmentTime(initial);
+        setGetLoading(false);
         setCalendarNeedsZip(false);
       }
       return;
@@ -252,7 +277,7 @@ function ContactForm (props) {
       if (page == 1) {
         result = await formSubmit(data);
       } else if (page == 4) {
-        result = await appointmentSubmit(data, appointmentTime, calendarInfo);
+        result = await appointmentSubmit(data, appointmentTime, calendarInfo.current);
       }
       
       console.log(result);
@@ -263,7 +288,6 @@ function ContactForm (props) {
       
       setPostLoading(false);
       setPage(page+1);
-      console.log(page);
     } catch (e) {
       if (e.message === 'Error saving the form data.') {
         toast.dismiss();
@@ -297,11 +321,13 @@ function ContactForm (props) {
 
   if ((page == 2 || page == 3) && calendarInfo.current.id === "default") {
     calendarInfo.current.id = "loading";
+    setGetLoading(true);
     getCalendarInfo(calendarNeedsZip, calendarInfo.current.locationName)
     .then((calendar) => {
       if (!calendar.success && calendar.message.includes("location")) {
         throw new Error('zip-code');
       }
+      setGetLoading(false);
       calendarInfo.current = calendar;
     })
     .catch ((e) => {
@@ -309,6 +335,8 @@ function ContactForm (props) {
         calendarInfo.current.id = "default-failed";
         console.error(e);
       }
+      calendarInfo.current.id = "zip-input";
+      setGetLoading(false);
       setCalendarNeedsZip(true);
     });
   }
@@ -316,7 +344,7 @@ function ContactForm (props) {
   return (
     <form noValidate id="ps-contact-form" onSubmit={checkValidity}>
       <CurrentPage 
-        page={page}
+        pageState={[page, setPage]}
         message={props.message}
         inputs={currentInputs}
         postLoading={postLoading}
@@ -324,7 +352,6 @@ function ContactForm (props) {
         needsZip={[calendarNeedsZip, setCalendarNeedsZip]}
         appt={[appointmentTime, setAppointmentTime]}
       />
-      <input id="hidden" type="hidden" name="action" value="contact_form" />
       <ToastContainer
         position="bottom-center"
         autoClose={5000}

@@ -577,16 +577,16 @@ function ps_ghl_create_contact( $contact_info, $location ) {
  * @param object $contact A contact object from wpdb.
  * @param string $location_id The locationId where the contact exists.
  */
-function ps_ghl_update_contact( $contact, $location_id, ) {
+function ps_ghl_update_contact( $contact, $location_id ) {
 	$contact_schema = [
-		'address1' => $contact->address,
+		'address1' => $contact->address1,
 		'city' => $contact->city,
 		'state' => $contact->state,
 		'postalCode' => $contact->zip
 	];
 
 	$opts = [
-		CURLOPT_URL => "https://services.leadconnectorhq.com/contacts/$contact->id",
+		CURLOPT_URL => "https://services.leadconnectorhq.com/contacts/$contact->contact_id",
 		CURLOPT_RETURNTRANSFER => true,
 		CURLOPT_ENCODING => "",
 		CURLOPT_MAXREDIRS => 10,
@@ -597,7 +597,19 @@ function ps_ghl_update_contact( $contact, $location_id, ) {
 	];
 
 	$response = ps_ghl_api_call( $opts, 'Location', $location_id );
-	return $response->succeeded;
+	if ($response->succeded) {
+		return [
+			'contactId' => $response->contact->id,
+			'success' => true
+		];
+	} else {
+		return [
+			'success' => false,
+			'message' => "Contact could not be updated."
+		];
+	}
+	
+		
 }
 
 /**
@@ -609,6 +621,7 @@ function ps_ghl_update_contact( $contact, $location_id, ) {
 function ps_handle_form_submit() {
 
 	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
 		if ( !isset($_COOKIE['session_id']) ) {
 			setcookie('session_id', wp_generate_uuid4(), array(
 				'samesite' => 'Lax',
@@ -641,7 +654,7 @@ function ps_handle_form_submit() {
 			global $wpdb;
 			$table_name = $wpdb->prefix . 'contact_form_submissions';
 
-			maybe_create_table($table_name, 'CREATE TABLE ' . $table_name . ' (
+			maybe_create_table($table_name, "CREATE TABLE " . $table_name . " (
 				name TEXT,
 				email TEXT,
 				phone TEXT,
@@ -651,10 +664,10 @@ function ps_handle_form_submit() {
 				session_id TEXT,
 				contact_id TEXT,
 				submission_time DATETIME,
-				id INT(10) NOT NULL UNSIGNED AUTO_INCREMENT,
-				PRIMARY KEY id
-			)' );
-
+				id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+				PRIMARY KEY (id)
+			);");
+			
 			$data = array(
 				'name' => $name,
 				'email' => $email,
@@ -897,7 +910,7 @@ add_action( 'admin_post_calendar_info', 'ps_handle_calendar_request' );
  * @param object $contact The contact object as returned by GHL's API.
  * @param int $start_time The start time of the appointment in milliseconds.
  * @param int $end_time The end time of the appointment in milliseconds.
- * @return string $contact_id The contact's id. Useful for passing to next page of form.
+ * @return array Associative array containing success status, error message on failure, contact ID on success.
  */
 function ps_ghl_create_appointment( $calendar_id, $location_id, $contact, $start_time, $end_time ) {	
 	$opts = [
@@ -911,18 +924,31 @@ function ps_ghl_create_appointment( $calendar_id, $location_id, $contact, $start
 		CURLOPT_POSTFIELDS => json_encode([
 			'calendarId' => $calendar_id,
 			'locationId' => $location_id,
-			'contactId' => $contact->id,
-			'startTime' => date(DateTimeInterface::ATOM, $start_time/1000),
-			'endTime' => date(DateTimeInterface::ATOM, $end_time/1000),
+			'contactId' => $contact->contact_id,
+			'startTime' => date(DateTimeInterface::ATOM, intval($start_time)),
+			'endTime' => date(DateTimeInterface::ATOM, intval($end_time)),
 			'title' => $contact->name,
 			'appointmentStatus' => 'new'
 		])
 	];
 
 	$response = ps_ghl_api_call($opts, 'Location', $location_id, '2021-04-15');
-	return $response->contactId;
+	if (!isset($response->id)) {
+		return [
+			'success' => false,
+			'message' => $response->message
+		];
+	} else {
+		return [
+			'success' => true,
+			'contact_id' => $response->contactId
+		];
+	}
 }
 
+/**
+ * Handles appointment submission POST request from front end.
+ */
 function ps_handle_appointment_submit() {
 	global $wpdb;
 	global $ghl_config;
@@ -941,8 +967,8 @@ function ps_handle_appointment_submit() {
 				$contact = $result[0];
 			}
 		} else {
-			$result = $wpdb->get_results("SELECT * FROM $table_name WHERE session_id ");
-			$contact = $result[0];
+			$results = $wpdb->get_results("SELECT * FROM $table_name WHERE session_id = '" . $_COOKIE['session_id'] . "'");
+			$contact = $results[0];
 		}
 
 		$location_id = array_flip(PS_NAMETABLE)[$contact->location];
@@ -957,20 +983,25 @@ function ps_handle_appointment_submit() {
 		$contact_response = ps_ghl_update_contact($updated_contact, $location_id);
 		$appointment_response = ps_ghl_create_appointment(
 			$_POST['calendarId'],
-			$_POST['locationId'],
-			$contact,
-			$_POST['startTime'],
-			$_POST['endTime']);
+			$location_id,
+			$updated_contact,
+			substr($_POST['startTime'], 0, -3),
+			substr($_POST['endTime'], 0, -3));
 		
-		if (!$contact_response->succeeded) {
+		if (!$contact_response['success']) {
 			$response = (object) [
 				"success" => false,
-				"message" => $response->message
+				"message" => $contact_response['message']
+			];
+		} else if (!$appointment_response['success']) {
+			$response = (object) [
+				"success" => false,
+				"message" => $appointment_response['message']
 			];
 		} else {
 			$response = (object) [
 				"success" => true,
-				"message" => "Contact updated."
+				"message" => "Appointment created successfully."
 			];
 		}
 

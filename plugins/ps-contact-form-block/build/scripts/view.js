@@ -87,10 +87,11 @@ const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-
  * @returns Current buttons based on component page state.
  */
 function CurrentButtons({
-  page,
+  pageState,
   loading,
   needsZip
 }) {
+  const [page, setPage] = pageState;
   return page == 1 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Button__WEBPACK_IMPORTED_MODULE_4__["default"], {
     id: "pg1_button",
     type: "submit",
@@ -105,7 +106,18 @@ function CurrentButtons({
     id: "pg3_zip-button",
     type: "submit",
     loading: loading
-  }, "Submit") : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null);
+  }, "Submit") : page == 4 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Button__WEBPACK_IMPORTED_MODULE_4__["default"], {
+    id: "pg4_back",
+    type: "button",
+    onClick: e => {
+      e.preventDefault();
+      setPage(3);
+    }
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_sl__WEBPACK_IMPORTED_MODULE_6__.SlArrowLeft, null)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Button__WEBPACK_IMPORTED_MODULE_4__["default"], {
+    id: "pg4_button",
+    type: "submit",
+    loading: loading
+  }, "Submit")) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null);
 }
 
 /**
@@ -120,16 +132,16 @@ function CurrentButtons({
  * @returns Rendered page of the form, including inputs, error fields, and CurrentButtons.
  */
 function CurrentPage({
-  page,
+  pageState,
   message,
   inputs,
-  getLoading,
   postLoading,
   calendarInfo,
   needsZip,
   appt
 }) {
   const [calendarNeedsZip, setNeedsZip] = needsZip;
+  const [page, setPage] = pageState;
   const isDisabled = args => {
     const {
       date: date,
@@ -155,7 +167,7 @@ function CurrentPage({
     calendarInfo.blockedSlots.forEach(blockedSlot => {
       let i = 0;
       while (i < timeslots.length) {
-        if (timeslots[i].getTime() >= blockedSlot.startTime && timeslots[i].getTime() <= blockedSlot.closeTime || timeslots[i].getTime() < calendarInfo.startTime) {
+        if (timeslots[i].getTime() >= blockedSlot.startTime && timeslots[i].getTime() <= blockedSlot.endTime) {
           timeslots.splice(i, 1);
           continue;
         }
@@ -175,11 +187,12 @@ function CurrentPage({
     id: "page" + page,
     className: "page",
     page: page
-  }, page == 6 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Unfortunately, you reside outside of our service area.") : page == 3 && !calendarNeedsZip ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_DateTimeBooker__WEBPACK_IMPORTED_MODULE_2__["default"], {
+  }, page == 6 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Unfortunately, you reside outside of our service area.") : page == 3 && !calendarNeedsZip || page == 3 && calendarInfo.id !== "zip-input" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_DateTimeBooker__WEBPACK_IMPORTED_MODULE_2__["default"], {
     isDisabled: isDisabled,
     timeInfo: timeInfo,
-    loading: calendarInfo.id,
-    appt: appt
+    loading: calendarInfo.id === "loading",
+    appt: appt,
+    pageState: [page, setPage]
   }) : inputs, page == 1 && message ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
     key: "contact_message_field"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
@@ -192,9 +205,9 @@ function CurrentPage({
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
     className: "error"
   })) : null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentButtons, {
-    page: page,
+    pageState: [page, setPage],
     loading: postLoading,
-    needsZip: needsZip
+    needsZip: calendarNeedsZip
   }));
 }
 
@@ -205,7 +218,7 @@ function CurrentPage({
  * first page message box. Lots of discrete settings in here, needs to be reworked
  * if turned into a dynamic plugin.
  * 
- * @todo Add mobile layout using isMobile
+ * @todo Add mobile layout using isMobile. ADD NONCE. !!ADD CONTACT INFO SECTION IF SERVER DOESNT MATCH SESSION!!
  * @param {Object} props List of properties passed from view.js
  * @returns Rendered contact form JSX.
  */
@@ -224,20 +237,26 @@ function ContactForm(props) {
     slotBuffer: 0,
     slotDuration: 30,
     slotInterval: 30,
-    allowBookingAfter: 60,
-    allowBookingFor: 60,
     id: "default",
     locationId: "default",
     locationName: null,
-    blockedSlots: []
+    blockedSlots: [],
+    startTime: new Date().setHours(0, 0, 0, 0),
+    endTime: new Date(new Date().setMonth(new Date().getMonth() + 2)).setHours(0, 0, 0, 0)
   });
   const now = new Date();
-  const initial = now.getHours() > 17 || new Date(now).setHours(0, 0, 0, 0) < new Date(calendarInfo.current.startTime).setHours(0, 0, 0, 0) ? new Date(new Date(now.getTime() + 1000 * 60 * 60 * 24).setHours(0, 0, 0, 0)) : new Date(new Date(now).setHours(0, 0, 0, 0));
-  let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(3); //CHANGE THIS BACK TO 1
+  let initial;
+  let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1); //CHANGE THIS BACK TO 1
+  let [getLoading, setGetLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   let [postLoading, setPostLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   let [calendarNeedsZip, setCalendarNeedsZip] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-  let [appointmentTime, setAppointmentTime] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(initial);
+  let [appointmentTime, setAppointment] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(initial);
+  const setAppointmentTime = value => {
+    console.log("setAppointmentTime called.");
+    setAppointment(value);
+  };
   console.log("calendarNeedsZip: " + calendarNeedsZip);
+  console.log("current time: " + appointmentTime);
   let currentInputs;
   if (page == 3 && calendarNeedsZip) {
     currentInputs = [(0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
@@ -268,6 +287,12 @@ function ContactForm(props) {
         className: "error"
       })) : null;
     });
+    currentInputs.push((0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+      type: "hidden",
+      id: "action",
+      name: "action",
+      value: page == 1 ? "contact_form" : "appointment"
+    }));
   }
 
   /**
@@ -281,19 +306,21 @@ function ContactForm(props) {
    */
   async function checkValidity(e) {
     e.preventDefault();
+    console.log("ContactForm line 192 - appointmentTime: " + appointmentTime + "\n");
     const data = new FormData(e.currentTarget);
     if (page == 5) {
       return;
     }
     if (page == 2) {
-      setPage(page++);
+      setPage(page + 1);
       return;
     }
-    if (page == 3 && !data.get('zip')) {
-      setPage(page++);
+    if (page == 3 && calendarInfo.current.id !== "zip-input") {
+      setPage(page + 1);
+      console.log("ContactForm line 202 - appointmentTime: " + appointmentTime + "\n");
       return;
     }
-    if (page == 3 && data.get('zip')) {
+    if (page == 3 && calendarInfo.current.id === "zip-input") {
       const zipInput = document.querySelector("#calendar_zip");
       let error = zipInput.nextSibling;
       let validity = await (0,_scripts_form_validation__WEBPACK_IMPORTED_MODULE_1__.checkInput)(zipInput, e);
@@ -301,6 +328,7 @@ function ContactForm(props) {
         error.textContent = validity.error;
         error.className = "error active";
         zipInput.focus();
+        return;
       } else {
         if (validity.location === "invalid") {
           setPage(6);
@@ -308,7 +336,12 @@ function ContactForm(props) {
         }
         // calendarInfo.current.locationName = validity.location;
         calendarInfo.current.id = "loading";
+        setGetLoading(true);
+        console.log("current id: " + calendarInfo.current.id);
         calendarInfo.current = await (0,_scripts_calendar_utils__WEBPACK_IMPORTED_MODULE_5__.getCalendarInfo)(calendarNeedsZip, validity.location);
+        initial = now.getHours() > 17 || new Date(now).setHours(0, 0, 0, 0) < new Date(calendarInfo.current.startTime).setHours(0, 0, 0, 0) ? new Date(new Date(now.getTime() + 1000 * 60 * 60 * 24).setHours(0, 0, 0, 0)) : new Date(new Date(now).setHours(0, 0, 0, 0));
+        setAppointmentTime(initial);
+        setGetLoading(false);
         setCalendarNeedsZip(false);
       }
       return;
@@ -351,7 +384,7 @@ function ContactForm(props) {
       if (page == 1) {
         result = await formSubmit(data);
       } else if (page == 4) {
-        result = await (0,_scripts_calendar_utils__WEBPACK_IMPORTED_MODULE_5__.appointmentSubmit)(data, appointmentTime, calendarInfo);
+        result = await (0,_scripts_calendar_utils__WEBPACK_IMPORTED_MODULE_5__.appointmentSubmit)(data, appointmentTime, calendarInfo.current);
       }
       console.log(result);
       if (!result.success) {
@@ -359,7 +392,6 @@ function ContactForm(props) {
       }
       setPostLoading(false);
       setPage(page + 1);
-      console.log(page);
     } catch (e) {
       if (e.message === 'Error saving the form data.') {
         react_toastify__WEBPACK_IMPORTED_MODULE_3__.toast.dismiss();
@@ -394,16 +426,20 @@ function ContactForm(props) {
   }
   if ((page == 2 || page == 3) && calendarInfo.current.id === "default") {
     calendarInfo.current.id = "loading";
+    setGetLoading(true);
     (0,_scripts_calendar_utils__WEBPACK_IMPORTED_MODULE_5__.getCalendarInfo)(calendarNeedsZip, calendarInfo.current.locationName).then(calendar => {
       if (!calendar.success && calendar.message.includes("location")) {
         throw new Error('zip-code');
       }
+      setGetLoading(false);
       calendarInfo.current = calendar;
     }).catch(e => {
       if (e.message !== 'zip-code') {
         calendarInfo.current.id = "default-failed";
         console.error(e);
       }
+      calendarInfo.current.id = "zip-input";
+      setGetLoading(false);
       setCalendarNeedsZip(true);
     });
   }
@@ -412,18 +448,13 @@ function ContactForm(props) {
     id: "ps-contact-form",
     onSubmit: checkValidity
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentPage, {
-    page: page,
+    pageState: [page, setPage],
     message: props.message,
     inputs: currentInputs,
     postLoading: postLoading,
     calendarInfo: calendarInfo.current,
     needsZip: [calendarNeedsZip, setCalendarNeedsZip],
     appt: [appointmentTime, setAppointmentTime]
-  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
-    id: "hidden",
-    type: "hidden",
-    name: "action",
-    value: "contact_form"
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_toastify__WEBPACK_IMPORTED_MODULE_3__.ToastContainer, {
     position: "bottom-center",
     autoClose: 5000,
@@ -522,8 +553,10 @@ function TimeSlot({
   }, formatTime(value)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
     className: (0,clsx__WEBPACK_IMPORTED_MODULE_1__.clsx)('timeslot__select', myKey == activeKey ? '' : 'timeslot__select--hidden'),
     type: "submit",
-    onClick: () => {
-      onChange(value);
+    onClick: e => {
+      e.preventDefault();
+      console.log("DateTimeBooker line 63 - value: " + value + "\n");
+      onChange(value, e, true);
     }
   }, "Select"));
 }
@@ -612,31 +645,36 @@ function DateTimeBooker({
   isDisabled,
   timeInfo,
   loading,
-  appt
+  appt,
+  pageState
 }) {
+  const [formPage, setFormPage] = pageState;
   const [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1);
   const [value, setValue] = appt;
   const changedDay = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
+  console.log(timeInfo);
+  console.log("DateTimeBooker line 166 - value: " + value + "\n");
   const {
     hours,
     interval = 30,
     startTime = new Date()
   } = timeInfo;
-  const onChange = newVal => {
+  const onChange = (newVal, e, time) => {
+    console.log("newVal: " + newVal + "\n");
     if (value != null) {
       changedDay.current = value.getDate() != newVal.getDate();
     }
     setValue(newVal);
+    if (time) {
+      setFormPage(formPage + 1);
+    }
   };
   const onChangeMobile = (value, newPage) => {
     onChange(value);
     setPage(page + newPage);
   };
-
-  // const noPrev = new Date(value).setDate(0) < new Date(timeInfo.startTime).setHours(0,0,0,0);
-  // const noNext = new Date(value).setMonth(value.getMonth()+1, 1) > new Date(timeInfo.endTime);
-
-  return loading === "loading" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(BookerPlaceholder, null) : !isMobile ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  console.log("DateTimeBooker line 190 - value: " + value + "\n");
+  return loading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(BookerPlaceholder, null) : !isMobile ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "date-time-booker-container"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_calendar__WEBPACK_IMPORTED_MODULE_3__["default"], {
     onChange: onChange,
@@ -748,14 +786,16 @@ async function appointmentSubmit(data, time, calendarInfo) {
   data.append("locationId", calendarInfo.locationId);
   data.append("startTime", time.getTime());
   data.append("endTime", time.getTime() + calendarInfo.slotDuration * 60 * 1000);
-  const response = await fetch(_components_ContactForm__WEBPACK_IMPORTED_MODULE_0__.ADMIN_URL + '?action=appointment', {
+  console.log("action: " + data.get("action"));
+  const response = await fetch(_components_ContactForm__WEBPACK_IMPORTED_MODULE_0__.ADMIN_URL, {
     method: "POST",
     body: data
   });
   if (!response.ok) {
     throw new Error(`HTTP Error: ${response.status}`);
   }
-  return await response.json();
+  console.log(await response.text());
+  return;
 }
 
 /***/ }),

@@ -31,9 +31,11 @@ export async function appointmentSubmit(data, time, calendarInfo) {
     data.append("startTime", time.getTime());
     data.append("endTime", time.getTime() + (calendarInfo.slotDuration*60*1000));
 
-    const response = await fetch(ADMIN_URL + '?action=appointment', { method: "POST", body: data });
+    console.log("action: " + data.get("action"));
+    const response = await fetch(ADMIN_URL, { method: "POST", body: data });
     if (!response.ok) {
         throw new Error(`HTTP Error: ${response.status}`);
     }
-    return await response.json();
+    console.log(await response.text());
+    return;
 }

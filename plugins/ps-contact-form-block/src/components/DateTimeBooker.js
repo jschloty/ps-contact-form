@@ -60,7 +60,7 @@ function TimeSlot( { children, onChange, disabled, myKey, activeKey, onSwap } ) 
       <button 
         className={clsx('timeslot__select', myKey == activeKey ? '' : 'timeslot__select--hidden')}
         type="submit"
-        onClick={() => {onChange(value)}}>Select</button>
+        onClick={(e) => {e.preventDefault(); console.log("DateTimeBooker line 63 - value: " + value + "\n"); onChange(value, e, true);}}>Select</button>
     </div>
   )
 }
@@ -148,7 +148,12 @@ function TimeGrid( {
       </div>
       {timeSlots.map((slot, i) => {
         return (
-          <TimeSlot key={"timeslot" + i} myKey={i} disabled={slotDisabled({date: slot, view: 'time'})} {...props}>
+          <TimeSlot 
+            key={"timeslot" + i}
+            myKey={i}
+            disabled={slotDisabled({date: slot, view: 'time'})}
+            {...props}
+          >
             {slot}
           </TimeSlot>
         );
@@ -157,11 +162,15 @@ function TimeGrid( {
   )
 }
 
-export default function DateTimeBooker({isDisabled, timeInfo, loading, appt}) {
+export default function DateTimeBooker({isDisabled, timeInfo, loading, appt, pageState}) {
+  const [formPage, setFormPage] = pageState;
   const [page, setPage] = useState(1);
   const [value, setValue] = appt;
 
   const changedDay = useRef(false);
+  console.log(timeInfo);
+  console.log("DateTimeBooker line 166 - value: " + value + "\n");
+
 
   const {
     hours,
@@ -169,12 +178,17 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading, appt}) {
     startTime = new Date()
   } = timeInfo;
 
-  const onChange = (newVal) => {
+  const onChange = (newVal, e, time) => {
+    console.log("newVal: " + newVal + "\n");
+
     if (value != null) {
       changedDay.current = value.getDate() != newVal.getDate();
     }
 
     setValue(newVal);
+    if (time) {
+      setFormPage(formPage + 1);
+    }
   }
 
   const onChangeMobile = ( value, newPage ) => {
@@ -182,10 +196,9 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading, appt}) {
     setPage(page+newPage);
   }
 
-  // const noPrev = new Date(value).setDate(0) < new Date(timeInfo.startTime).setHours(0,0,0,0);
-  // const noNext = new Date(value).setMonth(value.getMonth()+1, 1) > new Date(timeInfo.endTime);
+  console.log("DateTimeBooker line 190 - value: " + value + "\n");
 
-  return loading === "loading" ? <BookerPlaceholder /> :
+  return loading ? <BookerPlaceholder /> :
     !isMobile ? (
       <div className="date-time-booker-container">
         <Calendar 
