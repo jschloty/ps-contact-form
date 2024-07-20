@@ -196,8 +196,7 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
 	$curl = curl_init();
 
 	if ( !isset($api_config->refresh_token) ) {
-		echo 'Error: Unauthenticated API access.';
-		return;
+		throw new Exception('Error: Unauthenticated API access.');
 	}
 
 	if ( $user_type === "Company" ) {
@@ -241,13 +240,13 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
 	curl_close($curl);
 
 	if ($err) {
-		echo "cURL Error: " . $err;
+		throw new Exception("cURL Error: " . $err);
 	}
 
 	$response = json_decode($response_str);
 
 	if ( isset($response->statusCode) ) {
-		echo '<p>An error has occurred. ' . $response->message . '</p>';
+		throw new Error('Authentication error: '.$response->message);
 		return;
 	}
 
@@ -292,7 +291,7 @@ function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $version = 
 	$api_config = $ghl_config->getConfig();
 
 	if ($user_type != 'Company' && $user_type != 'Location') {
-		echo 'Error: User type must be Company or Location.';
+		throw new Exception('Invalid user type.');
 		return;
 	}
 
@@ -331,8 +330,7 @@ function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $version = 
 	curl_close($curl);
 
 	if ( $err ) {
-		echo "cURL Error: " . $err;
-		return;
+		throw new Exception("cURL Error: " . $err);
 	}
 
 	$response = json_decode($response_json);
@@ -345,24 +343,21 @@ function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $version = 
 		case 200:
 			return $response;
 		case 400:
-			echo '400 Error: ' . $response->message;
-			return $response;
+			throw new Exception('400 Error: ' . $response->message);
 		case 401:
 			if (str_contains($response->message, "scope")) {
-				echo '401 Error: ' . $response->message;
-				break;
+				throw new Exception('401 Error: ' . $response->message);
 			}
 			
 			if ( $tries > 2 ) {
-				echo 'Error: Too many failed API attempts.';
+				throw new Exception('Error: Too many failed API attempts.');
 				break;
 			}
 			ps_refresh_access_token( $user_type, $location_id );
 			$tries++;
 			return ps_ghl_api_call( $curl_opts, $user_type, $location_id, $tries );
 		case 422:
-			echo '422 Error: ' . $response->message;
-			break;
+			throw new Exception('422 Error: ' . $response->message);
 		default:
 			return $response;
 	}
@@ -382,7 +377,7 @@ function ps_ghl_get_locations() {
 	$appId = "6679dffae548834c93b053ca";
 
 	if ( !isset($api_config->access_token) ) {
-		echo 'Error: unauthorized API call. Please authorize LeadSmart first.';
+		throw new Exception('Unauthorized API call. Please authorize LeadSmart first.');
 		return;
 	}
 
@@ -397,10 +392,6 @@ function ps_ghl_get_locations() {
 	];
 
 	$response = ps_ghl_api_call( $opts, 'Company' );
-
-	if ( isset($response->success) && (!$response->success)) {
-		return $response;
-	}
 
 	if ( isset($response->locations) ) {
 		$merged = (object) array_merge((array) $api_config, (array) $response);
@@ -559,16 +550,10 @@ function ps_ghl_create_contact( $contact_info, $location ) {
 	$response = ps_ghl_api_call( $opts, 'Location', $target_location->_id );
 
 	if ( !isset($response->contact) ) {
-		return [
-			'success' => false,
-			'message' => 'Error: Contact could not be created.'
-		];
+		throw new Exception("Error: contact could not be created.");
 	}
 
-	return [
-		'contact_id' => $response->contact->id,
-		'success' => true
-	];
+	return $response->contact->id;
 }
 
 /**
@@ -597,19 +582,13 @@ function ps_ghl_update_contact( $contact, $location_id ) {
 	];
 
 	$response = ps_ghl_api_call( $opts, 'Location', $location_id );
-	if ($response->succeded) {
-		return [
-			'contactId' => $response->contact->id,
-			'success' => true
-		];
-	} else {
-		return [
-			'success' => false,
-			'message' => "Contact could not be updated."
-		];
+	if (!$response->succeded) {
+		throw new Exception('Error: Contact could not be updated.');
 	}
-	
-		
+	return [
+		'success' => false,
+		'message' => "Contact could not be updated."
+	];
 }
 
 /**
@@ -637,61 +616,68 @@ function ps_handle_form_submit() {
 		$location = sanitize_text_field($_POST['location']);
 		$zip = (int) $_POST['zip'];
 		$session_id = $_COOKIE['session_id'];
-
-		$api_result = ps_ghl_create_contact([
-			'name' => $name,
-			'email' => $email,
-			'phone' => $phone,
-			'message' => $message,
-			'postalCode' => $zip
-		], $location);
-
-		if ($api_result['success'] == false) {
-			$response = $api_result;
-			//SEND ADMIN AN EMAIL
-
-		} else {
-			global $wpdb;
-			$table_name = $wpdb->prefix . 'contact_form_submissions';
-
-			maybe_create_table($table_name, "CREATE TABLE " . $table_name . " (
-				name TEXT,
-				email TEXT,
-				phone TEXT,
-				message TEXT,
-				location TEXT,
-				zip INT(15),
-				session_id TEXT,
-				contact_id TEXT,
-				submission_time DATETIME,
-				id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-				PRIMARY KEY (id)
-			);");
-			
-			$data = array(
+		
+		try {
+			$api_result = ps_ghl_create_contact([
 				'name' => $name,
 				'email' => $email,
 				'phone' => $phone,
 				'message' => $message,
-				'location' => $location,
-				'zip' => $zip,
-				'session_id' => $session_id,
-				'contact_id' => $api_result['contact_id'],
-				'submission_time' => current_time('mysql')
-			);
-			$insert_result = $wpdb->insert($table_name, $data);
+				'postalCode' => $zip
+			], $location);
+			$api_message = '';
+		} catch (Exception $e) {
+			$api_result = false;
+			$api_message = "\n".$e->getMessage();
+			mail('personal.jts@gmail.com', 'Error saving contact', "There was an error on line ".$e->getLine()." of ".$e->getFile().".\r\n
+			The contact could not be created in GHL.\r\nContact name: $name\r\nContact email: $email\r\nContact session ID: $session_id\r\nError message: ".$e->getMessage()."\r\n");
+		}
 
-			if ($insert_result === false) {
-				$response = array(
-					'success' => false,
-					'message' => 'Error saving the form data.'
-				);
-			} else {
-				$response = array(
-					'success' => true,
-					'message' => 'Form data saved successfully.'
-				);
-			}
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'contact_form_submissions';
+
+		maybe_create_table($table_name, "CREATE TABLE " . $table_name . " (
+			name TEXT,
+			email TEXT,
+			phone TEXT,
+			message TEXT,
+			location TEXT,
+			zip INT(15),
+			session_id TEXT,
+			contact_id TEXT,
+			submission_time DATETIME,
+			id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+			PRIMARY KEY (id)
+		);");
+		
+		$data = array(
+			'name' => $name,
+			'email' => $email,
+			'phone' => $phone,
+			'message' => $message,
+			'location' => $location,
+			'zip' => $zip,
+			'session_id' => $session_id,
+			'submission_time' => current_time('mysql')
+		);
+		if ($api_result) {
+			$data['contact_id'] = $api_result;
+		} else {
+			$data['contact_id'] = 'failed';
+		}
+
+		$insert_result = $wpdb->insert($table_name, $data);
+
+		if ($insert_result === false) {
+			$response = array(
+				'success' => false,
+				'message' => 'Error saving the form data.'
+			);
+		} else {
+			$response = array(
+				'success' => true,
+				'message' => 'Form data saved successfully.'.$api_message
+			);
 		}
 
 		header('Content-Type: application/json');
@@ -819,31 +805,38 @@ function ps_ghl_get_calendar_info( $location_id, $calendar_id = '' ) {
 		CURLOPT_CUSTOMREQUEST => "GET"
 	];
 
-	$api_response = ps_ghl_api_call($opts, 'Location', $location_id, '2021-04-15');
-	$calendar_list = $api_response->calendars;
+	try {
+		$api_response = ps_ghl_api_call($opts, 'Location', $location_id, '2021-04-15');
+		$calendar_list = $api_response->calendars;
 
-	// converts API-created calendar list to an associative array with calendar ID as keys
-	foreach ($calendar_list as $calendar) {
-		$calendars[$calendar->id] = $calendar;
-	}
-	$calendar_fixed = (object) array_merge((array) $calendars[$calendar_id], (array) $manual_calendar_fix);
-	$useful_calendar = new UsefulCalendar($calendar_fixed);
+		// converts API-created calendar list to an associative array with calendar ID as keys
+		foreach ($calendar_list as $calendar) {
+			$calendars[$calendar->id] = $calendar;
+		}
+		$calendar_fixed = (object) array_merge((array) $calendars[$calendar_id], (array) $manual_calendar_fix);
+		$useful_calendar = new UsefulCalendar($calendar_fixed);
 
-	$opts[CURLOPT_URL] = "https://services.leadconnectorhq.com/calendars/events?locationId=$location_id&calendarId=$calendar_id&startTime=$useful_calendar->startTime&endTime=$useful_calendar->endTime";
-	$api_response2 = ps_ghl_api_call($opts, 'Location', $location_id, '2021-04-15');
-	
-	$event_times = array_map(function($event) {
+		$opts[CURLOPT_URL] = "https://services.leadconnectorhq.com/calendars/events?locationId=$location_id&calendarId=$calendar_id&startTime=$useful_calendar->startTime&endTime=$useful_calendar->endTime";
+		$api_response2 = ps_ghl_api_call($opts, 'Location', $location_id, '2021-04-15');
+		
+		$event_times = array_map(function($event) {
+			return (object) [
+				'startTime' => intval(DateTime::createFromFormat(DateTimeInterface::ATOM, $event->startTime)->format('Uv')),
+				'endTime' => intval(DateTime::createFromFormat(DateTimeInterface::ATOM, $event->endTime)->format('Uv'))
+			];
+		}, $api_response2->events);
+
+		$useful_array = (array) $useful_calendar;
+		$useful_array['blockedSlots'] = $event_times;
+		$useful_calendar = (object) $useful_array;
+
+		return $useful_calendar;
+	} catch (Exception $e) {
 		return (object) [
-			'startTime' => intval(DateTime::createFromFormat(DateTimeInterface::ATOM, $event->startTime)->format('Uv')),
-			'endTime' => intval(DateTime::createFromFormat(DateTimeInterface::ATOM, $event->endTime)->format('Uv'))
+			'success' => false,
+			'message' => "Calendar error: ".$e->getMessage()
 		];
-	}, $api_response2->events);
-
-	$useful_array = (array) $useful_calendar;
-	$useful_array['blockedSlots'] = $event_times;
-	$useful_calendar = (object) $useful_array;
-
-	return $useful_calendar;
+	}
 }
 
 
@@ -885,10 +878,6 @@ function ps_handle_calendar_request() {
 		}
 
 		$location_id = array_flip(PS_NAMETABLE)[$location_name];
-
-		if (!isset($location_id)) {
-			die('Error - invalid location ID');
-		}
 		
 		$calendar = ps_ghl_get_calendar_info( $location_id );
 		$response = (object) array_merge( (array) $calendar, [ 'success' => true ] );
@@ -932,18 +921,13 @@ function ps_ghl_create_appointment( $calendar_id, $location_id, $contact, $start
 		])
 	];
 
+
 	$response = ps_ghl_api_call($opts, 'Location', $location_id, '2021-04-15');
-	if (!isset($response->id)) {
-		return [
-			'success' => false,
-			'message' => $response->message
-		];
-	} else {
-		return [
-			'success' => true,
-			'contact_id' => $response->contactId
-		];
-	}
+	
+	return [
+		'success' => true,
+		'contact_id' => $response->contactId
+	];
 }
 
 /**
@@ -956,52 +940,45 @@ function ps_handle_appointment_submit() {
 	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		$table_name = $wpdb->prefix . "contact_form_submissions";
 
-		if ( !isset($_COOKIE['session_id']) ) {
-			if ( !isset($_POST['email']) ) {
-				$response = (object) [
-					"success" => false,
-					"message" => "Existing session not detected. Contact email must be supplied."
-				];
+		try {	
+			if ( !isset($_COOKIE['session_id']) ) {
+				if ( !isset($_POST['email']) ) {
+					throw new Exception("Existing session not detected. Contact email must be supplied.");
+				} else {
+					$result = $wpdb->get_results("SELECT * FROM $table_name WHERE email = '".$_POST['email']."'");
+					$contact = $result[0];
+				}
 			} else {
-				$result = $wpdb->get_results("SELECT * FROM $table_name WHERE email = '".$_POST['email']."'");
-				$contact = $result[0];
+				$results = $wpdb->get_results("SELECT * FROM $table_name WHERE session_id = '" . $_COOKIE['session_id'] . "'");
+				$contact = $results[0];
 			}
-		} else {
-			$results = $wpdb->get_results("SELECT * FROM $table_name WHERE session_id = '" . $_COOKIE['session_id'] . "'");
-			$contact = $results[0];
-		}
 
-		$location_id = array_flip(PS_NAMETABLE)[$contact->location];
+			$location_id = array_flip(PS_NAMETABLE)[$contact->location];
 
-		$address = [
-			'address1' => $_POST['address1'],
-			'city' => $_POST['city'],
-			'state' => $_POST['state'],
-			'postalCode' => $_POST['zip']
-		];
-		$updated_contact = (object) array_merge((array) $contact, $address);
-		$contact_response = ps_ghl_update_contact($updated_contact, $location_id);
-		$appointment_response = ps_ghl_create_appointment(
-			$_POST['calendarId'],
-			$location_id,
-			$updated_contact,
-			substr($_POST['startTime'], 0, -3),
-			substr($_POST['endTime'], 0, -3));
-		
-		if (!$contact_response['success']) {
-			$response = (object) [
-				"success" => false,
-				"message" => $contact_response['message']
+			$address = [
+				'address1' => $_POST['address1'],
+				'city' => $_POST['city'],
+				'state' => $_POST['state'],
+				'postalCode' => $_POST['zip']
 			];
-		} else if (!$appointment_response['success']) {
-			$response = (object) [
-				"success" => false,
-				"message" => $appointment_response['message']
-			];
-		} else {
+			
+			$updated_contact = (object) array_merge((array) $contact, $address);
+			$contact_response = ps_ghl_update_contact($updated_contact, $location_id);
+			$appointment_response = ps_ghl_create_appointment(
+				$_POST['calendarId'],
+				$location_id,
+				$updated_contact,
+				substr($_POST['startTime'], 0, -3),
+				substr($_POST['endTime'], 0, -3));
+
 			$response = (object) [
 				"success" => true,
 				"message" => "Appointment created successfully."
+			];
+		} catch (Exception $e) {
+			$response = (object) [
+				"success" => false,
+				"message" => "Appointment error on line ".$e->getLine()." of ".$e->getFile().": ".$e->getMessage()
 			];
 		}
 
@@ -1032,7 +1009,7 @@ function ps_display_contact_form_submissions_page() {
 		public $table_name;
 		
 		public function __construct() {
-			parent::__contruct(array(
+			parent::__construct(array(
 				'singular' => 'singular_form',
 				'plural' => 'plural_form'
 			));
