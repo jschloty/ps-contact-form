@@ -585,10 +585,7 @@ function ps_ghl_update_contact( $contact, $location_id ) {
 	if (!$response->succeded) {
 		throw new Exception('Error: Contact could not be updated.');
 	}
-	return [
-		'success' => false,
-		'message' => "Contact could not be updated."
-	];
+	return true;
 }
 
 /**
@@ -963,8 +960,8 @@ function ps_handle_appointment_submit() {
 			];
 			
 			$updated_contact = (object) array_merge((array) $contact, $address);
-			$contact_response = ps_ghl_update_contact($updated_contact, $location_id);
-			$appointment_response = ps_ghl_create_appointment(
+			ps_ghl_update_contact($updated_contact, $location_id);
+			ps_ghl_create_appointment(
 				$_POST['calendarId'],
 				$location_id,
 				$updated_contact,
@@ -983,7 +980,7 @@ function ps_handle_appointment_submit() {
 		}
 
 		header("Content-Type: application/json");
-		echo json_encode($response);
+		echo json_encode($response, JSON_UNESCAPED_SLASHES);
 		exit;
 	}
 }

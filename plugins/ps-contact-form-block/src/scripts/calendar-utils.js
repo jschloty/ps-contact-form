@@ -37,5 +37,5 @@ export async function appointmentSubmit(data, time, calendarInfo) {
         throw new Error(`HTTP Error: ${response.status}`);
     }
     console.log(await response.text());
-    return;
+    return await response.json();
 }

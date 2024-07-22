@@ -252,11 +252,8 @@ function ContactForm(props) {
   let [calendarNeedsZip, setCalendarNeedsZip] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   let [appointmentTime, setAppointment] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(initial);
   const setAppointmentTime = value => {
-    console.log("setAppointmentTime called.");
     setAppointment(value);
   };
-  console.log("calendarNeedsZip: " + calendarNeedsZip);
-  console.log("current time: " + appointmentTime);
   let currentInputs;
   if (page == 3 && calendarNeedsZip) {
     currentInputs = [(0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
@@ -306,7 +303,6 @@ function ContactForm(props) {
    */
   async function checkValidity(e) {
     e.preventDefault();
-    console.log("ContactForm line 192 - appointmentTime: " + appointmentTime + "\n");
     const data = new FormData(e.currentTarget);
     if (page == 5) {
       return;
@@ -317,7 +313,6 @@ function ContactForm(props) {
     }
     if (page == 3 && calendarInfo.current.id !== "zip-input") {
       setPage(page + 1);
-      console.log("ContactForm line 202 - appointmentTime: " + appointmentTime + "\n");
       return;
     }
     if (page == 3 && calendarInfo.current.id === "zip-input") {
@@ -337,7 +332,6 @@ function ContactForm(props) {
         // calendarInfo.current.locationName = validity.location;
         calendarInfo.current.id = "loading";
         setGetLoading(true);
-        console.log("current id: " + calendarInfo.current.id);
         calendarInfo.current = await (0,_scripts_calendar_utils__WEBPACK_IMPORTED_MODULE_5__.getCalendarInfo)(calendarNeedsZip, validity.location);
         initial = now.getHours() > 17 || new Date(now).setHours(0, 0, 0, 0) < new Date(calendarInfo.current.startTime).setHours(0, 0, 0, 0) ? new Date(new Date(now.getTime() + 1000 * 60 * 60 * 24).setHours(0, 0, 0, 0)) : new Date(new Date(now).setHours(0, 0, 0, 0));
         setAppointmentTime(initial);
@@ -352,7 +346,6 @@ function ContactForm(props) {
     if (page == 1) {
       inputs.push(document.querySelector("form#ps-contact-form textarea"));
     }
-    console.log(inputs);
     for (const input of inputs) {
       if (input.id === "hidden") {
         return;
@@ -386,7 +379,6 @@ function ContactForm(props) {
       } else if (page == 4) {
         result = await (0,_scripts_calendar_utils__WEBPACK_IMPORTED_MODULE_5__.appointmentSubmit)(data, appointmentTime, calendarInfo.current);
       }
-      console.log(result);
       if (!result.success) {
         throw new Error(result.message);
       }
@@ -432,7 +424,9 @@ function ContactForm(props) {
         throw new Error('zip-code');
       }
       setGetLoading(false);
+      initial = now.getHours() > 17 || new Date(now).setHours(0, 0, 0, 0) < new Date(calendar.startTime).setHours(0, 0, 0, 0) ? new Date(new Date(now.getTime() + 1000 * 60 * 60 * 24).setHours(0, 0, 0, 0)) : new Date(new Date(now).setHours(0, 0, 0, 0));
       calendarInfo.current = calendar;
+      setAppointmentTime(initial);
     }).catch(e => {
       if (e.message !== 'zip-code') {
         calendarInfo.current.id = "default-failed";
@@ -555,7 +549,6 @@ function TimeSlot({
     type: "submit",
     onClick: e => {
       e.preventDefault();
-      console.log("DateTimeBooker line 63 - value: " + value + "\n");
       onChange(value, e, true);
     }
   }, "Select"));
@@ -652,15 +645,13 @@ function DateTimeBooker({
   const [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1);
   const [value, setValue] = appt;
   const changedDay = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
-  console.log(timeInfo);
-  console.log("DateTimeBooker line 166 - value: " + value + "\n");
   const {
     hours,
     interval = 30,
-    startTime = new Date()
+    startTime = new Date(),
+    endTime
   } = timeInfo;
   const onChange = (newVal, e, time) => {
-    console.log("newVal: " + newVal + "\n");
     if (value != null) {
       changedDay.current = value.getDate() != newVal.getDate();
     }
@@ -673,8 +664,9 @@ function DateTimeBooker({
     onChange(value);
     setPage(page + newPage);
   };
-  console.log("DateTimeBooker line 190 - value: " + value + "\n");
-  return loading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(BookerPlaceholder, null) : !isMobile ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  return loading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(BookerPlaceholder, null) :
+  // !isMobile 
+   true ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "date-time-booker-container"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_calendar__WEBPACK_IMPORTED_MODULE_3__["default"], {
     onChange: onChange,
@@ -689,8 +681,8 @@ function DateTimeBooker({
     minDetail: "month",
     value: value,
     tileDisabled: isDisabled,
-    minDate: new Date(new Date(timeInfo.startTime).setHours(0, 0, 0, 0)),
-    maxDate: new Date(new Date(timeInfo.endTime).setHours(0, 0, 0, 0))
+    minDate: new Date(new Date(startTime).setHours(0, 0, 0, 0)),
+    maxDate: new Date(new Date(endTime).setHours(0, 0, 0, 0))
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TimeGrid, {
     onChange: onChange,
     value: value,
@@ -702,22 +694,7 @@ function DateTimeBooker({
     style: value != null ? "" : {
       display: "none"
     }
-  })) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "date-time-booker-container"
-  }, page == 1 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_calendar__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    onChange: value => {
-      onChangeMobile(value, 1);
-    },
-    minDetail: "month",
-    value: value,
-    tileDisabled: isDisabled
-  }) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TimeGrid, {
-    onChange: onChangeMobile,
-    value: value,
-    interval: 30,
-    mobile: true,
-    slotDisabled: isDisabled
-  }));
+  })) : 0;
 }
 
 /***/ }),
@@ -795,7 +772,7 @@ async function appointmentSubmit(data, time, calendarInfo) {
     throw new Error(`HTTP Error: ${response.status}`);
   }
   console.log(await response.text());
-  return;
+  return await response.json();
 }
 
 /***/ }),

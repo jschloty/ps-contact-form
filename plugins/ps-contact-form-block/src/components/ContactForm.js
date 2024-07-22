@@ -153,12 +153,9 @@ function ContactForm (props) {
   let [appointmentTime, setAppointment] = useState(initial);
 
   const setAppointmentTime = (value) => {
-    console.log("setAppointmentTime called.");
     setAppointment(value);
   } 
 
-  console.log("calendarNeedsZip: " + calendarNeedsZip);
-  console.log("current time: " + appointmentTime);
 
   let currentInputs;
 
@@ -195,7 +192,6 @@ function ContactForm (props) {
    */  
   async function checkValidity(e) {
     e.preventDefault();
-    console.log("ContactForm line 192 - appointmentTime: " + appointmentTime + "\n");
 
     const data = new FormData(e.currentTarget);
 
@@ -206,7 +202,6 @@ function ContactForm (props) {
     }
     if (page == 3 && calendarInfo.current.id !== "zip-input") {
       setPage(page+1);
-      console.log("ContactForm line 202 - appointmentTime: " + appointmentTime + "\n");
       return;
     }
     if (page == 3 && calendarInfo.current.id === "zip-input") {
@@ -227,7 +222,6 @@ function ContactForm (props) {
         // calendarInfo.current.locationName = validity.location;
         calendarInfo.current.id = "loading";
         setGetLoading(true);
-        console.log("current id: " + calendarInfo.current.id);
         calendarInfo.current = await getCalendarInfo(calendarNeedsZip, validity.location);
         initial = now.getHours() > 17 || new Date(now).setHours(0,0,0,0) < new Date(calendarInfo.current.startTime).setHours(0,0,0,0) ? 
           new Date(new Date(now.getTime() + 1000*60*60*24).setHours(0,0,0,0)) 
@@ -243,7 +237,6 @@ function ContactForm (props) {
     let inputs = Array.from(inputList);
     inputs.pop();
     if (page == 1) {inputs.push(document.querySelector("form#ps-contact-form textarea"));}
-    console.log(inputs);
 
     for (const input of inputs) {
       if (input.id === "hidden") {return;}
@@ -280,8 +273,6 @@ function ContactForm (props) {
         result = await appointmentSubmit(data, appointmentTime, calendarInfo.current);
       }
       
-      console.log(result);
-
       if (!result.success) {
         throw new Error(result.message);
       }
@@ -328,7 +319,11 @@ function ContactForm (props) {
         throw new Error('zip-code');
       }
       setGetLoading(false);
+      initial = now.getHours() > 17 || new Date(now).setHours(0,0,0,0) < new Date(calendar.startTime).setHours(0,0,0,0) 
+        ? new Date(new Date(now.getTime() + 1000*60*60*24).setHours(0,0,0,0)) 
+        : new Date(new Date(now).setHours(0,0,0,0));
       calendarInfo.current = calendar;
+      setAppointmentTime(initial);
     })
     .catch ((e) => {
       if (e.message !== 'zip-code') {

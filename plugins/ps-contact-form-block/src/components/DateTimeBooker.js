@@ -60,7 +60,7 @@ function TimeSlot( { children, onChange, disabled, myKey, activeKey, onSwap } ) 
       <button 
         className={clsx('timeslot__select', myKey == activeKey ? '' : 'timeslot__select--hidden')}
         type="submit"
-        onClick={(e) => {e.preventDefault(); console.log("DateTimeBooker line 63 - value: " + value + "\n"); onChange(value, e, true);}}>Select</button>
+        onClick={(e) => {e.preventDefault(); onChange(value, e, true);}}>Select</button>
     </div>
   )
 }
@@ -168,19 +168,15 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading, appt, pag
   const [value, setValue] = appt;
 
   const changedDay = useRef(false);
-  console.log(timeInfo);
-  console.log("DateTimeBooker line 166 - value: " + value + "\n");
-
 
   const {
     hours,
     interval = 30,
-    startTime = new Date()
+    startTime = new Date(),
+    endTime
   } = timeInfo;
 
   const onChange = (newVal, e, time) => {
-    console.log("newVal: " + newVal + "\n");
-
     if (value != null) {
       changedDay.current = value.getDate() != newVal.getDate();
     }
@@ -196,10 +192,9 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading, appt, pag
     setPage(page+newPage);
   }
 
-  console.log("DateTimeBooker line 190 - value: " + value + "\n");
-
   return loading ? <BookerPlaceholder /> :
-    !isMobile ? (
+    // !isMobile 
+    true ? (
       <div className="date-time-booker-container">
         <Calendar 
           onChange={onChange} 
@@ -209,11 +204,11 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading, appt, pag
               setValue(null);
             }
           }}
-          minDetail="month" 
+          minDetail="month"
           value={value}
           tileDisabled={isDisabled}
-          minDate={new Date(new Date(timeInfo.startTime).setHours(0,0,0,0))}
-          maxDate={new Date(new Date(timeInfo.endTime).setHours(0,0,0,0))}
+          minDate={new Date(new Date(startTime).setHours(0,0,0,0))}
+          maxDate={new Date(new Date(endTime).setHours(0,0,0,0))}
         />
         <TimeGrid 
           onChange={onChange}
