@@ -210,6 +210,7 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
 		foreach($api_config->locations as $known_location) {
 			if ( $location_id === $known_location->_id && isset( $known_location->refresh_token )) {
 				$refresh_token = $known_location->refresh_token;
+				break;
 			}
 			else if ( $location_id === $known_location->_id && !isset($known_location->refresh_token) ) {
 				ps_ghl_get_location_tokens( $known_location->name );
@@ -263,6 +264,7 @@ function ps_refresh_access_token( $user_type, $location_id = "" ) {
 		foreach($api_config->locations as &$known_location) {
 			if ( $known_location->_id === $response->locationId ) {
 				$known_location = (object) array_merge( (array) $known_location, (array) $response );
+				break;
 			}
 		}
 
@@ -300,6 +302,7 @@ function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $version = 
 		foreach($api_config->locations as $known_location) {
 			if ($known_location->_id === $location_id && isset($known_location->access_token)) {
 				$location_token = $known_location->access_token;
+				break;
 			}
 		}
 	}
@@ -355,7 +358,7 @@ function ps_ghl_api_call( $curl_opts, $user_type, $location_id = '', $version = 
 			}
 			ps_refresh_access_token( $user_type, $location_id );
 			$tries++;
-			return ps_ghl_api_call( $curl_opts, $user_type, $location_id, $tries );
+			return ps_ghl_api_call( $curl_opts, $user_type, $location_id, $version, $tries );
 		case 422:
 			throw new Exception('422 Error: ' . $response->message);
 		default:
@@ -598,21 +601,27 @@ function ps_handle_form_submit() {
 
 	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'contact_form_submissions';
+
 		if ( !isset($_COOKIE['session_id']) ) {
-			setcookie('session_id', wp_generate_uuid4(), array(
+			$session_id = wp_generate_uuid4();
+			setcookie('session_id', $session_id, array(
 				'samesite' => 'Lax',
 				'httponly' => true,
 				'secure' => true
 			));
+		} else {
+			$session_id = $_COOKIE['session_id'];
+			$init_result = $wpdb->get_row("SELECT * FROM $table_name WHERE session_id = $session_id");
 		}
-
+		
 		$name = sanitize_text_field($_POST['name']);
 		$email = sanitize_text_field($_POST['email']);
 		$phone = sanitize_text_field($_POST['phone']);
 		$message = sanitize_text_field($_POST['message']);
 		$location = sanitize_text_field($_POST['location']);
 		$zip = (int) $_POST['zip'];
-		$session_id = $_COOKIE['session_id'];
 		
 		try {
 			$api_result = ps_ghl_create_contact([
@@ -629,9 +638,6 @@ function ps_handle_form_submit() {
 			mail('personal.jts@gmail.com', 'Error saving contact', "There was an error on line ".$e->getLine()." of ".$e->getFile().".\r\n
 			The contact could not be created in GHL.\r\nContact name: $name\r\nContact email: $email\r\nContact session ID: $session_id\r\nError message: ".$e->getMessage()."\r\n");
 		}
-
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'contact_form_submissions';
 
 		maybe_create_table($table_name, "CREATE TABLE " . $table_name . " (
 			name TEXT,
@@ -657,15 +663,17 @@ function ps_handle_form_submit() {
 			'session_id' => $session_id,
 			'submission_time' => current_time('mysql')
 		);
-		if ($api_result) {
-			$data['contact_id'] = $api_result;
-		} else {
-			$data['contact_id'] = 'failed';
+
+		if (!$init_result) {
+			$data['contact_id'] = $api_result ? $api_result : 'failed';
+			$insert_result = $wpdb->insert($table_name, $data);
+		} else if ($init_result) {
+			$data['contact_id'] = $api_result ? $api_result : 'failed - duplicate contact';
+			$data['id'] = $init_result->id;
+			$insert_result = $wpdb->replace($table_name, $data);
 		}
-
-		$insert_result = $wpdb->insert($table_name, $data);
-
-		if ($insert_result === false) {
+		
+		if (!isset($insert_result) || $insert_result === false) {
 			$response = array(
 				'success' => false,
 				'message' => 'Error saving the form data.'
@@ -848,17 +856,20 @@ function ps_handle_calendar_request() {
 	
 	if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 		
-		if (!isset($_COOKIE['session_id'])) {
-			setcookie('session_id', wp_generate_uuid4(), array(
+		if ( !isset($_COOKIE['session_id']) ) {
+			$session_id = wp_generate_uuid4();
+			setcookie('session_id', $session_id, array(
 				'samesite' => 'Lax',
 				'httponly' => true,
 				'secure' => true
 			));
+		} else {
+			$session_id = $_COOKIE['session_id'];
 		}
 
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'contact_form_submissions';
-		$db_result = $wpdb->get_results( "SELECT * FROM $table_name WHERE session_id = '" . $_COOKIE['session_id'] . "'" );
+		$db_result = $wpdb->get_results( "SELECT * FROM $table_name WHERE session_id = '" . $session_id . "'" );
 		if (count($db_result) === 0) {
 			if (!isset($_GET['location_name'])) {
 				header('Content-Type: application/json');
