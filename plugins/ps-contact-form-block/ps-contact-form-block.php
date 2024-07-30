@@ -601,6 +601,11 @@ function ps_handle_form_submit() {
 
 	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+		if ( !check_admin_referer('ps-form-submit') ) {
+			wp_nonce_ays('ps-form-submit');
+			exit;
+		}
+
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'contact_form_submissions';
 

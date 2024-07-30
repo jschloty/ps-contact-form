@@ -244,6 +244,13 @@ function ContactForm(props) {
     startTime: new Date().setHours(0, 0, 0, 0),
     endTime: new Date(new Date().setMonth(new Date().getMonth() + 2)).setHours(0, 0, 0, 0)
   });
+  const {
+    inputs,
+    message,
+    heading,
+    content,
+    nonce
+  } = props;
   const now = new Date();
   let initial;
   let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1); //CHANGE THIS BACK TO 1
@@ -270,7 +277,7 @@ function ContactForm(props) {
     }))];
   } else {
     // Inputs that match page number
-    currentInputs = props.inputs.map(input => {
+    currentInputs = inputs.map(input => {
       return input.page == page ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
         key: input.name + "_field"
       }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
@@ -289,6 +296,12 @@ function ContactForm(props) {
       id: "action",
       name: "action",
       value: page == 1 ? "contact_form" : "appointment"
+    }));
+    currentInputs.push((0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+      type: "hidden",
+      id: "_wpnonce",
+      name: "_wpnonce",
+      value: nonce
     }));
   }
 
@@ -331,11 +344,9 @@ function ContactForm(props) {
         }
         // calendarInfo.current.locationName = validity.location;
         calendarInfo.current.id = "loading";
-        setGetLoading(true);
         calendarInfo.current = await (0,_scripts_calendar_utils__WEBPACK_IMPORTED_MODULE_5__.getCalendarInfo)(calendarNeedsZip, validity.location);
         initial = now.getHours() > 17 || new Date(now).setHours(0, 0, 0, 0) < new Date(calendarInfo.current.startTime).setHours(0, 0, 0, 0) ? new Date(new Date(now.getTime() + 1000 * 60 * 60 * 24).setHours(0, 0, 0, 0)) : new Date(new Date(now).setHours(0, 0, 0, 0));
         setAppointmentTime(initial);
-        setGetLoading(false);
         setCalendarNeedsZip(false);
       }
       return;
@@ -418,12 +429,10 @@ function ContactForm(props) {
   }
   if ((page == 2 || page == 3) && calendarInfo.current.id === "default") {
     calendarInfo.current.id = "loading";
-    setGetLoading(true);
     (0,_scripts_calendar_utils__WEBPACK_IMPORTED_MODULE_5__.getCalendarInfo)(calendarNeedsZip, calendarInfo.current.locationName).then(calendar => {
       if (!calendar.success && calendar.message.includes("location")) {
         throw new Error('zip-code');
       }
-      setGetLoading(false);
       initial = now.getHours() > 17 || new Date(now).setHours(0, 0, 0, 0) < new Date(calendar.startTime).setHours(0, 0, 0, 0) ? new Date(new Date(now.getTime() + 1000 * 60 * 60 * 24).setHours(0, 0, 0, 0)) : new Date(new Date(now).setHours(0, 0, 0, 0));
       calendarInfo.current = calendar;
       setAppointmentTime(initial);
@@ -433,7 +442,6 @@ function ContactForm(props) {
         console.error(e);
       }
       calendarInfo.current.id = "zip-input";
-      setGetLoading(false);
       setCalendarNeedsZip(true);
     });
   }
@@ -441,9 +449,13 @@ function ContactForm(props) {
     noValidate: true,
     id: "ps-contact-form",
     onSubmit: checkValidity
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentPage, {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
+    id: "form-h2"
+  }, heading?.[page - 1]), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    id: "form-p"
+  }, content?.[page - 1]), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentPage, {
     pageState: [page, setPage],
-    message: props.message,
+    message: message,
     inputs: currentInputs,
     postLoading: postLoading,
     calendarInfo: calendarInfo.current,

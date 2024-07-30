@@ -11,9 +11,11 @@ import { __ } from '@wordpress/i18n';
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/#useblockprops
  */
-import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
+import { InspectorControls, useBlockProps, RichText } from '@wordpress/block-editor';
 
-import { PanelBody, ToggleControl, TextControl } from '@wordpress/components';
+import { PanelBody, TextControl, TextareaControl, Button } from '@wordpress/components';
+
+import { useState } from 'react';
 
 /**
  * Lets webpack process CSS, SASS or SCSS files referenced in JavaScript files.
@@ -35,17 +37,62 @@ import '../editor.scss';
  * @return {Element} Element to render in editor.
 */
 export default function Edit( { attributes, setAttributes }) {
-	const { inputs, message } = attributes;
+	const { inputs, message, pages, currentPage } = attributes;
+	console.log("currentPage = " + currentPage);
+	console.log("pages = " + pages);
+	console.log(attributes.heading);
+	
+	const setPage = ( page ) => {
+		setAttributes({ currentPage: page });
+	}
+	const blockProps = useBlockProps();
+	
 
 	return (
-	<form {...useBlockProps()}>
-		{inputs.map(input => { 
-			return (<li key={input.id}>
-				<label htmlFor={input.label}>{input.name}</label>
-				<input type={input.type} id={input.id} name={input.id} required={input.required}/>
-			</li>)
-		})}
-		{!!message ? (<div><label htmlFor="message">Message</label><textarea id="message" placeholder="Enter message..."></textarea></div>) : null}
-	</form>
-	)
+	<>
+		<InspectorControls>
+			<PanelBody title={ 'Settings' }>
+				<Button id="previous" variant="secondary" type="button" disabled={currentPage<1} onClick={() => setPage(currentPage-1)}>Prev</Button>
+				<p style={{display: 'inline-block'}}>Page {currentPage + 1}</p>
+				<Button id="next" variant="secondary" type="button" disabled={currentPage+1>=pages} onClick={() => setPage(currentPage+1)}>Next</Button>
+			</PanelBody>
+		</InspectorControls>
+		<form {...blockProps}>
+			<RichText 
+				{...blockProps}
+				tagName="h2"
+				value={ attributes.heading?.[currentPage] || "" }
+				allowedFormats={ ['core/bold', 'core/italic'] }
+				onChange={ (content) => {
+					const headings = attributes?.heading || [];
+					headings.length = pages;
+					headings[currentPage] = content;
+					console.log(headings);
+					setAttributes( { heading: headings } );
+				} }
+				placeholder="Lorem Ipsum Dolor Sit Amet"
+			/>
+			<RichText 
+				{...blockProps}
+				tagName="p"
+				value={ attributes.content?.[currentPage] || "" }
+				allowedFormats={ ['core/bold', 'core/italic'] }
+				onChange={ (content) => {
+					const text = attributes?.content || [];
+					text.length = pages;
+					text[currentPage] = content;
+					setAttributes( { content: text } );
+				} }
+				placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+			/>
+			{inputs.map(input => {
+				return (input.page-1 == currentPage ? <li key={input.id}>
+					<label htmlFor={input.label}>{input.name}</label>
+					<input type={input.type} id={input.id} name={input.id} required={input.required}/>
+				</li> : null)
+			})}
+			{!!message && currentPage == 0 ? (<div><label htmlFor="message">Message</label><textarea id="message" placeholder="Enter message..."></textarea></div>) : null}
+		</form>
+	</>
+	);
 }
