@@ -60,7 +60,7 @@ export default function Edit( { attributes, setAttributes }) {
 		<form {...blockProps}>
 			<RichText 
 				{...blockProps}
-				tagName="h2"
+				tagName="h1"
 				value={ attributes.heading?.[currentPage] || "" }
 				allowedFormats={ ['core/bold', 'core/italic'] }
 				onChange={ (content) => {

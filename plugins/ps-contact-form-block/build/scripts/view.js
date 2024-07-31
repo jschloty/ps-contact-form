@@ -96,7 +96,9 @@ function CurrentButtons({
     id: "pg1_button",
     type: "submit",
     loading: loading
-  }, "Get a quote"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Existing customer? ", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", null, "Click here"), " to contact us.")) : page == 2 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "No thanks.", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("br", null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
+  }, "Get a quote"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    id: "existing"
+  }, "Existing customer? ", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", null, "Click here"), " to contact us.")) : page == 2 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "No thanks.", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("br", null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
     href: "google.com"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_sl__WEBPACK_IMPORTED_MODULE_6__.SlArrowLeft, null), " Return to home")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Button__WEBPACK_IMPORTED_MODULE_4__["default"], {
     id: "pg2_button",
@@ -292,12 +294,14 @@ function ContactForm(props) {
       })) : null;
     });
     currentInputs.push((0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+      key: "action",
       type: "hidden",
       id: "action",
       name: "action",
       value: page == 1 ? "contact_form" : "appointment"
     }));
     currentInputs.push((0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+      key: "nonce",
       type: "hidden",
       id: "_wpnonce",
       name: "_wpnonce",
@@ -449,8 +453,8 @@ function ContactForm(props) {
     noValidate: true,
     id: "ps-contact-form",
     onSubmit: checkValidity
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
-    id: "form-h2"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h1", {
+    id: "form-h1"
   }, heading?.[page - 1]), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     id: "form-p"
   }, content?.[page - 1]), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentPage, {
@@ -1206,6 +1210,38 @@ module.exports = () => {
 
 	return ret;
 };
+
+
+/***/ }),
+
+/***/ "./node_modules/react-dom/client.js":
+/*!******************************************!*\
+  !*** ./node_modules/react-dom/client.js ***!
+  \******************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+
+var m = __webpack_require__(/*! react-dom */ "react-dom");
+if (false) {} else {
+  var i = m.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+  exports.createRoot = function(c, o) {
+    i.usingClientEntryPoint = true;
+    try {
+      return m.createRoot(c, o);
+    } finally {
+      i.usingClientEntryPoint = false;
+    }
+  };
+  exports.hydrateRoot = function(c, h, o) {
+    i.usingClientEntryPoint = true;
+    try {
+      return m.hydrateRoot(c, h, o);
+    } finally {
+      i.usingClientEntryPoint = false;
+    }
+  };
+}
 
 
 /***/ }),
@@ -6735,8 +6771,7 @@ var __webpack_exports__ = {};
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom */ "react-dom");
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var react_dom_client__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom/client */ "./node_modules/react-dom/client.js");
 /* harmony import */ var _components_ContactForm__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/ContactForm */ "./src/components/ContactForm.js");
 
 
@@ -6751,7 +6786,7 @@ __webpack_require__.r(__webpack_exports__);
 const divsUnloaded = document.querySelectorAll(".ps-form-unloaded");
 divsUnloaded.forEach(div => {
   const data = JSON.parse(div.querySelector("pre").innerText);
-  const root = react_dom__WEBPACK_IMPORTED_MODULE_1___default().createRoot(div);
+  const root = react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(div);
   root.render((0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ContactForm__WEBPACK_IMPORTED_MODULE_2__["default"], {
     ...data
   }));

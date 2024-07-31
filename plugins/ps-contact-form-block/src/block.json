@@ -96,8 +96,7 @@
 	"textdomain": "ps-contact-form-block",
 	"editorScript": "file:./scripts/index.js",
 	"editorStyle": "file:./index.css",
-	"style": "file:./style-index.css",
+	"style": "file:./scripts/style-index.css",
 	"render": "file:./render.php",
-	"viewScript": "file:./scripts/view.js",
-	"viewStyle": "file:./Calendar.css"
+	"viewScript": "file:./scripts/view.js"
 }

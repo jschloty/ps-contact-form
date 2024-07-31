@@ -18,7 +18,7 @@ function CurrentButtons({ pageState, loading, needsZip }) {
   const [page, setPage] = pageState;
   return page == 1 ? (<>
       <Button id="pg1_button" type="submit" loading={loading}>Get a quote</Button>
-      <p>Existing customer? <a>Click here</a> to contact us.</p>
+      <p id="existing">Existing customer? <a>Click here</a> to contact us.</p>
     </>) 
     : page == 2 ? (<>
       <p>No thanks.<br /><a href="google.com"><SlArrowLeft /> Return to home</a></p>
@@ -179,8 +179,8 @@ function ContactForm (props) {
       </li>
       ) : null;
     })
-    currentInputs.push(<input type="hidden" id="action" name="action" value={page == 1 ? "contact_form" : "appointment"}></input>);
-    currentInputs.push(<input type="hidden" id="_wpnonce" name="_wpnonce" value={nonce}></input>)
+    currentInputs.push(<input key="action" type="hidden" id="action" name="action" value={page == 1 ? "contact_form" : "appointment"}></input>);
+    currentInputs.push(<input key="nonce" type="hidden" id="_wpnonce" name="_wpnonce" value={nonce}></input>)
   }
   
   
@@ -336,7 +336,7 @@ function ContactForm (props) {
 
   return (
     <form noValidate id="ps-contact-form" onSubmit={checkValidity}>
-      <h2 id="form-h2">{heading?.[page-1]}</h2>
+      <h1 id="form-h1">{heading?.[page-1]}</h1>
       <p id="form-p">{content?.[page-1]}</p>
       <CurrentPage 
         pageState={[page, setPage]}
