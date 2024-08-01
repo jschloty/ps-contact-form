@@ -53,7 +53,7 @@ export default function Edit( { attributes, setAttributes }) {
 		<InspectorControls>
 			<PanelBody title={ 'Settings' }>
 				<Button id="previous" variant="secondary" type="button" disabled={currentPage<1} onClick={() => setPage(currentPage-1)}>Prev</Button>
-				<p style={{display: 'inline-block'}}>Page {currentPage + 1}</p>
+				<p style={{display: 'inline-block', padding: '0 6px'}}>Page {currentPage + 1}</p>
 				<Button id="next" variant="secondary" type="button" disabled={currentPage+1>=pages} onClick={() => setPage(currentPage+1)}>Next</Button>
 			</PanelBody>
 		</InspectorControls>
@@ -85,13 +85,15 @@ export default function Edit( { attributes, setAttributes }) {
 				} }
 				placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
 			/>
-			{inputs.map(input => {
-				return (input.page-1 == currentPage ? <li key={input.id}>
-					<label htmlFor={input.label}>{input.name}</label>
-					<input type={input.type} id={input.id} name={input.id} required={input.required}/>
-				</li> : null)
-			})}
-			{!!message && currentPage == 0 ? (<div><label htmlFor="message">Message</label><textarea id="message" placeholder="Enter message..."></textarea></div>) : null}
+			<ul id={"form-page-"+(currentPage+1)}>
+				{inputs.map(input => {
+					return (input.page-1 == currentPage ? <li key={input.id}>
+						<label htmlFor={input.id}>{input.label}</label>
+						<input type={input.type} id={input.id} name={input.name} required={input.required}/>
+					</li> : null)
+				})}
+				{!!message && currentPage == 0 ? (<li key="message"><label htmlFor="message">Message</label><textarea id="message" placeholder="Enter message..."></textarea></li>) : null}
+			</ul>
 		</form>
 	</>
 	);

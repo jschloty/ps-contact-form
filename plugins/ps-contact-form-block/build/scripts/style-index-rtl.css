@@ -753,61 +753,66 @@
  *
  * Replace them with your own styles or remove the file completely.
  */
-.wp-block-create-block-ps-contact-form-block {
-  padding: 2px;
-}
-
-#ps-contact-form {
+#ps-contact-form, form.wp-block-create-block-ps-contact-form-block {
   background-color: #fff;
   box-shadow: -0.2px 0.5px 4px rgba(0, 0, 0, 0.35);
   border-radius: 12px;
   max-width: 800px;
   font-family: sans-serif;
-  margin: 0 16px;
+  margin: 16px 16px;
   padding: 26px 30px;
 }
-#ps-contact-form h1#form-h1 {
+#ps-contact-form h1#form-h1, form.wp-block-create-block-ps-contact-form-block h1#form-h1 {
   text-align: center;
   font-size: 27px;
 }
-#ps-contact-form p#form-p {
+#ps-contact-form p#form-p, form.wp-block-create-block-ps-contact-form-block p#form-p {
   text-align: center;
   font-size: 16px;
   line-height: 1.2;
 }
-#ps-contact-form ul {
+#ps-contact-form ul, form.wp-block-create-block-ps-contact-form-block ul {
   margin: 0;
   display: flex !important;
   flex-direction: column;
   gap: 10px;
 }
-#ps-contact-form ul #message {
+#ps-contact-form ul #message, form.wp-block-create-block-ps-contact-form-block ul #message {
   resize: vertical;
 }
-#ps-contact-form ul button {
+#ps-contact-form ul button, form.wp-block-create-block-ps-contact-form-block ul button {
   flex: 0 50px;
   width: 180px;
   align-self: center;
   margin: 10px 0px 0px 0px;
 }
-#ps-contact-form ul p#existing {
+#ps-contact-form ul p#existing, form.wp-block-create-block-ps-contact-form-block ul p#existing {
   font-size: 10px;
   text-align: center;
   margin-top: -9px;
   padding-bottom: 0;
 }
-#ps-contact-form .error {
+#ps-contact-form .error, form.wp-block-create-block-ps-contact-form-block .error {
   display: hidden;
 }
-#ps-contact-form .error.active {
+#ps-contact-form .error.active, form.wp-block-create-block-ps-contact-form-block .error.active {
   display: block;
   color: red;
 }
-#ps-contact-form li {
+#ps-contact-form li, form.wp-block-create-block-ps-contact-form-block li {
   list-style-type: none;
 }
-#ps-contact-form li input {
+#ps-contact-form li input, #ps-contact-form li textarea, form.wp-block-create-block-ps-contact-form-block li input, form.wp-block-create-block-ps-contact-form-block li textarea {
   border-radius: 3px;
+  padding: 10px;
+  width: 100%;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 24px;
+  color: #555;
+  background-color: #f1f1f1;
+  border: none;
+  transition: all 0.2s ease;
 }
 
 .date-time-booker-container {

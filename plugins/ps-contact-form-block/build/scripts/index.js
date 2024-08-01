@@ -87,7 +87,8 @@ function Edit({
     onClick: () => setPage(currentPage - 1)
   }, "Prev"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     style: {
-      display: 'inline-block'
+      display: 'inline-block',
+      padding: '0 6px'
     }
   }, "Page ", currentPage + 1), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Button, {
     id: "next",
@@ -126,23 +127,27 @@ function Edit({
       });
     },
     placeholder: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-  }), inputs.map(input => {
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", {
+    id: "form-page-" + (currentPage + 1)
+  }, inputs.map(input => {
     return input.page - 1 == currentPage ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
       key: input.id
     }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
-      htmlFor: input.label
-    }, input.name), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+      htmlFor: input.id
+    }, input.label), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
       type: input.type,
       id: input.id,
-      name: input.id,
+      name: input.name,
       required: input.required
     })) : null;
-  }), !!message && currentPage == 0 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
+  }), !!message && currentPage == 0 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
+    key: "message"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
     htmlFor: "message"
   }, "Message"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("textarea", {
     id: "message",
     placeholder: "Enter message..."
-  })) : null));
+  })) : null)));
 }
 
 /***/ }),
