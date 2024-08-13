@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useLayoutEffect } from 'react';
 import { Calendar } from 'react-calendar';
 import { clsx } from 'clsx';
 import { SlArrowLeft } from "react-icons/sl";
@@ -7,15 +7,17 @@ import { TbReceiptYuan } from 'react-icons/tb';
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-let isMobile = window.innerWidth <= 768;
-
-window.addEventListener("resize", () => {
-    if (window.innerWidth <= 768) {
-        isMobile = true;
-    } else {
-        isMobile = false;
+function useWindowSize() {
+  const [size, setSize] = useState([window.innerWidth, window.innerHeight]);
+  useLayoutEffect(() => {
+    function updateSize() {
+      setSize([window.innerWidth, window.innerHeight]);
     }
-})
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, [])
+  return size;
+}
 
 /**
  * BookerPlaceholder: a greyed out dummy calendar that displays while the calendar info is retrieved.
@@ -166,6 +168,7 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading, appt, pag
   const [formPage, setFormPage] = pageState;
   const [page, setPage] = useState(1);
   const [value, setValue] = appt;
+  const [width, height] = useWindowSize();
 
   const changedDay = useRef(false);
 
@@ -192,10 +195,10 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading, appt, pag
     setPage(page+newPage);
   }
 
+  console.log("width = " + width);
   return loading ? <BookerPlaceholder /> :
-    // !isMobile 
-    true ? (
-      <div className="date-time-booker-container">
+    width >= 768
+    ? <div className="date-time-booker-container">
         <Calendar 
           onChange={onChange} 
           onActiveStartDateChange={({ action }) => {
@@ -221,10 +224,23 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading, appt, pag
           style={value != null ? "" : {display:"none"}}
         />
       </div>
-    ) : (
-      <div className="date-time-booker-container">
-        {page == 1 ? <Calendar onChange={(value) => {onChangeMobile(value, 1)}} minDetail="month" value={value} tileDisabled={isDisabled}/> 
-        : <TimeGrid onChange={onChangeMobile} value={value} interval={30} mobile={true} slotDisabled={isDisabled} />}
-      </div>
-    );
+    : <div className="date-time-booker-container date-time-booker-mobile">
+        {page == 1 
+        ? <Calendar 
+            onChange={(value) => {onChangeMobile(value, 1)}} 
+            minDetail="month" 
+            value={value} 
+            tileDisabled={isDisabled}/> 
+        : <TimeGrid 
+            onChange={onChangeMobile} 
+            value={value} 
+            changedDay={changedDay}
+            hours={hours}
+            interval={interval} 
+            startTime={startTime}
+            mobile
+            slotDisabled={isDisabled}
+            style={value != null ? "" : {display:"none"}}  
+          />}
+      </div>;
 }

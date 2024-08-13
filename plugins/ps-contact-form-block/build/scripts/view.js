@@ -96,7 +96,9 @@ function CurrentButtons({
     id: "pg1_button",
     type: "submit",
     loading: loading
-  }, "Get a quote"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Existing customer? ", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", null, "Click here"), " to contact us.")) : page == 2 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "No thanks.", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("br", null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
+  }, "Get a quote"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    id: "existing"
+  }, "Existing customer? ", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", null, "Click here"), " to contact us.")) : page == 2 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "No thanks.", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("br", null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
     href: "google.com"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_sl__WEBPACK_IMPORTED_MODULE_6__.SlArrowLeft, null), " Return to home")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Button__WEBPACK_IMPORTED_MODULE_4__["default"], {
     id: "pg2_button",
@@ -244,9 +246,16 @@ function ContactForm(props) {
     startTime: new Date().setHours(0, 0, 0, 0),
     endTime: new Date(new Date().setMonth(new Date().getMonth() + 2)).setHours(0, 0, 0, 0)
   });
+  const {
+    inputs,
+    message,
+    heading,
+    content,
+    nonce
+  } = props;
   const now = new Date();
   let initial;
-  let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1); //CHANGE THIS BACK TO 1
+  let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(3); //CHANGE THIS BACK TO 1
   let [getLoading, setGetLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   let [postLoading, setPostLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   let [calendarNeedsZip, setCalendarNeedsZip] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
@@ -270,7 +279,7 @@ function ContactForm(props) {
     }))];
   } else {
     // Inputs that match page number
-    currentInputs = props.inputs.map(input => {
+    currentInputs = inputs.map(input => {
       return input.page == page ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
         key: input.name + "_field"
       }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
@@ -285,10 +294,18 @@ function ContactForm(props) {
       })) : null;
     });
     currentInputs.push((0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+      key: "action",
       type: "hidden",
       id: "action",
       name: "action",
       value: page == 1 ? "contact_form" : "appointment"
+    }));
+    currentInputs.push((0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+      key: "nonce",
+      type: "hidden",
+      id: "_wpnonce",
+      name: "_wpnonce",
+      value: nonce
     }));
   }
 
@@ -331,11 +348,9 @@ function ContactForm(props) {
         }
         // calendarInfo.current.locationName = validity.location;
         calendarInfo.current.id = "loading";
-        setGetLoading(true);
         calendarInfo.current = await (0,_scripts_calendar_utils__WEBPACK_IMPORTED_MODULE_5__.getCalendarInfo)(calendarNeedsZip, validity.location);
         initial = now.getHours() > 17 || new Date(now).setHours(0, 0, 0, 0) < new Date(calendarInfo.current.startTime).setHours(0, 0, 0, 0) ? new Date(new Date(now.getTime() + 1000 * 60 * 60 * 24).setHours(0, 0, 0, 0)) : new Date(new Date(now).setHours(0, 0, 0, 0));
         setAppointmentTime(initial);
-        setGetLoading(false);
         setCalendarNeedsZip(false);
       }
       return;
@@ -418,12 +433,10 @@ function ContactForm(props) {
   }
   if ((page == 2 || page == 3) && calendarInfo.current.id === "default") {
     calendarInfo.current.id = "loading";
-    setGetLoading(true);
     (0,_scripts_calendar_utils__WEBPACK_IMPORTED_MODULE_5__.getCalendarInfo)(calendarNeedsZip, calendarInfo.current.locationName).then(calendar => {
       if (!calendar.success && calendar.message.includes("location")) {
         throw new Error('zip-code');
       }
-      setGetLoading(false);
       initial = now.getHours() > 17 || new Date(now).setHours(0, 0, 0, 0) < new Date(calendar.startTime).setHours(0, 0, 0, 0) ? new Date(new Date(now.getTime() + 1000 * 60 * 60 * 24).setHours(0, 0, 0, 0)) : new Date(new Date(now).setHours(0, 0, 0, 0));
       calendarInfo.current = calendar;
       setAppointmentTime(initial);
@@ -433,7 +446,6 @@ function ContactForm(props) {
         console.error(e);
       }
       calendarInfo.current.id = "zip-input";
-      setGetLoading(false);
       setCalendarNeedsZip(true);
     });
   }
@@ -441,9 +453,13 @@ function ContactForm(props) {
     noValidate: true,
     id: "ps-contact-form",
     onSubmit: checkValidity
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentPage, {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h1", {
+    id: "form-h1"
+  }, heading?.[page - 1]), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    id: "form-p"
+  }, content?.[page - 1]), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(CurrentPage, {
     pageState: [page, setPage],
-    message: props.message,
+    message: message,
     inputs: currentInputs,
     postLoading: postLoading,
     calendarInfo: calendarInfo.current,
@@ -487,14 +503,17 @@ __webpack_require__.r(__webpack_exports__);
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-let isMobile = window.innerWidth <= 768;
-window.addEventListener("resize", () => {
-  if (window.innerWidth <= 768) {
-    isMobile = true;
-  } else {
-    isMobile = false;
-  }
-});
+function useWindowSize() {
+  const [size, setSize] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([window.innerWidth, window.innerHeight]);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
+    function updateSize() {
+      setSize([window.innerWidth, window.innerHeight]);
+    }
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+  return size;
+}
 
 /**
  * BookerPlaceholder: a greyed out dummy calendar that displays while the calendar info is retrieved.
@@ -644,6 +663,7 @@ function DateTimeBooker({
   const [formPage, setFormPage] = pageState;
   const [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1);
   const [value, setValue] = appt;
+  const [width, height] = useWindowSize();
   const changedDay = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
   const {
     hours,
@@ -664,9 +684,8 @@ function DateTimeBooker({
     onChange(value);
     setPage(page + newPage);
   };
-  return loading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(BookerPlaceholder, null) :
-  // !isMobile 
-   true ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  console.log("width = " + width);
+  return loading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(BookerPlaceholder, null) : width >= 768 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "date-time-booker-container"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_calendar__WEBPACK_IMPORTED_MODULE_3__["default"], {
     onChange: onChange,
@@ -694,7 +713,28 @@ function DateTimeBooker({
     style: value != null ? "" : {
       display: "none"
     }
-  })) : 0;
+  })) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "date-time-booker-container date-time-booker-mobile"
+  }, page == 1 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_calendar__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    onChange: value => {
+      onChangeMobile(value, 1);
+    },
+    minDetail: "month",
+    value: value,
+    tileDisabled: isDisabled
+  }) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TimeGrid, {
+    onChange: onChangeMobile,
+    value: value,
+    changedDay: changedDay,
+    hours: hours,
+    interval: interval,
+    startTime: startTime,
+    mobile: true,
+    slotDisabled: isDisabled,
+    style: value != null ? "" : {
+      display: "none"
+    }
+  }));
 }
 
 /***/ }),
@@ -1194,6 +1234,38 @@ module.exports = () => {
 
 	return ret;
 };
+
+
+/***/ }),
+
+/***/ "./node_modules/react-dom/client.js":
+/*!******************************************!*\
+  !*** ./node_modules/react-dom/client.js ***!
+  \******************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+
+var m = __webpack_require__(/*! react-dom */ "react-dom");
+if (false) {} else {
+  var i = m.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+  exports.createRoot = function(c, o) {
+    i.usingClientEntryPoint = true;
+    try {
+      return m.createRoot(c, o);
+    } finally {
+      i.usingClientEntryPoint = false;
+    }
+  };
+  exports.hydrateRoot = function(c, h, o) {
+    i.usingClientEntryPoint = true;
+    try {
+      return m.hydrateRoot(c, h, o);
+    } finally {
+      i.usingClientEntryPoint = false;
+    }
+  };
+}
 
 
 /***/ }),
@@ -6723,8 +6795,7 @@ var __webpack_exports__ = {};
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom */ "react-dom");
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var react_dom_client__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom/client */ "./node_modules/react-dom/client.js");
 /* harmony import */ var _components_ContactForm__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/ContactForm */ "./src/components/ContactForm.js");
 
 
@@ -6739,7 +6810,7 @@ __webpack_require__.r(__webpack_exports__);
 const divsUnloaded = document.querySelectorAll(".ps-form-unloaded");
 divsUnloaded.forEach(div => {
   const data = JSON.parse(div.querySelector("pre").innerText);
-  const root = react_dom__WEBPACK_IMPORTED_MODULE_1___default().createRoot(div);
+  const root = react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(div);
   root.render((0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_ContactForm__WEBPACK_IMPORTED_MODULE_2__["default"], {
     ...data
   }));

@@ -18,7 +18,7 @@ function CurrentButtons({ pageState, loading, needsZip }) {
   const [page, setPage] = pageState;
   return page == 1 ? (<>
       <Button id="pg1_button" type="submit" loading={loading}>Get a quote</Button>
-      <p>Existing customer? <a>Click here</a> to contact us.</p>
+      <p id="existing">Existing customer? <a>Click here</a> to contact us.</p>
     </>) 
     : page == 2 ? (<>
       <p>No thanks.<br /><a href="google.com"><SlArrowLeft /> Return to home</a></p>
@@ -98,7 +98,7 @@ function CurrentPage({
   };
 
   return (<ul id={"page" + page} className="page" page={page}>
-    {page == 6 ? (<p>Unfortunately, you reside outside of our service area.</p>) 
+    {page == 6 ? <p>Unfortunately, you reside outside of our service area.</p>
     : (page == 3 && !calendarNeedsZip) || (page == 3 && calendarInfo.id !== "zip-input") ? 
       <DateTimeBooker 
         isDisabled={isDisabled} 
@@ -142,11 +142,13 @@ function ContactForm (props) {
     startTime: new Date().setHours(0,0,0,0),
     endTime: new Date(new Date().setMonth(new Date().getMonth() + 2)).setHours(0,0,0,0)
   });
+
+  const { inputs, message, heading, content, nonce } = props;
   
   const now = new Date();
   let initial;
 
-  let [page, setPage] = useState(1); //CHANGE THIS BACK TO 1
+  let [page, setPage] = useState(3); //CHANGE THIS BACK TO 1
   let [getLoading, setGetLoading] = useState(false);
   let [postLoading, setPostLoading] = useState(false);
   let [calendarNeedsZip, setCalendarNeedsZip] = useState(false);
@@ -168,7 +170,7 @@ function ContactForm (props) {
     </li>)];
   } else {
     // Inputs that match page number
-    currentInputs = props.inputs.map(input => {
+    currentInputs = inputs.map(input => {
       return input.page == page ? (
       <li key={input.name + "_field"}>
         <label htmlFor={input.id}>{input.label}</label>
@@ -177,7 +179,8 @@ function ContactForm (props) {
       </li>
       ) : null;
     })
-    currentInputs.push((<input type="hidden" id="action" name="action" value={page == 1 ? "contact_form" : "appointment"}></input>))
+    currentInputs.push(<input key="action" type="hidden" id="action" name="action" value={page == 1 ? "contact_form" : "appointment"}></input>);
+    currentInputs.push(<input key="nonce" type="hidden" id="_wpnonce" name="_wpnonce" value={nonce}></input>)
   }
   
   
@@ -221,13 +224,11 @@ function ContactForm (props) {
         }
         // calendarInfo.current.locationName = validity.location;
         calendarInfo.current.id = "loading";
-        setGetLoading(true);
         calendarInfo.current = await getCalendarInfo(calendarNeedsZip, validity.location);
         initial = now.getHours() > 17 || new Date(now).setHours(0,0,0,0) < new Date(calendarInfo.current.startTime).setHours(0,0,0,0) ? 
           new Date(new Date(now.getTime() + 1000*60*60*24).setHours(0,0,0,0)) 
         : new Date(new Date(now).setHours(0,0,0,0));
         setAppointmentTime(initial);
-        setGetLoading(false);
         setCalendarNeedsZip(false);
       }
       return;
@@ -312,13 +313,11 @@ function ContactForm (props) {
 
   if ((page == 2 || page == 3) && calendarInfo.current.id === "default") {
     calendarInfo.current.id = "loading";
-    setGetLoading(true);
     getCalendarInfo(calendarNeedsZip, calendarInfo.current.locationName)
     .then((calendar) => {
       if (!calendar.success && calendar.message.includes("location")) {
         throw new Error('zip-code');
       }
-      setGetLoading(false);
       initial = now.getHours() > 17 || new Date(now).setHours(0,0,0,0) < new Date(calendar.startTime).setHours(0,0,0,0) 
         ? new Date(new Date(now.getTime() + 1000*60*60*24).setHours(0,0,0,0)) 
         : new Date(new Date(now).setHours(0,0,0,0));
@@ -331,16 +330,17 @@ function ContactForm (props) {
         console.error(e);
       }
       calendarInfo.current.id = "zip-input";
-      setGetLoading(false);
       setCalendarNeedsZip(true);
     });
   }
 
   return (
     <form noValidate id="ps-contact-form" onSubmit={checkValidity}>
+      <h1 id="form-h1">{heading?.[page-1]}</h1>
+      <p id="form-p">{content?.[page-1]}</p>
       <CurrentPage 
         pageState={[page, setPage]}
-        message={props.message}
+        message={message}
         inputs={currentInputs}
         postLoading={postLoading}
         calendarInfo={calendarInfo.current}

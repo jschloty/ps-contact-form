@@ -88,13 +88,15 @@
 				}
 			]},
 		"message": { "type": "boolean", "default": true},
-		"pages": { "type": "integer", "default": 1 }
+		"pages": { "type": "integer", "default": 6 },
+		"currentPage": { "type": "integer", "default": 0 },
+		"heading": { "type": "array" },
+		"content": { "type": "array" }
 	},
 	"textdomain": "ps-contact-form-block",
-	"editorScript": "file:./index.js",
+	"editorScript": "file:./scripts/index.js",
 	"editorStyle": "file:./index.css",
-	"style": "file:./style-index.css",
+	"style": "file:./scripts/style-index.css",
 	"render": "file:./render.php",
-	"viewScript": "file:./scripts/view.js",
-	"viewStyle": "file:./Calendar.css"
+	"viewScript": "file:./scripts/view.js"
 }
