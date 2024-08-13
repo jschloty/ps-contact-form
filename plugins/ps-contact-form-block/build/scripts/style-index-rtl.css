@@ -780,11 +780,7 @@
 #ps-contact-form ul #message, form.wp-block-create-block-ps-contact-form-block ul #message {
   resize: vertical;
 }
-<<<<<<< HEAD
-#ps-contact-form ul button:not(.timeslot__value, .react-calendar__tile), form.wp-block-create-block-ps-contact-form-block ul button:not(.timeslot__value, .react-calendar__tile) {
-=======
-#ps-contact-form ul button, form.wp-block-create-block-ps-contact-form-block ul button {
->>>>>>> 9cede4749f0845b99bedffa635c5ab69fe94f577
+#ps-contact-form ul button:not(.timeslot__value, .react-calendar__tile, .timegrid__previous), form.wp-block-create-block-ps-contact-form-block ul button:not(.timeslot__value, .react-calendar__tile, .timegrid__previous) {
   flex: 0 50px;
   width: 180px;
   align-self: center;
@@ -839,7 +835,7 @@
   height: 55px;
   display: flex;
   justify-content: center;
-  margin: 5px auto;
+  margin: 0 auto 12px;
 }
 .react-calendar__navigation button {
   aspect-ratio: 1/1;
@@ -848,10 +844,18 @@
   margin: 3px;
 }
 .react-calendar__navigation button.react-calendar__navigation__arrow:enabled:hover {
-  background-color: gray;
+  color: color-mix(in srgb, var(--nectar-extra-color-1) 20%, transparent);
 }
 .react-calendar__navigation button.react-calendar__navigation__prev2-button, .react-calendar__navigation button.react-calendar__navigation__next2-button {
   display: none;
+}
+.react-calendar__navigation button h2 {
+  font-size: 22px;
+  line-height: 0.5;
+}
+.react-calendar__navigation button h3 {
+  font-size: 17px;
+  line-height: 0.9;
 }
 .react-calendar__navigation button.react-calendar__navigation__label {
   background-color: transparent;
@@ -862,10 +866,21 @@
   color: var(--nectar-extra-color-2);
 }
 
+.react-calendar__month-view__weekdays {
+  padding: 5px 0;
+}
+
 .react-calendar__month-view__weekdays__weekday {
   text-align: center;
   align-content: center;
   aspect-ratio: 1/0.5;
+  border-right: 1px solid lightgray;
+  height: 30px;
+}
+.react-calendar__month-view__weekdays__weekday:first-child {
+  border-right: none;
+}
+.react-calendar__month-view__weekdays__weekday abbr {
   text-decoration: none;
 }
 
@@ -905,8 +920,39 @@
   color: lightgray;
 }
 
-.react-calendar__tile:enabled:hover {
+.react-calendar__tile:enabled:not(.react-calendar__tile--active):hover {
   background-color: color-mix(in srgb, var(--nectar-extra-color-1) 20%, transparent);
+}
+
+@media only screen and (max-width: 768px) {
+  #ps-contact-form:has(#page3):not(:has(#calendar_zip)) {
+    padding: 26px 15px;
+  }
+  .react-calendar__month-view__weekdays__weekday {
+    flex-basis: 20% !important;
+  }
+  .react-calendar__month-view__days {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    padding: 6px;
+  }
+  .react-calendar__month-view__weekdays__weekday--weekend {
+    display: none;
+  }
+  .react-calendar__month-view__days__day--weekend {
+    display: none;
+  }
+}
+.timegrid__previous, .react-calendar__navigation__arrow {
+  font-size: 40px;
+  border: none;
+  background-color: transparent;
+}
+.timegrid__previous:enabled, .react-calendar__navigation__arrow:enabled {
+  color: var(--nectar-extra-color-1);
+}
+.timegrid__previous:disabled, .react-calendar__navigation__arrow:disabled {
+  color: lightgray;
 }
 
 .timegrid {
@@ -921,15 +967,29 @@
 }
 .timegrid .mobile-header {
   display: none;
+  margin-bottom: -30px;
 }
-<<<<<<< HEAD
+.timegrid .mobile-header h1 {
+  font-family: "Libre Caslon Text";
+  font-size: 23px;
+  line-height: 1.1;
+  text-align: center;
+}
+.timegrid .mobile-header h2 {
+  font-family: "Koh Santepheap";
+  font-size: 18px;
+  line-height: 0.9;
+  text-align: center;
+}
+.timegrid .mobile-header button.timegrid__previous {
+  position: relative;
+  bottom: 52%;
+  right: 5%;
+}
 @media screen and (max-width: 767px) {
   .timegrid {
     max-width: unset;
   }
-=======
-@media screen and (max-width: 768px) {
->>>>>>> 9cede4749f0845b99bedffa635c5ab69fe94f577
   .timegrid .mobile-header {
     display: block;
   }
@@ -955,13 +1015,6 @@
     opacity: 0;
   }
 }
-.timegrid__previous {
-  border: 1px solid gray;
-  border-radius: 50%;
-  position: absolute;
-  right: 5px;
-}
-
 .timeslot {
   flex-grow: 1;
   width: calc(100% - 24px);

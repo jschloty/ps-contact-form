@@ -37,11 +37,7 @@
       resize: vertical;
     }
 
-<<<<<<< HEAD
-    button:not(.timeslot__value, .react-calendar__tile) {
-=======
-    button {
->>>>>>> 9cede4749f0845b99bedffa635c5ab69fe94f577
+    button:not(.timeslot__value, .react-calendar__tile, .timegrid__previous) {
       flex: 0 50px;
       width: 180px;
       align-self: center;
@@ -102,8 +98,8 @@
   height: 55px;
   display: flex;
   justify-content: center;
-  margin: 5px auto;
-  
+  margin: 0 auto 12px;
+
   button { 
     aspect-ratio: 1 / 1;
     border: none;
@@ -111,11 +107,20 @@
     margin: 3px;
 
     &.react-calendar__navigation__arrow:enabled:hover {
-      background-color: gray;
+      color: color-mix(in srgb, var(--nectar-extra-color-1) 20%, transparent);
     }
 
     &.react-calendar__navigation__prev2-button, &.react-calendar__navigation__next2-button {
       display:none;
+    }
+
+    h2 {
+      font-size: 22px;
+      line-height: 0.5;
+    }
+    h3 {
+      font-size: 17px;
+      line-height: 0.9;
     }
   }
 
@@ -130,11 +135,24 @@
   }  
 }
 
+.react-calendar__month-view__weekdays {
+  padding: 5px 0;
+}
+
 .react-calendar__month-view__weekdays__weekday {
   text-align: center;
   align-content: center;
   aspect-ratio: 1 / 0.5;
-  text-decoration: none;
+  border-left: 1px solid lightgray;
+  height: 30px;
+
+  &:first-child {
+    border-left: none;
+  }
+
+  abbr {
+    text-decoration: none;
+  }
 }
 
 .react-calendar__month-view__days {
@@ -175,9 +193,50 @@
   color: lightgray;
 }
 
-.react-calendar__tile:enabled:hover {
+.react-calendar__tile:enabled:not(.react-calendar__tile--active):hover {
   background-color: color-mix(in srgb, var(--nectar-extra-color-1) 20%, transparent);
 }
+
+// Below is custom mobile implementation for weekdays only
+
+@media only screen and (max-width: 768px) {
+  #ps-contact-form:has(#page3):not(:has(#calendar_zip)) {
+    padding: 26px 15px;
+  }
+  
+  .react-calendar__month-view__weekdays__weekday {
+    flex-basis: 20% !important;
+  }
+
+  .react-calendar__month-view__days {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    padding: 6px;
+  }
+
+  .react-calendar__month-view__weekdays__weekday--weekend {
+    display: none;
+  }
+
+  .react-calendar__month-view__days__day--weekend {
+    display: none;
+  }
+}
+
+// next and previous buttons
+
+.timegrid__previous, .react-calendar__navigation__arrow {
+  font-size: 40px;
+  border: none;
+  background-color: transparent;
+  &:enabled {
+    color: var(--nectar-extra-color-1);
+  }
+  &:disabled {
+    color: lightgray;
+  }
+}
+
 
 .timegrid {
   display: flex;
@@ -191,6 +250,24 @@
 
   .mobile-header {
     display:none;
+    margin-bottom: -30px;
+    h1 {
+      font-family: 'Libre Caslon Text';
+      font-size: 23px;
+      line-height: 1.1;
+      text-align: center;
+    }
+    h2 {
+      font-family: 'Koh Santepheap';
+      font-size: 18px;
+      line-height: 0.9;
+      text-align: center;
+    }
+    button.timegrid__previous {
+      position: relative;
+      bottom: 52%;
+      left: 5%;
+    }
   }
 
   @media screen and (max-width: 767px) {
@@ -221,13 +298,6 @@
   to {
     opacity: 0;
   }
-}
-
-.timegrid__previous {
-  border: 1px solid gray;
-  border-radius: 50%;
-  position: absolute;
-  left: 5px;
 }
 
 .timeslot {

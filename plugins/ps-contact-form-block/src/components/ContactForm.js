@@ -41,7 +41,7 @@ function CurrentButtons({ pageState, loading, needsZip }) {
  * @returns Rendered page of the form, including inputs, error fields, and CurrentButtons.
  */
 function CurrentPage({ 
-  pageState, message, inputs, postLoading, calendarInfo, needsZip, appt
+  pageState, message, inputs, postLoading, getLoading, calendarInfo, needsZip, appt
 }) {
   const [calendarNeedsZip, setNeedsZip] = needsZip;
   const [page, setPage] = pageState;
@@ -97,6 +97,8 @@ function CurrentPage({
     endTime: calendarInfo.endTime
   };
 
+  console.log("calendarInfo.id: " + calendarInfo.id);
+
   return (<ul id={"page" + page} className="page" page={page}>
     {page == 6 ? <p>Unfortunately, you reside outside of our service area.</p>
     : (page == 3 && !calendarNeedsZip) || (page == 3 && calendarInfo.id !== "zip-input") ? 
@@ -114,7 +116,11 @@ function CurrentPage({
       <textarea id="message" name="message" max-length="250" placeholder="Enter message..."></textarea>
       <span className="error"></span>
     </li> : null}
-    <CurrentButtons pageState={[page, setPage]} loading={postLoading} needsZip={calendarNeedsZip} />
+    <CurrentButtons 
+      pageState={[page, setPage]}
+      loading={postLoading || getLoading}
+      needsZip={calendarNeedsZip}
+    />
   </ul>)
 }
 
@@ -222,13 +228,14 @@ function ContactForm (props) {
           setPage(6);
           return;
         }
-        // calendarInfo.current.locationName = validity.location;
         calendarInfo.current.id = "loading";
+        setGetLoading(true);
         calendarInfo.current = await getCalendarInfo(calendarNeedsZip, validity.location);
         initial = now.getHours() > 17 || new Date(now).setHours(0,0,0,0) < new Date(calendarInfo.current.startTime).setHours(0,0,0,0) ? 
           new Date(new Date(now.getTime() + 1000*60*60*24).setHours(0,0,0,0)) 
         : new Date(new Date(now).setHours(0,0,0,0));
         setAppointmentTime(initial);
+        setGetLoading(false);
         setCalendarNeedsZip(false);
       }
       return;
@@ -343,6 +350,7 @@ function ContactForm (props) {
         message={message}
         inputs={currentInputs}
         postLoading={postLoading}
+        getLoading={getLoading}
         calendarInfo={calendarInfo.current}
         needsZip={[calendarNeedsZip, setCalendarNeedsZip]}
         appt={[appointmentTime, setAppointmentTime]}

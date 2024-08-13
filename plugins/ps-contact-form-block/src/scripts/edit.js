@@ -52,9 +52,7 @@ export default function Edit( { attributes, setAttributes }) {
 	<>
 		<InspectorControls>
 			<PanelBody title={ 'Settings' }>
-				<Button id="previous" variant="secondary" type="button" disabled={currentPage<1} onClick={() => setPage(currentPage-1)}>Prev</Button>
-				<p style={{display: 'inline-block', padding: '0 6px'}}>Page {currentPage + 1}</p>
-				<Button id="next" variant="secondary" type="button" disabled={currentPage+1>=pages} onClick={() => setPage(currentPage+1)}>Next</Button>
+				
 			</PanelBody>
 		</InspectorControls>
 		<form {...blockProps}>
@@ -94,6 +92,9 @@ export default function Edit( { attributes, setAttributes }) {
 				})}
 				{!!message && currentPage == 0 ? (<li key="message"><label htmlFor="message">Message</label><textarea id="message" placeholder="Enter message..."></textarea></li>) : null}
 			</ul>
+			<Button id="previous" variant="secondary" type="button" disabled={currentPage<1} onClick={() => setPage(currentPage-1)}>Prev</Button>
+			<p style={{display: 'inline-block', padding: '0 6px'}}>Page {currentPage + 1}</p>
+			<Button id="next" variant="secondary" type="button" disabled={currentPage+1>=pages} onClick={() => setPage(currentPage+1)}>Next</Button>
 		</form>
 	</>
 	);

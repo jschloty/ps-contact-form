@@ -1,8 +1,7 @@
-import { useState, useRef, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Calendar } from 'react-calendar';
 import { clsx } from 'clsx';
-import { SlArrowLeft } from "react-icons/sl";
-import { TbReceiptYuan } from 'react-icons/tb';
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -146,7 +145,7 @@ function TimeGrid( {
       <div className="mobile-header">
         <h1>{WEEKDAYS[value.getDay()]}</h1>
         <h2>{getFormattedDate(value)}</h2>
-        <button className="timegrid__previous" type="button" onClick={() => {onChange(value, -1)}}><SlArrowLeft /></button>
+        <button className="timegrid__previous" type="button" onClick={() => {onChange(value, -1)}}><IoIosArrowBack /></button>
       </div>
       {timeSlots.map((slot, i) => {
         return (
@@ -169,6 +168,13 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading, appt, pag
   const [page, setPage] = useState(1);
   const [value, setValue] = appt;
   const [width, height] = useWindowSize();
+  
+  // set initial value to null if on mobile
+  useEffect(() => {
+    if (width < 768) {
+      setValue(null);
+    }
+  }, [loading, width]);
 
   const changedDay = useRef(false);
 
@@ -195,6 +201,13 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading, appt, pag
     setPage(page+newPage);
   }
 
+  const navLabel = ({date}) => {
+    return <>
+    <h2>{MONTHS[date.getMonth()]}</h2>
+    <h3>{date.getFullYear()}</h3>
+    </>
+  }
+
   console.log("width = " + width);
   return loading ? <BookerPlaceholder /> :
     width >= 768
@@ -212,6 +225,9 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading, appt, pag
           tileDisabled={isDisabled}
           minDate={new Date(new Date(startTime).setHours(0,0,0,0))}
           maxDate={new Date(new Date(endTime).setHours(0,0,0,0))}
+          prevLabel={<IoIosArrowBack />}
+          nextLabel={<IoIosArrowForward />}
+          navigationLabel={navLabel}
         />
         <TimeGrid 
           onChange={onChange}
@@ -228,9 +244,21 @@ export default function DateTimeBooker({isDisabled, timeInfo, loading, appt, pag
         {page == 1 
         ? <Calendar 
             onChange={(value) => {onChangeMobile(value, 1)}} 
-            minDetail="month" 
-            value={value} 
-            tileDisabled={isDisabled}/> 
+            onActiveStartDateChange={({ action }) => {
+              if (action === "prev" || action === "next") {
+                changedDay.current = true;
+                setValue(null);
+              }
+            }}
+            minDetail="month"
+            value={value}
+            tileDisabled={isDisabled}
+            minDate={new Date(new Date(startTime).setHours(0,0,0,0))}
+            maxDate={new Date(new Date(endTime).setHours(0,0,0,0))}
+            prevLabel={<IoIosArrowBack />}
+            nextLabel={<IoIosArrowForward />}
+            navigationLabel={navLabel}
+          />
         : <TimeGrid 
             onChange={onChangeMobile} 
             value={value} 

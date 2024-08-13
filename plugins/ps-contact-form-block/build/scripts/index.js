@@ -79,24 +79,7 @@ function Edit({
   const blockProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.useBlockProps)();
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.InspectorControls, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.PanelBody, {
     title: 'Settings'
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Button, {
-    id: "previous",
-    variant: "secondary",
-    type: "button",
-    disabled: currentPage < 1,
-    onClick: () => setPage(currentPage - 1)
-  }, "Prev"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
-    style: {
-      display: 'inline-block',
-      padding: '0 6px'
-    }
-  }, "Page ", currentPage + 1), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Button, {
-    id: "next",
-    variant: "secondary",
-    type: "button",
-    disabled: currentPage + 1 >= pages,
-    onClick: () => setPage(currentPage + 1)
-  }, "Next"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
     ...blockProps
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.RichText, {
     ...blockProps,
@@ -147,7 +130,24 @@ function Edit({
   }, "Message"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("textarea", {
     id: "message",
     placeholder: "Enter message..."
-  })) : null)));
+  })) : null), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Button, {
+    id: "previous",
+    variant: "secondary",
+    type: "button",
+    disabled: currentPage < 1,
+    onClick: () => setPage(currentPage - 1)
+  }, "Prev"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    style: {
+      display: 'inline-block',
+      padding: '0 6px'
+    }
+  }, "Page ", currentPage + 1), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Button, {
+    id: "next",
+    variant: "secondary",
+    type: "button",
+    disabled: currentPage + 1 >= pages,
+    onClick: () => setPage(currentPage + 1)
+  }, "Next")));
 }
 
 /***/ }),
