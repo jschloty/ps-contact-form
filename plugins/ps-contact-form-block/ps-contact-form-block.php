@@ -874,6 +874,7 @@ function ps_handle_calendar_request() {
 
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'contact_form_submissions';
+<<<<<<< HEAD
 
 		maybe_create_table($table_name, "CREATE TABLE " . $table_name . " (
 			name TEXT,
@@ -889,6 +890,8 @@ function ps_handle_calendar_request() {
 			PRIMARY KEY (id)
 		);");
 		
+=======
+>>>>>>> 9cede4749f0845b99bedffa635c5ab69fe94f577
 		$db_result = $wpdb->get_results( "SELECT * FROM $table_name WHERE session_id = '" . $session_id . "'" );
 		if (count($db_result) === 0) {
 			if (!isset($_GET['location_name'])) {
