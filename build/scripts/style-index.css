@@ -799,8 +799,9 @@
 }
 #ps-contact-form ul #pg4_back, form.wp-block-create-block-ps-contact-form-block ul #pg4_back {
   position: absolute;
-  bottom: 25px;
-  left: calc(35% - 90px);
+  font-size: 40px;
+  bottom: 10px;
+  left: calc(15% - 90px);
   background: none;
   box-shadow: none;
   border: none;
@@ -1018,8 +1019,8 @@
 }
 .timegrid .mobile-header button.timegrid__previous {
   position: relative;
-  bottom: 52%;
-  left: 5%;
+  bottom: 45%;
+  right: 39%;
 }
 @media screen and (max-width: 767px) {
   .timegrid {

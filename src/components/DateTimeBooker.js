@@ -134,6 +134,7 @@ function TimeGrid( {
   value,
   changedDay,
   onChange,
+  onChangeMobile,
   hours,
   interval,
   startTime,
@@ -199,7 +200,7 @@ function TimeGrid( {
       <div className="mobile-header">
         <h1>{WEEKDAYS[value.getDay()]}</h1>
         <h2>{getFormattedDate(value)}</h2>
-        <button className="timegrid__previous" type="button" onClick={() => {onChange(value, -1)}}><IoIosArrowBack /></button>
+        <button className="timegrid__previous" type="button" onClick={() => {onChangeMobile(value, -1)}}><IoIosArrowBack /></button>
       </div>
       {timeSlots.map((slot, i) => {
         return (
@@ -354,7 +355,8 @@ export default function DateTimeBooker({calendarInfo, loading, appt, pageState, 
             navigationLabel={navLabel}
           />
         : <TimeGrid 
-            onChange={onChangeMobile} 
+            onChange={onChange}
+            onChangeMobile={onChangeMobile} 
             value={value} 
             changedDay={changedDay}
             hours={hours}

@@ -6,6 +6,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import Button from './Button';
 import { getCalendarInfo, appointmentSubmit } from '../scripts/calendar-utils';
 import PhoneInput from 'react-phone-number-input/input';
+import { IoIosArrowBack } from 'react-icons/io';
 
 export const ADMIN_URL = window.location.protocol + "//" + window.location.host + "/wp-admin/admin-post.php";
 
@@ -29,7 +30,7 @@ function CurrentButtons({ pageState, loading, needsZip, existing }) {
       <Button id="pg2_button" type="submit" loading={loading}>Sign me up!</Button>
     </>)
     : page == 3 && needsZip ? <Button id="pg3_zip-button" type="submit" loading={loading}>Submit</Button>
-    : page == 4 ? <><Button id="pg4_back" type="button" onClick={(e) => {e.preventDefault(); setPage(3)}} ><SlArrowLeft /></Button><Button id="pg4_button" type="submit" loading={loading}>Submit</Button></>
+    : page == 4 ? <><Button id="pg4_back" type="button" onClick={(e) => {e.preventDefault(); setPage(3)}} ><IoIosArrowBack /></Button><Button id="pg4_button" type="submit" loading={loading}>Submit</Button></>
     : (<p></p>);
 }
 
@@ -222,7 +223,7 @@ function ContactForm (props) {
     initialTime = initCalendar(calendarInfo.current);
   }
 
-  let [page, setPage] = useState(3); //CHANGE THIS BACK TO 1
+  let [page, setPage] = useState(1); //CHANGE THIS BACK TO 1
   let [getLoading, setGetLoading] = useState(false);
   let [postLoading, setPostLoading] = useState(false);
   let [calendarNeedsZip, setCalendarNeedsZip] = useState(false);

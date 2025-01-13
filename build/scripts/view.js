@@ -71,7 +71,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_toastify__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-toastify */ "./node_modules/react-toastify/dist/react-toastify.esm.mjs");
 /* harmony import */ var _Button__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./Button */ "./src/components/Button.js");
 /* harmony import */ var _scripts_calendar_utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../scripts/calendar-utils */ "./src/scripts/calendar-utils.js");
-/* harmony import */ var react_phone_number_input_input__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! react-phone-number-input/input */ "./node_modules/react-phone-number-input/input/index.js");
+/* harmony import */ var react_phone_number_input_input__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! react-phone-number-input/input */ "./node_modules/react-phone-number-input/input/index.js");
+/* harmony import */ var react_icons_io__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! react-icons/io */ "./node_modules/react-icons/io/index.mjs");
+
 
 
 
@@ -125,7 +127,7 @@ function CurrentButtons({
       e.preventDefault();
       setPage(3);
     }
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_sl__WEBPACK_IMPORTED_MODULE_6__.SlArrowLeft, null)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Button__WEBPACK_IMPORTED_MODULE_4__["default"], {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_io__WEBPACK_IMPORTED_MODULE_7__.IoIosArrowBack, null)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Button__WEBPACK_IMPORTED_MODULE_4__["default"], {
     id: "pg4_button",
     type: "submit",
     loading: loading
@@ -346,7 +348,7 @@ function ContactForm(props) {
   if (calendarInfo.current.locationId !== "default") {
     initialTime = initCalendar(calendarInfo.current);
   }
-  let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(3); //CHANGE THIS BACK TO 1
+  let [page, setPage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1); //CHANGE THIS BACK TO 1
   let [getLoading, setGetLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   let [postLoading, setPostLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   let [calendarNeedsZip, setCalendarNeedsZip] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
@@ -378,7 +380,7 @@ function ContactForm(props) {
         key: input.name + "_field"
       }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
         htmlFor: input.id
-      }, input.label), input.name === "phone" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_phone_number_input_input__WEBPACK_IMPORTED_MODULE_7__["default"], {
+      }, input.label), input.name === "phone" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_phone_number_input_input__WEBPACK_IMPORTED_MODULE_8__["default"], {
         country: "US",
         id: "phone",
         type: "tel",
@@ -750,6 +752,7 @@ function TimeGrid({
   value,
   changedDay,
   onChange,
+  onChangeMobile,
   hours,
   interval,
   startTime,
@@ -803,7 +806,7 @@ function TimeGrid({
     className: "timegrid__previous",
     type: "button",
     onClick: () => {
-      onChange(value, -1);
+      onChangeMobile(value, -1);
     }
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_io__WEBPACK_IMPORTED_MODULE_2__.IoIosArrowBack, null))), timeSlots.map((slot, i) => {
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TimeSlot, {
@@ -967,7 +970,8 @@ function DateTimeBooker({
     nextLabel: (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react_icons_io__WEBPACK_IMPORTED_MODULE_2__.IoIosArrowForward, null),
     navigationLabel: navLabel
   }) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TimeGrid, {
-    onChange: onChangeMobile,
+    onChange: onChange,
+    onChangeMobile: onChangeMobile,
     value: value,
     changedDay: changedDay,
     hours: hours,
