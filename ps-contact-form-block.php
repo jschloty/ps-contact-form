@@ -720,7 +720,7 @@ add_action( 'admin_post_contact_form', 'ps_handle_form_submit' );
 class UsefulCalendar {
 	public array $openHours = [];
 	public array $blockedSlots;
-	public int $slotBuffer, $slotDuration, $slotInterval, $startTime, $endTime;
+	public int $slotBuffer, $slotPreBuffer, $slotDuration, $slotInterval, $startTime, $endTime;
 	private int $allowBookingAfter, $allowBookingFor;
 	public string $id, $locationId, $locationName;
 
